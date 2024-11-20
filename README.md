@@ -2,7 +2,6 @@
 This repository contains all the scripts I used to analyse CLS correlators in a certain format. Please look at the README files to understand each file. 
 
 
----------------------------------------*****---------------------------------------
 ------------------------***** MAIN ANALYSIS SCRIPT *****------------------------
 
 
@@ -67,7 +66,6 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, f
 THIS IS A BRIEF EXPLANATION OF HOW THE CORRELATORS SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
 ---------------------------***** CORRELATORS SCRIPT *****--------------------------
 
 FUNCTIONALITY:
@@ -113,7 +111,6 @@ DESCRIPTION OF THE FUNCTIONS:
 
 THIS IS A BRIEF EXPLANATION OF HOW THE EFFECTIVE MASS SCRIPT WORKS
 
----------------------------------------*****---------------------------------------
 ------------------------***** EFFECTIVE MASSES SCRIPT *****------------------------
 FUNCTIONALITY:
 
@@ -148,7 +145,6 @@ DESCRIPTION OF THE FUNCTIONS:
 THIS IS A BRIEF EXPLANATION OF HOW THE EIGENVALUES SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
 ---------------------------***** EIGENVALUES SCRIPT *****--------------------------
 
 FUNCTIONALITY:
@@ -189,7 +185,6 @@ NOTE: DO NOT FORGET TO BE CONSISTENT CHOOSING THE PATH OF YOUR OUTPUTS, BECAUSE 
 THIS IS A BRIEF EXPLANATION OF HOW THE FILES SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
 ---------------------------***** FILES SCRIPT *****--------------------------
 
 This files contains all the information to do to all the steps later. You must create one of these for each ensemble you are using. 
@@ -214,7 +209,6 @@ DESCRIPTION:
 
 THIS IS A BRIEF EXPLANATION OF HOW THE FITTING SCRIPT WORKS
 
----------------------------------------*****---------------------------------------
 ------------------------***** FITTING SCRIPT *****------------------------
 FUNCTIONALITY:
 
@@ -273,7 +267,7 @@ NOTE: This script can be run alone or within the "main_analysis_script.py". If y
             + ratio_on: 'yes' or None, 'yes'=for ratios of correlators, None=normal correlator matrices. (OPTIONAL)
 
 
----------------------------------------*****---------------------------------------
+
 ------------------------***** PLOT MAIN SCRIPT *****------------------------
 
 THIS IS HOW THE MAIN PLOT SCRIPT WORKS. THERE ARE OTHER "README" FILES THAT EXPLAIN EACH OF THEM.
@@ -326,7 +320,7 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, f
 THIS IS A BRIEF EXPLANATION OF HOW THE PLOT CORRELATORS SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
+
 ------------------------***** PLOT CORRELATORS SCRIPT *****------------------------
 
 
@@ -358,7 +352,6 @@ DESCRIPTION OF THE FUNCTIONS:
 THIS IS A BRIEF EXPLANATION OF HOW THE PLOT EFFECTIVE MASSES SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
 ---------------------***** PLOT EFFECTIVE MASSES SCRIPT *****---------------------
 
 
@@ -388,7 +381,7 @@ DESCRIPTION OF THE FUNCTIONS:
 THIS IS A BRIEF EXPLANATION OF HOW THE PLOT FITS SCRIPT WORKS
 
 
----------------------------------------*****---------------------------------------
+
 -----------------------------***** PLOT FITS SCRIPT *****------------------------
 
 
