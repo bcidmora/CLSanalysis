@@ -4,10 +4,9 @@ This repository contains all the scripts I used to analyse CLS correlators in a 
 
 ------------------------***** MAIN ANALYSIS SCRIPT *****------------------------
 
-
  ***** THIS IS HOW THE MAIN SCRIPT WORKS. THERE ARE OTHER "README" FILES THAT EXPLAIN EACH OF THEM ****
 
-Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, for example.
+Notice that the names written as: $NAME$ must be fully replaced $NAME = n451, for example.
 
 
 ----------------- SOME REQUIREMENTS ----------------------------
@@ -17,7 +16,7 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, f
     - effective_masses_script.py
     - eigenvalues_script.py
     - fitting_script.py
-    - files_$name$.py
+    - files_$name.py
 
 2. You must have installed the following packages of python3 to make it run smoothly:
     - Numpy
@@ -63,12 +62,13 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, f
     4.4. Finally it prints the location of the output file so you do not lose it.
 
 
-THIS IS A BRIEF EXPLANATION OF HOW THE CORRELATORS SCRIPT WORKS
-
 
 ---------------------------***** CORRELATORS SCRIPT *****--------------------------
 
+THIS IS A BRIEF EXPLANATION OF HOW THE CORRELATORS SCRIPT WORKS
+
 FUNCTIONALITY:
+
 This script is the main code to do the following:
     1. Average the correlators over the nr. of gauge configurations.
     OBS: The averages ALWAYS correspond to the mean value of the original data, which will later be called "central values".
@@ -109,9 +109,12 @@ DESCRIPTION OF THE FUNCTIONS:
         1.7.4. kbt: integer. This is the amount of Bootstrap samples if you choose the_type_rs=='bt', if nothing entered here, it does 500 bootstrap samples. You can change this number here. ("OPTIONAL")
         1.7.5. own_kbt_list: array with your own random numbers for the Bootstrap. (OPTIONAL)
 
-THIS IS A BRIEF EXPLANATION OF HOW THE EFFECTIVE MASS SCRIPT WORKS
+
 
 ------------------------***** EFFECTIVE MASSES SCRIPT *****------------------------
+
+THIS IS A BRIEF EXPLANATION OF HOW THE EFFECTIVE MASS SCRIPT WORKS
+
 FUNCTIONALITY:
 
 This script contains two functions: one for the single hadrons and one for the multiple hadrons. 
@@ -142,12 +145,15 @@ DESCRIPTION OF THE FUNCTIONS:
     1.1. the_single_correlator_data: hdf5 File. Contains the info of the averaged correlators. 
     1.2. the_type_rs: string ('bt' or 'jk'). This is te type of resampling done to calculate the statistical errors.
 
-THIS IS A BRIEF EXPLANATION OF HOW THE EIGENVALUES SCRIPT WORKS
+
 
 
 ---------------------------***** EIGENVALUES SCRIPT *****--------------------------
 
+THIS IS A BRIEF EXPLANATION OF HOW THE EIGENVALUES SCRIPT WORKS
+
 FUNCTIONALITY:
+
 This script is the main code to do the following:
     1. It obtains the eigenvalues for a certain reference value of T0, for each tslice. 
     2. It saves the eigenvalues and the eigenvectors.
@@ -182,10 +188,11 @@ DESCRIPTION OF THE FUNCTIONS:
     
 NOTE: DO NOT FORGET TO BE CONSISTENT CHOOSING THE PATH OF YOUR OUTPUTS, BECAUSE THEY ARE REFERENCED LATER WHEN YOU WANT TO DO OTHER STEPS OR WHEN YOU DO THE PREVIOUS STEPS. THEY MUST BE CHANGED ONLY ONCE, WHEN YOU START USING THIS CODE, THEN NEVER AGAIN UNLESS YOU WANT TO STORE THEM IN A DIFFERENT PLACE.
 
-THIS IS A BRIEF EXPLANATION OF HOW THE FILES SCRIPT WORKS
 
 
 ---------------------------***** FILES SCRIPT *****--------------------------
+
+THIS IS A BRIEF EXPLANATION OF HOW THE FILES SCRIPT WORKS
 
 This files contains all the information to do to all the steps later. You must create one of these for each ensemble you are using. 
 NOTE: There must be a separate file for the single hadrons and for the correlation matrices. They must be averaged over irrep row and over momentum. 
@@ -207,9 +214,12 @@ DESCRIPTION:
     14. LatSize: This is the Lattice size (L^{3}xT, this is L)
 
 
-THIS IS A BRIEF EXPLANATION OF HOW THE FITTING SCRIPT WORKS
+
 
 ------------------------***** FITTING SCRIPT *****------------------------
+
+THIS IS A BRIEF EXPLANATION OF HOW THE FITTING SCRIPT WORKS
+
 FUNCTIONALITY:
 
 This script contains two functions: one for the single hadrons and one for the multiple hadrons. 
@@ -267,6 +277,8 @@ NOTE: This script can be run alone or within the "main_analysis_script.py". If y
             + ratio_on: 'yes' or None, 'yes'=for ratios of correlators, None=normal correlator matrices. (OPTIONAL)
 
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 ------------------------***** PLOT MAIN SCRIPT *****------------------------
 
@@ -317,12 +329,11 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, f
         
     4.4. Finally it prints the location of the output files so you do not lose them.
     
-THIS IS A BRIEF EXPLANATION OF HOW THE PLOT CORRELATORS SCRIPT WORKS
-
 
 
 ------------------------***** PLOT CORRELATORS SCRIPT *****------------------------
 
+THIS IS A BRIEF EXPLANATION OF HOW THE PLOT CORRELATORS SCRIPT WORKS
 
 This script has the functions to plot over all irreps contained in the averaged correlators file. 
 
@@ -349,11 +360,11 @@ DESCRIPTION OF THE FUNCTIONS:
         + Histogram of distribution of the resamples around the mean value. Only for one tslice.
     
 
-THIS IS A BRIEF EXPLANATION OF HOW THE PLOT EFFECTIVE MASSES SCRIPT WORKS
 
 
 ---------------------***** PLOT EFFECTIVE MASSES SCRIPT *****---------------------
 
+THIS IS A BRIEF EXPLANATION OF HOW THE PLOT EFFECTIVE MASSES SCRIPT WORKS
 
 This script has the functions to plot over all irreps contained in the averaged correlators file. 
 
@@ -378,12 +389,11 @@ DESCRIPTION OF THE FUNCTIONS:
         + Effective Masses of Correlators/Eigenvalues versus lattice time.
             
 
-THIS IS A BRIEF EXPLANATION OF HOW THE PLOT FITS SCRIPT WORKS
-
 
 
 -----------------------------***** PLOT FITS SCRIPT *****------------------------
 
+THIS IS A BRIEF EXPLANATION OF HOW THE PLOT FITS SCRIPT WORKS
 
 This script has the functions to plot over all irreps contained in the fits of correlators file. 
 
