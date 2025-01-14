@@ -233,11 +233,22 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
             mrs_f_real.append(np.array(mrs_f_real_n1))
         mrs_f = np.array(mrs_f_real)
         
+        mrs_f_real_rs=[]
+        for n1 in range(the_size_matrix):
+            mrs_f_real_rs.append(np.array(vf.MEAN(the_rs[n1][n1])))
+        mrs_f_rs = np.array(mrs_f_real_rs)
+        
+        sigmas_corr = []
+        for ss in range(the_size_matrix):
+            sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], mrs_f_rs[ss], the_type_rs)))
+        sigmas_corr=np.array(sigmas_corr)
+        
         re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs, the_size_matrix)
         re_mean = vf.RESHAPING_EIGENVALS_MEAN(mrs_f, the_size_matrix)
-
+        
         group_corr_real.create_dataset('Resampled',data=re_rs)
         group_corr_real.create_dataset('Mean', data= re_mean)
+        group_corr_real.create_dataset('Sigmas', data= sigmas_corr)
         j+=1
     the_matrix_correlator_data.close()
     end_time = time.time()
@@ -273,7 +284,7 @@ if __name__== "__main__":
     elif myEns == 'D200': from files_d200 import *
     
     myWeight = weight
-    myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
+    myLocation = vf.DIRECTORY_EXISTS(location + 'CorrelatorData/%s/'%myEns)
     myCnfgs = ncfgs
     
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
