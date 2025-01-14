@@ -121,6 +121,25 @@ def RESHAPING_CORRELATORS_RS(a,s):
         new_corr.append(np.array(new_corr_n))
     return np.array(new_corr)
 
+# This function reshapes the correlators as: [nt, Ncfgs, N, N] --> [N, N, nt, Ncgfs]
+# a: the list to reshape
+# s: size of the matrix
+def RESHAPING_CORRELATORS_RS_NT(a,s):
+    new_corr=[]
+    for n1 in range(s):
+        new_corr_n =[]
+        for n2 in range(s):
+            new_corr_nfs = []
+            for dis_t in range(len(a)):
+                new_corr_t=[]
+                for nfs in range(len(a[0])):
+                    new_corr_t.append(a[dis_t][nfs][n1][n2])
+                new_corr_nfs.append(np.array(new_corr_t))
+            new_corr_n.append(np.array(new_corr_nfs))
+        new_corr.append(np.array(new_corr_n))
+    return np.array(new_corr)
+
+
 
 # This function reshapes the data in the way: [N, N, nt] -> [nt,N,N] This is used to later get the eigenvalues easier form the matrices.
 # a: list with the data
@@ -175,7 +194,7 @@ def RESHAPING_EIGENVALS_FOR_FITS(a,s):
     return np.array(eig_corrs)
 
 # This function reshapes the eigenvalues from [nt, Ncfgs] -->> [Ncfgs, nt]. This is used to obatin the fits easier later. 
-# a: is the list of eigenvals, n configs, and time slices.
+# a: is the list of n configs, and time slices.
 # s: number of data entries
 def NT_TO_NCFGS(a):
     eig_corrs = []
@@ -186,6 +205,10 @@ def NT_TO_NCFGS(a):
         eig_corrs.append(np.array(corr_n))
     return np.array(eig_corrs)
 
+
+# This function reshapes the eigenvalues from  [Ncfgs, nt] -->> [nt, Ncfgs]. This is used to obatin the fits easier later. 
+# a: is the list of n configs, and time slices.
+# s: number of data entries
 def NCFGS_TO_NT(a):
     eig_corrs = []
     for t_slices in range(len(a[0])):
