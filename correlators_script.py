@@ -8,6 +8,7 @@ import set_of_functions as vf
 ### ------------------------------- START FUNCTIONS ----------------------------------------------------
 
 def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
+    
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
             rb, the_re_bin = 1, '' 
@@ -23,6 +24,11 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     else:
         the_nr_irreps = len(the_irreps)    
     
+    if kwargs.get('number_cfgs')==None:
+        the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
+    else:
+        the_number_cnfgs = int(kwargs.get('number_cfgs'))
+        
     op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
     
     if the_type_rs=='jk':
@@ -35,13 +41,11 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         else:
             k_bt = int(kwargs.get('kbt'))
         if kwargs.get('own_kbt_list')==None:
-            if kwargs.get('number_cfgs')==None:
-                the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
-            else:
-                the_number_cnfgs = int(kwargs.get('number_cfgs'))
             bt_cfgs = vf.RANDOM_GENERATOR(k_bt, int(the_number_cnfgs/rb))
         else:
             bt_cfgs = np.array(kwargs.get('own_kbt_list'))
+
+    the_weight = the_weight[:the_number_cnfgs]
 
     binned_rw = vf.BINNING(the_weight, rb)
     norm_reweight = vf.RW_NORMALIZATION(binned_rw, len(binned_rw))
@@ -53,7 +57,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         the_op_list = list(the_archivo[the_irreps[j]].attrs[op])
         the_size_matrix = len(the_op_list)
         
-        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])
+        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
         
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
@@ -115,6 +119,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
 
 
 def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
+    
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
             rb, the_re_bin = 1, '' 
@@ -131,6 +136,11 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         the_nr_irreps = int(kwargs.get('nr_irreps'))
     else:
         the_nr_irreps = len(the_irreps)    
+    
+    if kwargs.get('number_cfgs')==None:
+        the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
+    else:
+        the_number_cnfgs = int(kwargs.get('number_cfgs'))
 
     if the_type_rs=='jk':
         the_resampling_scheme = 'Jackknife'
@@ -141,11 +151,9 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
             print('Missing argument: Bootstrap sample size. Using sample size equals to %s'%k_bt)
         else:
             k_bt = int(kwargs.get('kbt'))
-        if kwargs.get('number_cfgs')==None:
-            the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
-        else:
-            the_number_cnfgs = int(kwargs.get('number_cfgs'))
         bt_cfgs = vf.RANDOM_GENERATOR(k_bt, int(the_number_cnfgs/rb))
+
+    the_weight = the_weight[:the_number_cnfgs]
 
     binned_rw = vf.BINNING(the_weight, rb)
     norm_reweight = vf.RW_NORMALIZATION(binned_rw, len(binned_rw))
@@ -157,7 +165,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     for j in range(the_nr_irreps):
         the_op_list = list(the_archivo[the_irreps[j]].attrs[op])
         the_size_matrix = len(the_op_list)
-        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])    
+        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]    
             
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
@@ -226,26 +234,27 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         group_corr_real = group_corr.create_group('Real')
 
         mrs_f_real=[]
+        rs_mean_real = []
         for n1 in range(the_size_matrix):
             mrs_f_real_n1=[]
+            rs_mean_real_n1=[]
             for n2 in range(the_size_matrix):
                 mrs_f_real_n1.append(np.array(vf.MEAN(the_datos[n1][n2])))
+                rs_mean_real_n1.append(np.array(vf.MEAN(the_rs[n1][n2])))
             mrs_f_real.append(np.array(mrs_f_real_n1))
+            rs_mean_real.append(np.array(rs_mean_real_n1))
         mrs_f = np.array(mrs_f_real)
-        
-        mrs_f_real_rs=[]
-        for n1 in range(the_size_matrix):
-            mrs_f_real_rs.append(np.array(vf.MEAN(the_rs[n1][n1])))
-        mrs_f_rs = np.array(mrs_f_real_rs)
+        mrs_f_rs = np.array(rs_mean_real)
         
         sigmas_corr = []
         for ss in range(the_size_matrix):
-            sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], mrs_f_rs[ss], the_type_rs)))
+            sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], mrs_f_rs[ss][ss], the_type_rs)))
         sigmas_corr=np.array(sigmas_corr)
         
         re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs, the_size_matrix)
         re_mean = vf.RESHAPING_EIGENVALS_MEAN(mrs_f, the_size_matrix)
-        
+        re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(mrs_f_rs, the_size_matrix)
+
         group_corr_real.create_dataset('Resampled',data=re_rs)
         group_corr_real.create_dataset('Mean', data= re_mean)
         group_corr_real.create_dataset('Sigmas', data= sigmas_corr)
@@ -277,14 +286,15 @@ if __name__== "__main__":
     myRb = 2
     myVersion = 'test'
     myKbt = 500
-    myNrIrreps=1
+    myNrIrreps=1 #None #2
     
     if myEns == 'N451': from files_n451 import *
     elif myEns == 'N201': from files_n201 import * 
     elif myEns == 'D200': from files_d200 import *
+    elif myEns == 'X451': from files_x451 import *
     
     myWeight = weight
-    myLocation = vf.DIRECTORY_EXISTS(location + 'CorrelatorData/%s/'%myEns)
+    myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
     myCnfgs = ncfgs
     
     vf.INFO_PRINTING(myWhichCorrelator, myEns)

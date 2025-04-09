@@ -14,7 +14,7 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **
     only_one_tmin = kwargs.get('one_tmin')
     the_type_fit = kwargs.get('type_fit')
     type_correlated_fit = kwargs.get('type_correlation')
-    names_irreps = list(the_data.keys())
+    the_names_irreps = list(the_data.keys())
     
     if the_type_fit=='1':
         dof = np.zeros((1,2))
@@ -25,31 +25,31 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **
         da_minimization = vf.DOUBLE_EXPONENTIAL
         fit_params = ('a0', 'e0', 'a1','e1')
 
-    for j in range(len(names_irreps)):
-        op_list = list(the_data[names_irreps[j]+'/Operators'])
+    for j in range(len(the_names_irreps)):
+        the_op_list = list(the_data[the_names_irreps[j]+'/Operators'])
         print('----------------------------------------------------------------------------------------')
-        print('IRREP: ' + str(names_irreps[j]) + '\n   --->>   Operators list: ')
-        for item in op_list: print('           ' + str(item.decode("utf-8")))    
+        print('IRREP: ' + str(the_names_irreps[j]) + '\n   --->>   Operators list: ')
+        for item in the_op_list: print('           ' + str(item.decode("utf-8")))    
         print('----------------------------------------------------------------------------------------')
         
-        if names_irreps[j] not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(names_irreps[j])
-        else: dis_irrep = the_fit_data[names_irreps[j]]
+        if the_names_irreps[j] not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(the_names_irreps[j])
+        else: dis_irrep = the_fit_data[the_names_irreps[j]]
         
         if '%sexp'%the_type_fit not in dis_irrep.keys(): 
             one_exp_fit = dis_irrep.create_group('%sexp'%the_type_fit)
             tmin_data = one_exp_fit.create_group('Tmin')
         else:
-            one_exp_fit = the_fit_data[names_irreps[j]+'/%sexp'%the_type_fit]
+            one_exp_fit = the_fit_data[the_names_irreps[j]+'/%sexp'%the_type_fit]
             tmin_data = one_exp_fit['Tmin']
         
-        corr_info = the_data[names_irreps[j]].get('Correlators')
+        corr_info = the_data[the_names_irreps[j]].get('Correlators')
         data_corr_fit = np.array(corr_info.get('Real/Mean'), dtype=np.float64)
         data_corr_fit_rs_raw = np.array(corr_info.get('Real/Resampled'), dtype=np.float64)
         data_corr_fit_rs = vf.NT_TO_NCFGS(data_corr_fit_rs_raw)
 
         data_cov_matrix = np.array(corr_info.get('Real/Covariance_matrix'), dtype=np.float64)
-        eff_energy_hint = np.array(the_data[names_irreps[j]].get('Effective_masses/Mean'))
-        nt = np.array(the_data[names_irreps[j]].get('Time_slices'))  
+        eff_energy_hint = np.array(the_data[the_names_irreps[j]].get('Effective_masses/Mean'))
+        nt = np.array(the_data[the_names_irreps[j]].get('Time_slices'))  
         
         nt_mod = np.arange(0,len(nt))
         if only_one_tmin: 
@@ -138,12 +138,12 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **k
     only_one_t0 = kwargs.get('one_t0')
     the_type_fit = kwargs.get('type_fit')
     type_correlated_fit = kwargs.get('type_correlation')
-    names_irreps = list(the_data.keys())
+    the_names_irreps = list(the_data.keys())
     
     if only_one_t0:
         t0_s = [int(kwargs.get('chosen_t0'))]
     else:
-        t0_s = sorted([int(item[3:]) for item in list(the_data[names_irreps[0]+'/GEVP'])])
+        t0_s = sorted([int(item[3:]) for item in list(the_data[the_names_irreps[0]+'/GEVP'])])
     
     if the_type_fit=='1':
         dof = np.zeros((1,2))
@@ -155,26 +155,26 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **k
         fit_params = ('a0', 'e0', 'a1','e1')
 
     for j in range(len(the_data)):                
-        op_list = list(the_data[names_irreps[j]+'/Operators'])
+        the_op_list = list(the_data[the_names_irreps[j]+'/Operators'])
         
         print('----------------------------------------------------------------------------------------')
-        print('IRREP: '+ str(names_irreps[j]) + '\n   --->>   Operators list: ')
-        for item in op_list: print('           ' + str(item.decode("utf-8")))
+        print('IRREP: '+ str(the_names_irreps[j]) + '\n   --->>   Operators list: ')
+        for item in the_op_list: print('           ' + str(item.decode("utf-8")))
         print('----------------------------------------------------------------------------------------')
         
-        if names_irreps[j] not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(names_irreps[j])
-        else: dis_irrep = the_fit_data[names_irreps[j]]
+        if the_names_irreps[j] not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(the_names_irreps[j])
+        else: dis_irrep = the_fit_data[the_names_irreps[j]]
         
         if 'Operators' not in dis_irrep.keys():
-            dis_irrep.create_dataset('Operators', data=op_list)
+            dis_irrep.create_dataset('Operators', data=the_op_list)
         if kwargs.get('ratio_on')!=None:
-            if 'Single_hadron_corrs' in dis_irrep.keys(): del the_fit_data[names_irreps[j]+'/Single_hadron_corrs']
-            dis_irrep.create_dataset('Single_hadron_corrs', data= list(the_data[names_irreps[j]+'/Single_hadron_corrs']))
+            if 'Single_hadron_corrs' in dis_irrep.keys(): del the_fit_data[the_names_irreps[j]+'/Single_hadron_corrs']
+            dis_irrep.create_dataset('Single_hadron_corrs', data= list(the_data[the_names_irreps[j]+'/Single_hadron_corrs']))
         
         if '%sexp'%the_type_fit not in dis_irrep.keys(): 
             one_exp_fit = dis_irrep.create_group('%sexp'%the_type_fit)
         else:
-            one_exp_fit = the_fit_data[names_irreps[j]+'/%sexp'%the_type_fit]
+            one_exp_fit = the_fit_data[the_names_irreps[j]+'/%sexp'%the_type_fit]
             
         begin_time_tmin = time.time()
         for t0 in t0_s:
@@ -186,13 +186,13 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **k
                 t0_group = one_exp_fit['t0_%s'%t0]
                 tmin_data = t0_group['Tmin']
             
-            corr_info = the_data[names_irreps[j]].get('GEVP/t0_%s'%t0)
+            corr_info = the_data[the_names_irreps[j]].get('GEVP/t0_%s'%t0)
             data_corr_fit = np.array(corr_info.get('Eigenvalues/Mean')).real 
             data_corr_fit_rs = np.array(corr_info.get('Eigenvalues/Resampled')).real 
             
             data_cov_matrix = np.array(corr_info.get('Eigenvalues/Covariance_matrix')).real 
             eff_energy_hint = np.array(corr_info.get('Effective_masses/Mean'))
-            nt = np.array(the_data[names_irreps[j]].get('Time_slices'))
+            nt = np.array(the_data[the_names_irreps[j]].get('Time_slices'))
 
             
             if type_correlated_fit=='Correlated':
@@ -301,6 +301,7 @@ if __name__=="__main__":
     if myEns == 'N451': from files_n451 import listTMaxSingleHads, listTMaxMultiHads
     elif myEns == 'N201': from files_n201 import listTMaxSingleHads, listTMaxMultiHads 
     elif myEns == 'D200': from files_d200 import listTMaxSingleHads, listTMaxMultiHads
+    elif myEns == 'X451': from files_x451 import listTMaxSingleHads, listTMaxMultiHads
     
     myLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
     

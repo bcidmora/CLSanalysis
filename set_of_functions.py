@@ -9,7 +9,7 @@ from pathlib import Path
 # cfgs_nr: is the amount of gauge configs after rebinning
 # it returns a list of list of numbers to plug into the boostrap sampling
 def RANDOM_GENERATOR(k_size, cfgs_nr):
-    np.random.seed(79611)
+    np.random.seed(414557)
     random_list = []
     for ii in range(k_size):
         this_random = []
@@ -40,7 +40,8 @@ def T_MAX_LIST(d_list):
       tmax_list.append(other_temp)
   return tmax_list
 
-
+### Comments:
+# This function prints the information of the ensemble and the type of correlators one have.
 def INFO_PRINTING(the_corr_type, the_ensemble):
     if the_corr_type=='s':
         print('.............................................................................')
@@ -58,7 +59,8 @@ def INFO_PRINTING(the_corr_type, the_ensemble):
         print('                               ENSEMBLE '+ the_ensemble)
         print('.............................................................................')
 
-
+## Comments:
+# This function checks if a directory exists, if not then it creats it.
 def DIRECTORY_EXISTS(a_dir):
     if not os.path.isdir(a_dir):
         Path(a_dir).mkdir(parents=True, exist_ok=True)
@@ -67,7 +69,16 @@ def DIRECTORY_EXISTS(a_dir):
         new_dir=a_dir
     return new_dir
         
-    
+
+### Comments:
+# a_string: this is a string of the name of the correlator data without being analysis. It gets from the string if the correlator was modified. It returns the list (First Ncfg, Last Ncfg, step Ncfgs)
+def GETTING_MIN_MAX_CONFIGS(a_string):
+    the_short_string = a_string[:-5]
+    the_split_string = list(the_short_string.split('_'))
+    the_important_part = the_split_string[-1]
+    the_new_string = list(the_important_part.split('-'))
+    return the_new_string
+
 
 ## ------------------- RESHAPING CORRELATORS -----------------------------------
 
@@ -193,6 +204,23 @@ def RESHAPING_EIGENVALS_FOR_FITS(a,s):
         eig_corrs.append(np.array(corr_n))
     return np.array(eig_corrs)
 
+# This function reshapes the eigenvalues fro[Neigens, Ncfgs, nt] -->> [nt, Ncfgs, Neigens] 
+# a: is the list of eigenvals, n configs, and time slices.
+def RESHAPING_EIGENVALS_NN(a):
+    t_slices = a.shape[2]
+    ncfgs = a.shape[1]
+    n_eigvals = a.shape[0]
+    eig_corrs = []
+    for t_s in range(t_slices):
+        corr_n=[]
+        for nf in range(ncfgs):
+            corr_t=[]
+            for n1 in range(n_eigvals):
+                corr_t.append(a[n1][nf][t_s])
+            corr_n.append(np.array(corr_t))
+        eig_corrs.append(np.array(corr_n))
+    return np.array(eig_corrs)
+
 # This function reshapes the eigenvalues from [nt, Ncfgs] -->> [Ncfgs, nt]. This is used to obatin the fits easier later. 
 # a: is the list of n configs, and time slices.
 # s: number of data entries
@@ -204,7 +232,6 @@ def NT_TO_NCFGS(a):
             corr_n.append(a[t_slices][n1])
         eig_corrs.append(np.array(corr_n))
     return np.array(eig_corrs)
-
 
 # This function reshapes the eigenvalues from  [Ncfgs, nt] -->> [nt, Ncfgs]. This is used to obatin the fits easier later. 
 # a: is the list of n configs, and time slices.
@@ -231,16 +258,46 @@ def SHRINK_MATRIX(c,low,up):
     out_small_cov = np.array(modified_cov_mat, dtype=np.double)
     return out_small_cov
 
-
+#Comments:
+# This functions removes cols and rows from  a correlation matrix, leaving it squared as it should be. 
+# c: this is the mean value of correlator matrix. It has a shapre of [N, N, nt]
+# r: This is the resampled correlator matrix. It has the shape [N, N, nt, Ncfgs]
+# ss: this is the index of the row/column to be removed
+def REMOVE_ROWS_COLS(c,r,ss):
+    modified_mean_corr = []
+    modified_rs_corr  = []
+    for ij in range(len(c)):
+        the_mean_corr_ij = []
+        the_rs_corr_ij = []
+        if ij!=ss:
+            for ji in range(len(c)):
+                if ji!=ss:
+                    the_mean_corr_ij.append(np.array(c[ij][ji]))
+                    the_rs_corr_ij.append(np.array(r[ij][ji]))
+            modified_mean_corr.append(np.array(the_mean_corr_ij))
+            modified_rs_corr.append(np.array(the_rs_corr_ij))
+    return [np.array(modified_mean_corr), np.array(modified_rs_corr)]
+            
 
 ## ------------------- EFFECTIVE MASSES -----------------------------------
 
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
 # a: shape [nt]
-def EFF_MASS(a):
+# This is the old version of the Effective Masses. It can still be used, but the other one is more general
+# def EFF_MASS(a):
+#     meff=[]
+#     for i in range(len(a)-1):
+#         meff.append(np.log(np.double(a[i])/np.double(a[i+1])))
+#     return np.array(meff)
+
+
+# This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
+# a: shape [nt]
+# d: distance of two points, by default this is 1
+def EFF_MASS(a,d):
     meff=[]
-    for i in range(len(a)-1):
-        meff.append(np.log(np.double(a[i])/np.double(a[i+1])))
+    for i in range(len(a)-d):
+        meff.append(np.log(np.double(a[i])/np.double(a[i+d])))
     return np.array(meff)
 
 
@@ -257,6 +314,8 @@ def BINNING(a_list, bin_size):
         if hh<len_a and len(rebinned_list)<int(len_a / bin_size):
             rebinned_list.append(np.mean(a_list[hh:hh+bin_size]))
     return np.array(rebinned_list, dtype=np.double)
+
+
 
 ## ------------------- REWIGHTING FACTORS --------------------------------
 # Comments
@@ -397,17 +456,36 @@ def COV_MATRIX(a,b,c):
     return np.matrix(sigma)
 
 
-
-
 ### ------------- FITTING FUNCTIONS AND STUFF --------------------------------------------
 
-
+# Comments:
+# This is the function for a single exponential fit. Ae^{-E0*(nt-t0))}
+# x: is the t_slices
+# e0: is a list (amplitud, energy)
+# *a: this is a variable size arguments, in thie case corresponds to t0.
 def SINGLE_EXPONENTIAL(x,e0,*a): 
     return e0[0] * np.exp((-e0[1]) * (x - a))
 
+# Comments:
+# This is the function for a double exponential fit. Ae^{-E0*(nt-t0)}(1+ Be^{-nt*D^{2}})
+# x: is the t_slices
+# e0: is a list (amplitud, energy E0, Amplitude shift of energy, DeltaE**2)
+# *a: this is a variable size arguments, in thie case corresponds to t0.
 def DOUBLE_EXPONENTIAL(x,e0,*a):
     return e0[0] * np.exp(-(x-a) * e0[1]) * (1. + e0[2] * np.exp(-x * (e0[3]**2)))
 
+
+# Comments:
+# This is the function for an alternative double exponential fit. Ae^{-E0*(nt-t0)}(1+ B e^{-nt (E1-E0)})
+# x: is the t_slices
+# e0: is a list (amplitud, energy E0, Amplitude shift of energy, DeltaE**2)
+# *a: this is a variable size arguments, in thie case corresponds to t0.
+def DOUBLE_EXPONENTIAL_ALTERNATIVE(x,e0,*a):
+    return e0[0] * np.exp(-(x-a) * e0[1]) * (1. + e0[2] * np.exp(-x * (e0[3]-e0[1])))
+
+
+### Comments:
+# This function tries to find a good guess for the fit to have a prior, so it would in principle take less time. It uses a simple polynomial fit of order 1. 
 def BEST_GUESS(c,t_i,tipo_fit):
     da_fits = np.polyfit(t_i, np.log(c), deg=1)
     amp0 = np.double(np.exp(da_fits[1]))
@@ -417,15 +495,20 @@ def BEST_GUESS(c,t_i,tipo_fit):
     guess.append(eng0)
     if tipo_fit=='2':
         guess.append(np.double(0.1))
-        guess.append(np.double(0.5)            )
+        guess.append(np.double(0.5))
     return guess
 
+
+### Comments: 
+# This function gets the Difference between a Chi^{2} of one time slice compared to the next time slice value of Chi^{2}. This in order to check for stability.
 def DELTA_CHI(a):
     delta_chi = []
     for ii in range(len(a)-1):
         delta_chi.append(a[ii ] - a[ii + 1])
     return np.array(delta_chi)
 
+### Comments:
+# This function gets the total Chi^{2}, not only per degree of freedom. 
 def TOTAL_CHI(a,b,c,nrp):
     total_a = []
     for ii in range(len(a)):
@@ -433,6 +516,8 @@ def TOTAL_CHI(a,b,c,nrp):
     return np.array(total_a)
 
 
+### Comments:
+# This class gets the function to do the Chi^{2} fit. 
 class My_Fits:
     def __init__(self, model, x, y, cov, dgof, a):
         self.model = model  # model predicts y for given x
@@ -450,6 +535,8 @@ class My_Fits:
 
 ### ------------------  PLOTTING STUFF --------------------------------------------------
 
+### Comments:
+# This function receives an operator name and returns a string in a nice way to put in the plots. 
 def OPERATORS_SH(operator_name):
     new_op = list(operator_name.split(' '))
     OperatorPlot = ''
@@ -463,6 +550,8 @@ def OPERATORS_SH(operator_name):
     return str(OperatorPlot)
 
 
+### Comments:
+# This class rewrites the names of the irreps in TeX type of text such that they can be put in the plots in a nice way.
 class IrrepInfo:
      def __init__(self,nombre):
         self.name = nombre.split('_')            
@@ -478,6 +567,9 @@ class IrrepInfo:
         self.TotalMomPlot = self.name[0][0]+ r'$^{2}=%s$'%self.name[0][-1]
 
 
+
+### Comments:
+# This class gets the info of the non-interacting levels. It only works when there is a threshold of 2 states nearby. It needs modification for the 3particle threshold.
 class NonInteractingLevels:
     def __init__(self,nombre,all_hads):
         self.FirstState = str(nombre[:4])
@@ -492,6 +584,27 @@ class NonInteractingLevels:
             else: continue
         self.First = first_name
         self.Second = second_name
+
+
+### Comments:
+# This function writes the errors in the plot in the way of parenthesis according to the precision given.
+def WRITTING_ERRORS_PLOTS(an_error, the_precision):
+    an_error = str(f'{an_error:.20f}')
+    the_error_string = "("
+    out_precision = True
+    if len(an_error)>(the_precision+2): 
+        an_error=an_error[:the_precision+2]
+    for ii in range(len(an_error)):
+        if len(the_error_string)>=2:
+            the_error_string+=an_error[ii]
+        else:
+            if an_error[ii]!="0" and an_error[ii]!=".": 
+                the_error_string+=an_error[ii]
+            else: continue
+    if len(the_error_string)>3:
+        the_error_string=the_error_string[:-1]
+        out_precision=False
+    return [the_error_string+")", out_precision]
 
 
 

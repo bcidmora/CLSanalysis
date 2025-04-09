@@ -2,17 +2,17 @@ import correlators_script as cs
 import effective_masses_script as efs
 import eigenvalues_script as evs
 import fitting_script as fs
+import rows_cols_script as rcs
 import sys
-
 
 
 ### ------- WHAT IT IS DONE --------
 
 runCorrs = True
-runEigenvals = True
-runEffMass = True
-runFits = True
-
+runEigenvals = False
+runRowsCols = False
+runEffMass = False
+runFits = False
 
 
 ### ------ MAIN VARIABLES ---------
@@ -21,17 +21,23 @@ myEns = str(sys.argv[1]).upper()
 myWhichCorrelator = str(sys.argv[2]).lower()
 myTypeRs = str(sys.argv[3]).lower()
 myRebinOn = str(sys.argv[4]).lower()
-myRb = 2
+myRb = 1
 myVersion = 'test'
 myKbt = 500
+myNrIrreps = 1#None # 2
+
+### Fitting parameters
 myTypeFit = '1' #'1'
 myTypeCorrelation = 'Correlated' # 'Uncorrelated'
-myOneTMin = True # False
+
+### GEVP parameters
+myOneTMin = False # True
 myOneT0 =  True # False
 myT0 = 4
-myNrIrreps = None # 1
-myKbtSamples = None #np.array(np.loadtxt('bootstrap_samples.txt')) 
 
+myKbtSamples = None #np.array(np.loadtxt('bootstrap_samples.txt')) 
+myEffMassDistance = 1 #None #2 #3
+myOpAnalysis = False
 
 if myRebinOn=='rb': 
     reBin = '_bin'+str(myRb)
@@ -39,17 +45,16 @@ else:
     reBin = ''
 
 
-
 ### ----  GETTING THE INFO FROM THE FOLLOWING FILES -------
 
 if myEns == 'N451': from files_n451 import *
 elif myEns == 'N201': from files_n201 import * 
 elif myEns == 'D200': from files_d200 import *
+elif myEns == 'X451': from files_x451 import *
 
 myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
 myWeight = weight
-myCnfgs = ncfgs
-
+myCnfgs = ncfgs # None # 20 # 100
 
 
 ### -------- PRINTING INFO OF ENSEMBLE ---------
@@ -61,7 +66,8 @@ vf.INFO_PRINTING(myWhichCorrelator, myEns)
 ##  Single Hadron correlators
 if myWhichCorrelator =='s':
     myArchivo, myIrreps = f1, name1 
-
+    
+    ### Correlators analysis
     if runCorrs: 
         locationWorkedCorrelators = cs.SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples)
     else:
@@ -69,15 +75,16 @@ if myWhichCorrelator =='s':
     
     myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')
     
+    ### Effective Masses analysis
     if runEffMass: 
-        efs.SingleCorrelatorEffectiveMass(myCorrelator, myTypeRs) 
+        efs.SingleCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass=myEffMassDistance) 
         
+    ### Fits analysis
     if runFits: 
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(myFitsLocation + 'Single_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
         fs.FitSingleCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxSingleHads, one_tmin = myOneTMin, type_fit = myTypeFit, type_correlation = myTypeCorrelation)
-        
         
         myFitCorrelator.close()
         
@@ -85,6 +92,7 @@ if myWhichCorrelator =='s':
 elif myWhichCorrelator=='m':        
     myArchivo, myIrreps = f, name
     
+    ### Correlators analysis
     if runCorrs: 
         locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples)
     else:
@@ -92,14 +100,24 @@ elif myWhichCorrelator=='m':
     
     myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')
     
-    if runEigenvals:
+    ### GEVP calculation
+    if runEigenvals or runRowsCols:
         myT0Min = int(input('T0 min: '))
         myT0Max = int(input('T0 max: ')) 
+    
+    if runEigenvals:
         evs.EigenvaluesExtraction(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)
     
+    ### Operators Analysis
+    if runRowsCols:
+        rcs.REMOVING_COLS_ROWS(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)#, nr_irreps=myNrIrreps)
+    
+    ### Effective Masses analysis
     if runEffMass: 
-        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs)
-        
+        if runRowsCols: myOpAnalysis = True
+        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass = myEffMassDistance, op_analysis=myOpAnalysis)
+
+    ### Fits analysis
     if runFits:        
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
@@ -115,9 +133,11 @@ elif myWhichCorrelator=='mr':
     
     myRatioCorrelator = h5py.File(locationWorkedCorrelators, 'r+')
     
+    ### Effective Masses analysis
     if runEffMass: 
         efs.MultiCorrelatorEffectiveMass(myRatioCorrelator, myTypeRs)
-        
+    
+    ### Fits analysis            
     if runFits:        
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Ratios/')
         myFitRatioCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_ratios_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
