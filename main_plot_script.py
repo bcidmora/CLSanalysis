@@ -9,10 +9,10 @@ from PyPDF2 import PdfMerger
 
 ### ------- WHAT IT IS DONE --------
 
-plotCorrs = True
-plotEffMass = True
-plotFits = True
-joinPlots = True
+plotCorrs = False
+plotEffMass = False
+plotFits = False
+joinPlots = False
 
 
 ### ------ MAIN VARIABLES ---------
@@ -22,19 +22,21 @@ myWhichCorrelator = str(sys.argv[2]).lower()
 myTypeRs = str(sys.argv[3]).lower()
 myRebinOn = str(sys.argv[4]).lower()
 
-myRb = 2
+myRb = 1
 myVersion = 'test'
 myNrExponentials = '1'
-myTypeCorrelation = 'Correlated'
+myTypeCorrelation = 'Correlated' # 'Uncorrelated'
 myOneTmin = True
 myT0 = 4
 
 myDataLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
 
 
-if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots
-elif myEns == 'N201': from files_n201 import singleTMinsFitPlots, multiTMinsFitPlots 
-elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots
+if plotFits: # SEE if this can be moved down
+    if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots
+    elif myEns == 'N201': from files_n201 import singleTMinsFitPlots, multiTMinsFitPlots 
+    elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots
+    elif myEns == 'X451': from files_x451 import singleTMinsFitPlots, multiTMinsFitPlots
     
 
 if myRebinOn=='rb': 
@@ -49,12 +51,9 @@ elif myTypeRs=='bt':
     myResamplingScheme='Bootstrap' 
 
 
-
 ### -------- PRINTING INFO OF ENSEMBLE ---------
 
 vf.INFO_PRINTING(myWhichCorrelator, myEns)
-
-
 
 ### ------------ START ----------------
 

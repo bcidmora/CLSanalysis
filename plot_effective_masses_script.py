@@ -31,7 +31,7 @@ def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, 
         plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot)
         plt.xticks(the_nt_ticks)
         plt.legend()
-        #plt.ylim([min(the_mean_corr)*0.95, max(the_mean_corr[2:])*1.1])
+        #plt.ylim([min(the_mean_corr)*0.95, max(the_mean_corr[2:])*1.1])#[the_t0-2:]
         plt.tight_layout()
         #plt.show()
         the_efm_fig.savefig(the_location + 'EffectiveMass_' + irrep[:4] +'_%s'%irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
@@ -39,16 +39,30 @@ def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, 
         
 def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, the_version, the_t0, the_location, the_rebin):
     m_irreps = list(the_matrix_correlator_data.keys())
+    the_do_eigs = True
+    
     for irrep in m_irreps:
         the_op_list = list(the_matrix_correlator_data[irrep+'/Operators'])
-        the_data = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Mean'%the_t0])
-        the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
+        
+        the_data_corr = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Effective_masses'])
+        the_data_sigmas_corr = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Effective_masses_sigmas'])
+        
+        try:
+            the_data = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Mean'%the_t0])
+            the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
+            the_do_eigs = True
+        except KeyError:
+            the_do_eigs = False
+       
+        
         for bb in range(len(the_op_list)):
-            the_mean_corr = the_data[bb][the_t0-2:]
-            the_sigmas_corr = the_data_sigmas[bb][the_t0-2:]
             the_nt_corr = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])[the_t0-2:]
-            the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
-            the_nt_ticks = np.arange(5, the_nt_corr[-1], 5)
+            
+            the_mean_corr_corr = the_data_corr[bb]
+            the_sigmas_corr_corr = the_data_sigmas_corr[bb]
+            the_nt_corr_corr = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])
+            the_nt_corr_efm = np.arange(the_nt_corr_corr[0]+0.5, the_nt_corr_corr[-1]+0.5, 1)
+            the_nt_ticks_corr = np.arange(3, the_nt_corr[-1], 2)
 
             the_op = the_op_list[bb]
             
@@ -58,17 +72,34 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
             NameIrrepPlot = da_irrep.NamePlot
             NameIrrep = da_irrep.Name
             
-            print('Effective Mass plot in progress...')
-            efm_fig = plt.figure()
-            plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
+            efm_corr_fig = plt.figure()
+            plt.errorbar(the_nt_corr_efm, the_mean_corr_corr, yerr = the_sigmas_corr_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
             plt.xlabel('t')
             plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
-            plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%the_t0)
-            plt.xticks(the_nt_ticks)
+            plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) )
+            plt.xticks(the_nt_ticks_corr)
             plt.legend()
             plt.tight_layout()
-            #plt.show()
-            efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
+            # plt.show()
+            efm_corr_fig.savefig(the_location + 'EffectiveMass_DiagonalCorrelators_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
+            
+            if the_do_eigs:
+                the_mean_corr = the_data[bb][the_t0-2:]
+                the_sigmas_corr = the_data_sigmas[bb][the_t0-2:]
+                the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
+                the_nt_ticks = np.arange(5, the_nt_corr[-1], 5)
+                
+                print('Effective Mass plot in progress...')
+                efm_fig = plt.figure()
+                plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
+                plt.xlabel('t')
+                plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
+                plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%the_t0)
+                plt.xticks(the_nt_ticks)
+                plt.legend()
+                plt.tight_layout()
+                # plt.show()
+                efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
             
             
 def PlotRatioHadronsEffectiveMasses(the_ratio_correlator_data, the_rs_scheme, the_version, the_t0, the_location, the_rebin):

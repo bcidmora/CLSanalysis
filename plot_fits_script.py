@@ -31,7 +31,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         fit_fig = plt.figure()
         plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5)
         
-        plt.errorbar([the_nt[the_tmins[irrep]-the_nt[0]]], [the_mean_corr[the_tmins[irrep]-the_nt[0]]], yerr = [the_sigmas_corr[the_tmins[irrep]-the_nt[0]]], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, markerfacecolor = 'white' , capsize=2.5, label = r'$t_{min} = %s$'%str(int(the_nt[the_tmins[irrep]-the_nt[0]])) + '\n' +  r'$t_{max} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_tmins[irrep]-the_nt[0]],3) + '\n' + r'$E_{fit} = %s$'%np.round(the_mean_corr[the_tmins[irrep]-the_nt[0]], 5))
+        plt.errorbar([the_nt[the_tmins[irrep]-the_nt[0]]], [the_mean_corr[the_tmins[irrep]-the_nt[0]]], yerr = [the_sigmas_corr[the_tmins[irrep]-the_nt[0]]], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, markerfacecolor = 'white' , capsize=2.5, label = r'$t_{min} = %s$'%str(int(the_nt[the_tmins[irrep]-the_nt[0]])) + '\n' +  r'$t_{max} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_tmins[irrep]-the_nt[0]],3) + '\n' + r'$E_{fit} = %s$'%np.round(the_mean_corr[the_tmins[irrep]-the_nt[0]], 5) + '\n' + r'$\sigma_{fit} = %s$'%np.round(the_sigmas_corr[the_tmins[irrep]-the_nt[0]], 5))
         plt.legend()
         plt.xlabel(r'$t_{min}$')
         plt.ylabel(r'$a_{t} \;\Delta E_{lab}$')
@@ -262,6 +262,7 @@ if __name__=="__main__":
     if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots
     elif myEns == 'N201': from files_n201 import singleTMinsFitPlots, multiTMinsFitPlots 
     elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots
+    elif myEns == 'X451': from files_x451 import singleTMinsFitPlots, multiTMinsFitPlots
     
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
     
