@@ -8,13 +8,15 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwargs):  
+def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwargs):   
     
+    ### Defining distance between time-slice elements of the correlator
     if kwargs.get('dist_eff_mass')!=None and kwargs.get('dist_eff_mass')!=1:
         the_dist_eff_mass = int(kwargs.get('dist_eff_mass'))
     else:
         the_dist_eff_mass = 1 
-        
+    
+    ### The irreps
     the_list_name_irreps = list(the_single_correlator_data.keys())
     
     begin_time = time.time()
@@ -25,30 +27,30 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
         
         the_size_matrix = len(the_op_list)
         
-        rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
-        rs_real = vf.NT_TO_NCFGS(rs_real)
+        the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
+        the_rs_real = vf.NT_TO_NCFGS(the_rs_real)
         
         if 'Effective_masses' in this_data.keys(): del the_single_correlator_data[the_list_name_irreps[j]+'/Effective_masses']
         
         group_em = this_data.create_group('Effective_masses')
-        mrs_f_real = np.array(this_data.get('Correlators/Real/Mean'))
+        the_mrs_f_real = np.array(this_data.get('Correlators/Real/Mean'))
         
-        em_rs_f =  vf.EFF_MASS(mrs_f_real,the_dist_eff_mass)
+        the_em_rs_f =  vf.EFF_MASS(the_mrs_f_real, the_dist_eff_mass)
         
-        l=0; em_rs=[]
-        for l in range(len(rs_real)):
-            em_rs.append(vf.EFF_MASS(rs_real.real[l],the_dist_eff_mass))
-        em_rs = vf.NCFGS_TO_NT(em_rs)
+        l=0; the_em_rs=[]
+        for l in range(len(the_rs_real)):
+            the_em_rs.append(vf.EFF_MASS(the_rs_real.real[l],the_dist_eff_mass))
+        the_em_rs = vf.NCFGS_TO_NT(the_em_rs)
         
-        mrs_f_real_rs  = []
-        for tt in range(len(em_rs)):
-            mrs_f_real_rs.append(np.mean(em_rs[tt]))
-        mrs_f_real_rs = np.array(mrs_f_real_rs )
+        the_mrs_f_real_rs  = []
+        for tt in range(len(the_em_rs)):
+            the_mrs_f_real_rs.append(np.mean(the_em_rs[tt]))
+        the_mrs_f_real_rs = np.array(the_mrs_f_real_rs)
         
-        sigma_eff_mass = vf.STD_DEV_MEAN(em_rs, mrs_f_real_rs, the_type_rs)
+        the_sigma_eff_mass = vf.STD_DEV_MEAN(the_em_rs, the_mrs_f_real_rs, the_type_rs)
         
-        group_em.create_dataset('Mean', data=em_rs_f)
-        group_em.create_dataset('Sigmas', data=sigma_eff_mass)
+        group_em.create_dataset('Mean', data=the_em_rs_f)
+        group_em.create_dataset('Sigmas', data=the_sigma_eff_mass)
         
         print('Irrep nr.: '+ str(j+1) + ' out of ' +str(len(the_list_name_irreps)))
     end_time = time.time()
@@ -57,12 +59,15 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
             
 def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwargs):
     
-    the_list_name_irreps = list(the_matrix_correlator_data.keys())    
-    
+    ### Defining distance between time-slice elements of the correlator
     if kwargs.get('dist_eff_mass')!=None and kwargs.get('dist_eff_mass')!=1:
         the_dist_eff_mass = int(kwargs.get('dist_eff_mass'))
     else:
         the_dist_eff_mass = 1
+        
+    ### The irreps
+    the_list_name_irreps = list(the_matrix_correlator_data.keys())    
+    
         
     begin_time = time.time()
     for j in range(len(the_list_name_irreps)): 
@@ -71,31 +76,31 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
         the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         the_size_matrix = len(the_op_list)
 
-        rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
-        mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))
+        the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
+        the_mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))
 
-        reshaped_mean_corr = vf.RESHAPING_CORRELATORS(mean_corr_real,the_size_matrix)
-        reshaped_rs_corr = vf.RESHAPING_CORRELATORS_RS(rs_real,the_size_matrix)
+        the_reshaped_mean_corr = vf.RESHAPING_CORRELATORS(the_mean_corr_real)
+        the_reshaped_rs_corr = vf.RESHAPING_CORRELATORS_RS(the_rs_real)
         
-        ii=0; efm_mass=[]; sigma_efm=[]
+        ii, the_efm_mass, the_sigma_efm = 0, [], []
         for ii in range(the_size_matrix):
-            mean_eff = vf.EFF_MASS(reshaped_mean_corr[ii][ii],the_dist_eff_mass)
+            the_mean_eff = vf.EFF_MASS(the_reshaped_mean_corr[ii][ii],the_dist_eff_mass)
             
-            efm_mass.append(mean_eff)
-            rs_eff=[]
-            for xyz in range(len(rs_real[0])):
-                rs_eff.append(vf.EFF_MASS(reshaped_rs_corr[ii][ii][xyz], the_dist_eff_mass))
+            the_efm_mass.append(the_mean_eff)
+            the_rs_eff = []
+            for xyz in range(len(the_rs_real[0])):
+                the_rs_eff.append(vf.EFF_MASS(the_reshaped_rs_corr[ii][ii][xyz], the_dist_eff_mass))
             
-            rs_eff = np.array(vf.NCFGS_TO_NT(rs_eff))
+            the_rs_eff = np.array(vf.NCFGS_TO_NT(the_rs_eff))
             
-            rs_mean_eff = vf.MEAN(rs_eff)
-            sigma_efm.append(vf.STD_DEV_MEAN(rs_eff, rs_mean_eff, the_type_rs))
+            the_rs_mean_eff = vf.MEAN(the_rs_eff)
+            the_sigma_efm.append(vf.STD_DEV_MEAN(the_rs_eff, the_rs_mean_eff, the_type_rs))
                 
             if 'Effective_masses' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses']
-            this_data.get('Correlators/Real').create_dataset('Effective_masses', data=np.array(efm_mass))
+            this_data.get('Correlators/Real').create_dataset('Effective_masses', data=np.array(the_efm_mass))
             
             if 'Effective_masses_sigmas' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses_sigmas']
-            this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(sigma_efm))
+            this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(the_sigma_efm))
             
         
         if 'GEVP' not in this_data.keys(): j+=1; print('Irrep nr.: '+ str(j) + ' out of ' +str(len(the_list_name_irreps))); continue
@@ -109,55 +114,56 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
                 if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
                 
                 group_em_t0 = gevp_group.get(item).create_group('Effective_masses')
-                evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
-                evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
+                the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
+                the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
                 
-                eff_mass_rs_f=[]; eff_mass_mean = []; cov_eff_mass=[]; 
+                the_eff_mass_mean , the_cov_eff_mass = [], []
                 for ls in range(the_size_matrix):
-                    average = np.array(vf.EFF_MASS(evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
-                    eff_mass_mean.append(average)
+                    the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
+                    the_eff_mass_mean.append(the_average)
                     
-                    eff_mass_rs = []
-                    for zz in range(evalues_rs_f.shape[1]):
-                        eff_mass_rs.append(np.array(vf.EFF_MASS(evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
-                    eff_mass_rs = np.array(vf.NCFGS_TO_NT(eff_mass_rs))
-                    eff_rs_mean = vf.MEAN(np.array(eff_mass_rs))
-                    cov_eff_mass.append(vf.STD_DEV_MEAN(eff_mass_rs, eff_rs_mean, the_type_rs))
+                    the_eff_mass_rs = []
+                    for zz in range(the_evalues_rs_f.shape[1]):
+                        the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
+                    the_eff_mass_rs = np.array(vf.NCFGS_TO_NT(the_eff_mass_rs))
+                    the_eff_rs_mean = vf.MEAN(np.array(the_eff_mass_rs))
+                    the_cov_eff_mass.append(vf.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
                 
-                group_em_t0.create_dataset('Mean', data=np.array(eff_mass_mean))
-                group_em_t0.create_dataset('Sigmas',data=np.array(cov_eff_mass))
+                group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
+                group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
                 
-                
-            if kwargs.get('op_analysis')!=None and kwargs.get('op_analysis')!=False:                
+               
+            if 'Operators_Analysis' in this_data.keys():
                 
                 print("Effective Masses of NEW GEVP eigenvalues in process...")
                 
                 for op in range(the_size_matrix):
                     
-                    print("Eigenvalue = %s"%str(op+1))
+                    print("Eigenvalue = %s"%str(op))
                     
                     gevp_group = this_data.get('Operators_Analysis/Op_%s'%op)
                     for item in gevp_group.keys():
                         if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
                         
                         group_em_t0 = gevp_group.get(item).create_group('Effective_masses')
-                        evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
-                        evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
+                        the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
+                        the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
                         
-                        eff_mass_rs_f=[]; eff_mass_mean = []; cov_eff_mass=[]; 
-                        for ls in range(the_size_matrix-1):
-                            average = np.array(vf.EFF_MASS(evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
-                            eff_mass_mean.append(average)
+                        eff_mass_rs_f=[]; the_eff_mass_mean = []; the_cov_eff_mass=[]; 
+                        for ls in range(len(the_evalues_rs_f)):
+                            the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
+                            the_eff_mass_mean.append(the_average)
                             
-                            eff_mass_rs = []
-                            for zz in range(evalues_rs_f.shape[1]):
-                                eff_mass_rs.append(np.array(vf.EFF_MASS(evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
-                            eff_mass_rs = np.array(vf.NCFGS_TO_NT(eff_mass_rs))
-                            eff_rs_mean = vf.MEAN(np.array(eff_mass_rs))
-                            cov_eff_mass.append(vf.STD_DEV_MEAN(eff_mass_rs, eff_rs_mean, the_type_rs))
+                            the_eff_mass_rs = []
+                            for zz in range(the_evalues_rs_f.shape[1]):
+                                the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
+                            the_eff_mass_rs = np.array(vf.NCFGS_TO_NT(the_eff_mass_rs))
+                            the_eff_rs_mean = vf.MEAN(np.array(the_eff_mass_rs))
+                            the_cov_eff_mass.append(vf.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
                         
-                        group_em_t0.create_dataset('Mean', data=np.array(eff_mass_mean))
-                        group_em_t0.create_dataset('Sigmas',data=np.array(cov_eff_mass))
+                        group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
+                        group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
+                
             print('Irrep nr.: '+ str(j+1) + ' out of ' +str(len(the_list_name_irreps)))
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
@@ -180,7 +186,7 @@ if __name__=="__main__":
     myWhichCorrelator = str(sys.argv[2]).lower()
     myTypeRs = str(sys.argv[3]).lower()
     myRebinOn = str(sys.argv[4]).lower()
-    myRb = 2
+    myRb = 1
     myVersion = 'test'
     myEffMassDistance = 1 #None #2 #3
     

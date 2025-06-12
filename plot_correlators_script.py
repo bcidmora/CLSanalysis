@@ -14,7 +14,7 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         the_rs_scheme='Jackknife'
     elif the_type_rs=='bt':
         the_rs_scheme='Bootstrap'   
-        
+    
     the_nr_bins = 25
     for irrep in s_irreps:
         the_mean_corr = np.array(the_single_correlator_data[irrep + '/Correlators/Real/Mean'])
@@ -88,7 +88,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
     for irrep in m_irreps:
         the_op_list = list(the_matrix_correlator_data[irrep+'/Operators'])
         
-        the_data_corr = vf.RESHAPING_CORRELATORS(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Mean']),len(the_op_list))
+        the_data_corr = vf.RESHAPING_CORRELATORS(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Mean']))
         the_data_sigmas_corr = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Sigmas'])
         
         try:
@@ -103,8 +103,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             the_nt_ticks = np.arange(the_nt[0], the_nt[-1], 5)
             
             the_op = the_op_list[bb]
-            
-            OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
+            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
             
             da_irrep = vf.IrrepInfo(irrep)
             MomentumIrrep = da_irrep.TotalMomPlot
@@ -117,11 +116,11 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             plt.errorbar(the_nt[the_t0-the_nt[0]:], the_data_corr[bb][bb][the_t0-the_nt[0]:], yerr = the_data_sigmas_corr[bb][the_t0-the_nt[0]:], marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = the_rs_scheme)
             plt.xlabel('t')
             plt.ylabel(r'$\mathbb{Re}\;C(t)$')
-            plt.title( NameIrrepPlot+ ' ' + ' (%s): '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)))
+            plt.title( NameIrrepPlot+ ' ' + ' (%s): '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot)
             plt.xticks(the_nt_ticks)
             plt.tight_layout()
             plt.legend()
-            #plt.show()
+            # plt.show()
             corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
             
             print('Correlator Log-plots in progress...')
@@ -129,19 +128,19 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             plt.errorbar(the_nt[the_t0-the_nt[0]:], the_data_corr[bb][bb][the_t0-the_nt[0]:], yerr = the_data_sigmas_corr[bb][the_t0-the_nt[0]:], marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = the_rs_scheme)
             plt.xlabel('t')
             plt.ylabel(r'$\log\mathbb{Re}\;C(t)$')
-            plt.title( NameIrrepPlot+ ' ' +  ' (%s): '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)))
+            plt.title( NameIrrepPlot+ ' ' +  ' (%s): '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot)
             plt.yscale('log')
             plt.legend()
             plt.tight_layout()
             plt.xticks(the_nt_ticks)
-            #plt.show()
+            # plt.show()
             corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep  + '_%s_log'%bb + the_rebin + '_v%s.pdf'%the_version)
             
             print('Correlator histogram in progress...')
             tt = int(len(the_nt)/2)+1
             the_gauss_fig = plt.figure()
             the_nt_mean = the_data_corr[bb][bb][tt]
-            the_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']),len(the_op_list))[bb][bb][tt]
+            the_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']))[bb][bb][tt]
             the_nr_samples = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']).shape[1]
 
             the_mean_rs = np.mean(the_rs)
@@ -151,12 +150,13 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             plt.hist(the_rs, bins=25, label =  r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) +'\n'+ r'$\sigma = %s$'%'{:.10e}'.format(the_stat_error))
             plt.vlines(the_mean_rs, 0, 200, colors= 'red', label = r'$ \bar{C}_{%s}(t) =$'%the_type_rs + r' $%s$'%the_mean_rs)
             plt.vlines(the_nt_mean, 0, 200, colors='black', label = r'$ \bar{C}(t) = $ %s'%the_nt_mean)
-            plt.title( NameIrrep + ' ' + ' (%s): '%MomentumIrrep +  r'$C_{%s}$'%(str(bb) + str(bb)) + ' t = %s'%(tt+the_nt[0]))
+            plt.title( NameIrrep + ' ' + ' (%s): '%MomentumIrrep +  r'$C_{%s}$'%(str(bb) + str(bb)) + ' [t = %s]'%(tt+the_nt[0]))
             plt.ylabel('Frequency')
             plt.xlabel(r'$Diag(C(t))_{%s}$'%(str(bb)+str(bb)))
             plt.legend()
             plt.tight_layout()
             plt.ylim([0,int(the_nr_samples*.3)])
+            # plt.show()
             the_gauss_fig.savefig(the_location + 'Histogram_DiagCorrelator_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
                 
             if the_do_eigs:
@@ -172,7 +172,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                 plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%the_t0)
                 plt.xticks(the_nt_ticks)
                 plt.tight_layout()
-                #plt.show()
+                plt.show()
                 corr_fig.savefig(the_location + 'Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
                 
                 print('Eigenvalues Log-plot in progress...')
@@ -184,7 +184,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                 plt.yscale('log')
                 plt.tight_layout()
                 plt.xticks(the_nt_ticks)
-                #plt.show()
+                # plt.show()
                 corr_fig.savefig(the_location + 'Eigenvalues_' + irrep  + '_%s_log'%bb + the_rebin + '_v%s.pdf'%the_version)
                 
                 print('Eigenvalues histogram in progress...')
@@ -207,7 +207,41 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                 plt.legend()
                 plt.tight_layout()
                 plt.ylim([0,int(the_nr_samples*.3)])
+                # plt.show()
                 the_gauss_fig.savefig(the_location + 'Histogram_Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
+        
+        if the_do_eigs:
+            the_nt = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])
+            the_nt_ticks = np.arange(the_nt[0], the_nt[-1], 5)
+                
+            corr_fig = plt.figure()
+            
+            the_markers_list = ['o','v','s','p','^','*','x','d','>','D', '<','8','P','h','1']
+            
+            for bb in range(len(the_op_list)):
+                the_mean_corr = the_data[bb]
+                the_sigmas_corr = np.sqrt(np.diag(the_data_sigmas[bb]))
+                
+                the_op = the_op_list[bb]
+                OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+
+                da_irrep = vf.IrrepInfo(irrep)
+                MomentumIrrep = da_irrep.TotalMomPlot
+                NameIrrepPlot = da_irrep.NamePlot 
+                NameIrrep = da_irrep.Name
+                
+                print('Eigenvalues Log-plot in progress...')
+                
+                plt.errorbar(the_nt[the_t0-the_nt[0]:], the_mean_corr[the_t0-the_nt[0]:], yerr = the_sigmas_corr[the_t0-the_nt[0]:], marker=the_markers_list[bb], ls='None', ms=4.5, markeredgewidth=1.1, lw=1.5, elinewidth=1.5, zorder=3, capsize=3.5, label = r'$\lambda_{%s}$'%bb)
+            plt.xlabel('t')
+            plt.ylabel(r'$\log\mathbb{Re}\;C(t)$')
+            plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' ($t_{0} = %s$)'%the_t0)
+            plt.yscale('log')
+            plt.tight_layout()
+            plt.legend()
+            plt.xticks(the_nt_ticks)
+            # plt.show()
+            corr_fig.savefig(the_location + 'ALLEigenvalues_' + irrep  + '_log' + the_rebin + '_v%s.pdf'%the_version)
     
 
 def PlotRatioHadronCorrelators(the_ratio_correlator_data, the_type_rs, the_version, the_t0, the_location):
@@ -274,7 +308,7 @@ def PlotRatioHadronCorrelators(the_ratio_correlator_data, the_type_rs, the_versi
                 plt.legend()
                 plt.tight_layout()
                 plt.ylim([0,the_nr_samples*(the_nr_bins/100)*.6])
-                #plt.show()
+                # plt.show()
                 the_gauss_fig.savefig(the_location + 'Histogram_Eigenvalues_ratios_' + irrep + '_%s_'%bb + the_rebin + 'v%s.pdf'%the_version)
 
 

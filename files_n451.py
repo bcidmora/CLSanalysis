@@ -14,23 +14,23 @@ f = h5py.File(location+'data/N451/'+hdf5NameMulti,'r')
 f1 = h5py.File(location+'data/N451/'+hdf5NameSingle,'r')
 
 ### Final reweighting factors
-# weight_raw = np.array(np.loadtxt(location + '/data/N451/N451r000_rw.dat', unpack=True))[3] ###OLD
 weight_raw = np.array(np.loadtxt(location + 'data/N451/N451r000.ms1.dat_ascii', unpack=True))[1]
 
 ### How Many Irreps has each?
 name = list(f.keys())
 name1 = list(f1.keys())
 
-### Number of gauge configurations
+### Number of gauge configurations available
 ncfgs = np.array(f[name[0]+'/data']).shape[0]
 # ncfgs = 1011
 
-### Final reweighting factors
+### Final reweighting factors (normalized to the total)
 weight = np.array(vf.RW_NORMALIZATION(weight_raw,ncfgs), dtype=np.float64)
 
 ### List of tmaxs used for the fitting procedure. 
 listTMaxSingleHads = [np.array(f1[name1[0]+'/data']).shape[-1]]*len(name1)
 
+### TMax used for the fits of correlation matrices
 listTMaxMultiHads=[]
 for ix in range(0,len(name)):
     list_tmax_multihads_ix=[]
@@ -38,8 +38,10 @@ for ix in range(0,len(name)):
         list_tmax_multihads_ix.append(np.array(f[name[ix]+'/data']).shape[-1])
     listTMaxMultiHads.append(list_tmax_multihads_ix)
 
+### Minimum time slices used for the fits of single hadron correlators.
 singleTMinsFitPlots = [12]*len(name1)
 
+### Minimum time slices for the fits of multihadron correlators
 multiTMinsFitPlots = []
 for ix in range(0,len(name)):
     multiTMinsFitPlots_ij=[]

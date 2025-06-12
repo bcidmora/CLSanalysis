@@ -24,13 +24,12 @@ myRebinOn = str(sys.argv[4]).lower()
 
 myRb = 1
 myVersion = 'test'
-myNrExponentials = '1'
+myNrExponentials = '1' # '2'
 myTypeCorrelation = 'Correlated' # 'Uncorrelated'
 myOneTmin = True
-myT0 = 4
+myT0 = 3
 
 myDataLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
-
 
 if plotFits: # SEE if this can be moved down
     if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots
@@ -38,7 +37,6 @@ if plotFits: # SEE if this can be moved down
     elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots
     elif myEns == 'X451': from files_x451 import singleTMinsFitPlots, multiTMinsFitPlots
     
-
 if myRebinOn=='rb': 
     reBin = '_bin'+str(myRb)
 else: 
@@ -59,7 +57,7 @@ vf.INFO_PRINTING(myWhichCorrelator, myEns)
 
 if myWhichCorrelator =='s':
     mySingleCorrelatorData = h5py.File(myDataLocation + 'Single_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion,'r')
-    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH_FOR_PLOTS$/Plots/%s/SingleHadrons/'%myEns +  '%s/'%myResamplingScheme)
+    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/Documents/Chris Files/Plots/%s/SingleHadrons/'%myEns +  '%s/'%myResamplingScheme)
     
     if plotCorrs:        
         pcorr.PlotSingleHadronCorrelators(mySingleCorrelatorData, myTypeRs, myVersion, myPlotLocation, reBin)
@@ -75,7 +73,7 @@ if myWhichCorrelator =='s':
         
         myFitCorrelator.close()
         
-    if joinPlots:
+    f joinPlots:
         irreps = list(mySingleCorrelatorData.keys())
         for aa in irreps:
             ops = list(mySingleCorrelatorData[aa+'/Operators'])
@@ -100,9 +98,9 @@ if myWhichCorrelator =='s':
         
     mySingleCorrelatorData.close()
     
-elif myWhichCorrelator=='m':        
+lif myWhichCorrelator=='m':        
     myMatrixCorrelatorData = h5py.File(myDataLocation + 'Matrix_correlators_' + myTypeRs + reBin +'_v%s.h5'%myVersion,'r')
-    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH_FOR_PLOTS$/Plots/%s/Matrices/'%myEns +  '%s/'%myResamplingScheme)
+    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/Documents/Chris Files/Plots/%s/Matrices/'%myEns +  '%s/'%myResamplingScheme)
     
     if plotCorrs: 
         pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myTypeRs, myVersion, myT0, myPlotLocation, reBin)
@@ -124,31 +122,42 @@ elif myWhichCorrelator=='m':
             ops = list(myMatrixCorrelatorData[aa+'/Operators'])
             x=[]
             for bb in range(len(ops)):
+                x.append(myPlotLocation + 'DiagonalCorrelator_' + aa + '_%s'%bb + reBin + '_v%s.pdf'%myVersion)
+                x.append(myPlotLocation + 'DiagonalCorrelator_' + aa + '_%s_log'%bb + reBin + '_v%s.pdf'%myVersion)
+                x.append(myPlotLocation + 'Histogram_DiagCorrelator_' + aa + '_%s'%bb + reBin + '_v%s.pdf'%myVersion)                
+                x.append(myPlotLocation + 'EffectiveMass_DiagonalCorrelators_'+ aa + '_%s'%bb + reBin + '_v%s.pdf'%myVersion)                
                 x.append(myPlotLocation + 'Eigenvalues_' + aa + '_%s'%bb + reBin + '_v%s.pdf'%myVersion)
                 x.append(myPlotLocation + 'Eigenvalues_' + aa +  '_%s_log'%bb + reBin + '_v%s.pdf'%myVersion)
                 x.append(myPlotLocation +'Histogram_Eigenvalues_' + aa + '_%s'%bb + reBin +  '_v%s.pdf'%myVersion)
                 x.append(myPlotLocation + 'EffectiveMass_Eigenvalues_'+ aa + '_%s'%bb + reBin + '_v%s.pdf'%myVersion)
-                x.append(myPlotLocation + 'T0s_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
-                x.append(myPlotLocation + 'Tmin_Fits_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
-                x.append(myPlotLocation + 'Tmin_Fits_Zoom_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
-                x.append(myPlotLocation + 'Tmin_Chisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
-                x.append(myPlotLocation + 'Tmin_TotalChisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin  + '_v%s.pdf'%myVersion)
-                if not myOneTmin:
-                    x.append(myPlotLocation + 'Tmin_DeltaChisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin  + '_v%s.pdf'%myVersion)
+            x.append(myPlotLocation + 'EffectiveMass_ALLDiagonalCorrelators_'+ aa + reBin + '_v%s.pdf'%myVersion)
+            x.append(myPlotLocation + 'EffectiveMass_ALLDiagonalCorrelators_'+ aa + reBin + '_v%s_Zoom.pdf'%myVersion)
+            x.append(myPlotLocation + 'ALLEigenvalues_'+ aa + '_log'+ reBin + '_v%s.pdf'%myVersion)
+            
+                # x.append(myPlotLocation + 'T0s_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                # x.append(myPlotLocation + 'Tmin_Fits_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                # x.append(myPlotLocation + 'Tmin_Fits_Zoom_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                # x.append(myPlotLocation + 'Tmin_Chisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                # x.append(myPlotLocation + 'Tmin_TotalChisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin  + '_v%s.pdf'%myVersion)
+                # if not myOneTmin:
+                    # x.append(myPlotLocation + 'Tmin_DeltaChisqr_'+ aa + '_%s'%bb + '_%sexp'%myNrExponentials + reBin  + '_v%s.pdf'%myVersion)
             merger = PdfMerger()
             for pdf in x:
                 merger.append(open(pdf, 'rb'))
-
-            with open(myPlotLocation +"%s"%aa + "_%sexp"%myNrExponentials + reBin + "_v%s.pdf"%myVersion, "wb") as fout:
+            
+            with open(myPlotLocation + myEns + "_%s"%aa + "_t0%s"%myT0 + reBin + "_%s"%myTypeRs + "_v%s.pdf"%myVersion, "wb") as fout:
                 merger.write(fout)
+            
+            # with open(myPlotLocation +"%s"%aa + "_%sexp"%myNrExponentials + reBin + "_v%s.pdf"%myVersion, "wb") as fout:
+            #     merger.write(fout)
         print('Now all the plots are in one file')
         
     myMatrixCorrelatorData.close()
     
     
-elif myWhichCorrelator=='mr':
+lif myWhichCorrelator=='mr':
     myRatioCorrelatorData = h5py.File(myDataLocation + 'Matrix_correlators_ratios_' + myTypeRs + reBin +'_v%s.h5'%myVersion,'r')
-    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH_FOR_PLOTS$/Plots/%s/Matrices_Ratios/'%myEns +  '%s/'%myResamplingScheme)
+    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/Documents/Chris Files/Plots/%s/Matrices_Ratios/'%myEns +  '%s/'%myResamplingScheme)
 
     if plotCorrs: 
         pcorr.PlotMultiHadronCorrelators(myRatioCorrelatorData, myTypeRs, myVersion, myT0, myPlotLocation, reBin)

@@ -7,6 +7,7 @@ import sys
 import set_of_functions as vf
 
 
+
 def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, the_version, the_location, the_rebin):
     s_irreps = list(the_single_correlator_data.keys())
     for irrep in s_irreps:
@@ -18,6 +19,8 @@ def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, 
 
         the_op = list(the_single_correlator_data[irrep+'/Operators'])[0]
         OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
+        
+        
         da_irrep = vf.IrrepInfo(irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
         NameIrrepPlot = da_irrep.NamePlot
@@ -25,15 +28,16 @@ def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, 
         
         print('Effective Mass plot in progress...')
         the_efm_fig = plt.figure()
-        plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label='%s'%the_rs_scheme)
+        plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=3, markeredgewidth=1.3, lw=0.95, elinewidth=0.95, zorder=3, capsize=2.5, label='%s'%the_rs_scheme)
         plt.xlabel('t')
         plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
         plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot)
         plt.xticks(the_nt_ticks)
         plt.legend()
-        #plt.ylim([min(the_mean_corr)*0.95, max(the_mean_corr[2:])*1.1])#[the_t0-2:]
+        plt.ylim(ymin=0)
+        #plt.ylim([min(the_mean_corr)*0.95, max(the_mean_corr[2:])*1.1])
         plt.tight_layout()
-        #plt.show()
+        # plt.show()
         the_efm_fig.savefig(the_location + 'EffectiveMass_' + irrep[:4] +'_%s'%irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
         
@@ -53,7 +57,16 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
             the_do_eigs = True
         except KeyError:
             the_do_eigs = False
-       
+            
+        the_nt_corr = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])[the_t0-2:]
+        the_nt_corr_corr = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])
+        the_nt_corr_efm = np.arange(the_nt_corr_corr[0]+0.5, the_nt_corr_corr[-1]+0.5, 1)
+        the_nt_ticks_corr = np.arange(3, the_nt_corr[-1], 2)
+        
+        da_irrep = vf.IrrepInfo(irrep)
+        MomentumIrrep = da_irrep.TotalMomPlot
+        NameIrrepPlot = da_irrep.NamePlot
+        NameIrrep = da_irrep.Name
         
         for bb in range(len(the_op_list)):
             the_nt_corr = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])[the_t0-2:]
@@ -66,17 +79,13 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
 
             the_op = the_op_list[bb]
             
-            OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
-            da_irrep = vf.IrrepInfo(irrep)
-            MomentumIrrep = da_irrep.TotalMomPlot
-            NameIrrepPlot = da_irrep.NamePlot
-            NameIrrep = da_irrep.Name
-            
+            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+
             efm_corr_fig = plt.figure()
-            plt.errorbar(the_nt_corr_efm, the_mean_corr_corr, yerr = the_sigmas_corr_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
+            plt.errorbar(the_nt_corr_efm, the_mean_corr_corr, yerr = the_sigmas_corr_corr, marker='o', ls='None', ms=3, markeredgewidth=1.3, lw=0.95, elinewidth=0.95, zorder=3, capsize=2.75, label = '%s'%the_rs_scheme)
             plt.xlabel('t')
             plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
-            plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) )
+            plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) + ' = '+OperatorNamePlot)
             plt.xticks(the_nt_ticks_corr)
             plt.legend()
             plt.tight_layout()
@@ -91,7 +100,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                 
                 print('Effective Mass plot in progress...')
                 efm_fig = plt.figure()
-                plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
+                plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=3, markeredgewidth=1.3, lw=0.95, elinewidth=0.95, zorder=3, capsize=2.75, label = '%s'%the_rs_scheme)
                 plt.xlabel('t')
                 plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
                 plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%the_t0)
@@ -100,6 +109,48 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                 plt.tight_layout()
                 # plt.show()
                 efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
+        
+        
+        efm_corr_all_fig = plt.figure()
+        the_markers_list = ['o','v','s','p','^','*','x','d','>','D', '<','8','P','h','1']
+        for bb in range(len(the_op_list)):            
+            the_mean_corr_corr = the_data_corr[bb]
+            the_sigmas_corr_corr = the_data_sigmas_corr[bb]
+
+            the_op = the_op_list[bb]
+            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+            
+            # plt.errorbar(the_nt_corr_efm, the_mean_corr_corr, yerr = the_sigmas_corr_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = OperatorNamePlot)
+            
+            plt.errorbar(the_nt_corr_efm, the_mean_corr_corr, yerr = the_sigmas_corr_corr, marker=the_markers_list[bb], ls='None', ms=3.8, markeredgewidth=1.3, lw=0.95, elinewidth=0.95, zorder=3, capsize=2.75, label = OperatorNamePlot)
+            
+        plt.xlabel('t')
+        plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
+        plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $C_{ii}(n_{t})$'+ ' [' + the_rs_scheme + ']')
+        plt.xticks(the_nt_ticks_corr)
+        plt.ylim(ymin=0)
+        plt.legend()
+        plt.tight_layout()
+        # plt.show()
+        efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLDiagonalCorrelators_' + irrep + the_rebin + '_v%s.pdf'%the_version)
+            
+#             if the_do_eigs:
+#                 the_mean_corr = the_data[bb][the_t0-2:]
+#                 the_sigmas_corr = the_data_sigmas[bb][the_t0-2:]
+#                 the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
+#                 the_nt_ticks = np.arange(5, the_nt_corr[-1], 5)
+#                 
+#                 print('Effective Mass plot in progress...')
+#                 efm_fig = plt.figure()
+#                 plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=2.5, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5, label = '%s'%the_rs_scheme)
+#                 plt.xlabel('t')
+#                 plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$')
+#                 plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%the_t0)
+#                 plt.xticks(the_nt_ticks)
+#                 plt.legend()
+#                 plt.tight_layout()
+#                 # plt.show()
+#                 efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
             
             
 def PlotRatioHadronsEffectiveMasses(the_ratio_correlator_data, the_rs_scheme, the_version, the_t0, the_location, the_rebin):
@@ -116,7 +167,8 @@ def PlotRatioHadronsEffectiveMasses(the_ratio_correlator_data, the_rs_scheme, th
             the_nt_ticks = np.arange(5, the_nt_corr[-1], 5)
 
             the_op = the_op_list[bb]
-            OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
+            # OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
+            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
             da_irrep = vf.IrrepInfo(irrep)
             MomentumIrrep = da_irrep.TotalMomPlot
             NameIrrepPlot = da_irrep.NamePlot

@@ -24,17 +24,19 @@ myRebinOn = str(sys.argv[4]).lower()
 myRb = 1
 myVersion = 'test'
 myKbt = 500
-myNrIrreps = 1#None # 2
+myNrIrreps = 1 #None # 2
 
 ### Fitting parameters
-myTypeFit = '1' #'1'
-myTypeCorrelation = 'Correlated' # 'Uncorrelated'
+myTypeFit = '1' #'2'
+myTypeCorrelation =  'Correlated' # 'Uncorrelated'
 
 ### GEVP parameters
 myOneTMin = False # True
 myOneT0 =  True # False
-myT0 = 4
+myT0 = 3
+mySorting = 'eigenvals' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'# 'vecs_fix_norm'
 
+### Oher parameters
 myKbtSamples = None #np.array(np.loadtxt('bootstrap_samples.txt')) 
 myEffMassDistance = 1 #None #2 #3
 myOpAnalysis = False
@@ -43,7 +45,6 @@ if myRebinOn=='rb':
     reBin = '_bin'+str(myRb)
 else: 
     reBin = ''
-
 
 ### ----  GETTING THE INFO FROM THE FOLLOWING FILES -------
 
@@ -106,16 +107,17 @@ elif myWhichCorrelator=='m':
         myT0Max = int(input('T0 max: ')) 
     
     if runEigenvals:
-        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)
+        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting)
     
     ### Operators Analysis
     if runRowsCols:
-        rcs.REMOVING_COLS_ROWS(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)#, nr_irreps=myNrIrreps)
+        # rcs.REMOVING_COLS_ROWS(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)#, nr_irreps=myNrIrreps)
+        rcs.ADDING_COLS_ROWS(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)
     
     ### Effective Masses analysis
     if runEffMass: 
-        if runRowsCols: myOpAnalysis = True
-        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass = myEffMassDistance, op_analysis=myOpAnalysis)
+        # if runRowsCols: myOpAnalysis = True
+        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass = myEffMassDistance)#, op_analysis=myOpAnalysis)
 
     ### Fits analysis
     if runFits:        

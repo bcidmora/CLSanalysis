@@ -36,14 +36,12 @@ weight = np.array(vf.RW_NORMALIZATION(weight_sarah, ncfgs), dtype=np.float64)
 ### This part here is only in case you have a subset of the original data, for my case it was 100 cnfgs, every 20 starting on 20 until 2000.
 if '-' in hdf5NameMulti:
     ncfgs = np.array(f[name[0]+'/data']).shape[0]
-    print(ncfgs)
     pre_weight = weight
     cnfgs_list_string = vf.GETTING_MIN_MAX_CONFIGS(hdf5NameSingle) 
-    cnfgs_list = np.arange(int(cnfgs_list_string[0]), int(cnfgs_list_string[1]), int(cnfgs_list_string[2]))
+    cnfgs_list = np.arange(int(cnfgs_list_string[0])-1, int(cnfgs_list_string[1])+1, int(cnfgs_list_string[2]))
     worked_weight = []
     for ii in range(len(cnfgs_list)):
         worked_weight.append(pre_weight[cnfgs_list[ii]])   
-    print("Size of the worked weight: ", np.array(worked_weight).shape)
     weight = np.array(vf.RW_NORMALIZATION(worked_weight,ncfgs), dtype=np.float64)
 
 ### List of tmaxs used for the fitting procedure. 
@@ -57,7 +55,8 @@ listTMaxSingleHads = [25,25,25,25,25,25,25,25,25,25, 25,25,25,25,25,25,25,25,25,
     #for jx in range(0,np.array(f[name[ix]+'/data']).shape[1]):
         #list_tmax_multihads_ix.append(np.array(f[name[ix]+'/data']).shape[-1]+1)
     #list_tmax_multihads.append(list_tmax_multihads_ix)
-    
+
+### TMax used for the fits of correlation matrices    
 listTMaxMultiHads = [[25,22,23,19,17],
                        [22,24,24,23,23,22,20,17],
                        [24,25,23],
@@ -68,7 +67,11 @@ listTMaxMultiHads = [[25,22,23,19,17],
                        [24,23,24,22,22,20],
                        [23,22,24,24,24,23,24,23,23,23,23,19,19]]
 
+### Minimum time slices used for the fits of single hadron correlators.
 singleTMinsFitPlots = [8,10,10,10,10,10,8,10,10,10,10,10,10,10,10,8,8,8,6,8,8,8,8,8,6,8,8,8,10]
+
+
+### Minimum time slices for the fits of multihadron correlators
 multiTMinsFitPlots = [[14, 13, 13, 11, 8],  #PSQ0 G1g
                     [14, 14, 14, 13, 11, 11, 11, 8], #PSQ0 G1u
                     [14, 14, 14], #PSQ0 Hu

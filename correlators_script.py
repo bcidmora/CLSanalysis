@@ -4,11 +4,11 @@ import time
 import sys
 import set_of_functions as vf
 
-
 ### ------------------------------- START FUNCTIONS ----------------------------------------------------
 
 def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
+    ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
             rb, the_re_bin = 1, '' 
@@ -19,46 +19,57 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     else:
         rb, the_re_bin = 1, ''  
     
+    ### How many irreps do you want to study
     if kwargs.get('nr_irreps')!=None:
         the_nr_irreps = int(kwargs.get('nr_irreps'))
     else:
         the_nr_irreps = len(the_irreps)    
     
+    ### If not all configs, this can be changed.
     if kwargs.get('number_cfgs')==None:
         the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
     else:
         the_number_cnfgs = int(kwargs.get('number_cfgs'))
-        
-    op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
     
+    ### The list of operators
+    the_op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
+    
+    ### Resampling scheme
     if the_type_rs=='jk':
         the_resampling_scheme = 'Jackknife'
     elif the_type_rs=='bt':
         the_resampling_scheme = 'Bootstrap'
         if kwargs.get('kbt')==None:
-            k_bt = 500
+            k_bt = 500 # Default
             print('Missing argument: Bootstrap sample size. Using sample size equals to %s'%k_bt)
         else:
             k_bt = int(kwargs.get('kbt'))
-        if kwargs.get('own_kbt_list')==None:
+        if kwargs.get('own_kbt_list')==None: ### You can also choose random numbers from a list
             bt_cfgs = vf.RANDOM_GENERATOR(k_bt, int(the_number_cnfgs/rb))
         else:
             bt_cfgs = np.array(kwargs.get('own_kbt_list'))
 
+    ### The reweighting factors are renormalized according to the configs taken.
     the_weight = the_weight[:the_number_cnfgs]
-
+    
+    ### The binning now also includes the reweighting factors
     binned_rw = vf.BINNING(the_weight, rb)
+    
+    ### Normalized again with the binning
     norm_reweight = vf.RW_NORMALIZATION(binned_rw, len(binned_rw))
     
+    ### This is the single correlators data
     the_single_correlator_data = h5py.File(the_location+ '/Single_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version,'w')
     
     begin_time = time.time()
+    ### Start of the analysis for the nr. of irreps.
     for j in range(the_nr_irreps):
-        the_op_list = list(the_archivo[the_irreps[j]].attrs[op])
+        the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
         the_size_matrix = len(the_op_list)
         
-        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
+        the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
         
+        ### Time slices
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
         the_max_nt = int(the_times[1][the_times[1].index('= ')+2:])
@@ -66,7 +77,8 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         
         print('-->   IRREP (%s/'%str(j+1) + str(len(the_irreps)) +'): ', the_irreps[j])
         
-        rw_datos = vf.REWEIGHTED_CORR(datos_raw.real, the_weight)
+        ### Reweighted data set
+        rw_datos = vf.REWEIGHTED_CORR(the_datos_raw.real, the_weight)
         if kwargs.get('rebin_on')=='rb':
             the_datos=[]
             for tt in range(len(rw_datos)):
@@ -75,6 +87,8 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
             the_datos = np.array(the_datos)
         else: 
             the_datos = np.array(rw_datos)
+        
+        ### Resampling
         if the_type_rs=='jk':
             the_rs = []
             for tt in range(len(the_datos)):
@@ -97,18 +111,18 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         group_corr_real = group_corr.create_group('Real')
         g_i.create_dataset('Operators', data=the_op_list) 
         
-        mrs_f_rs = np.array(vf.MEAN(the_rs))
+        the_mrs_f_rs = np.array(vf.MEAN(the_rs))
         
-        mrs_f = np.array(vf.MEAN(the_datos))
+        the_mrs_f = np.array(vf.MEAN(the_datos))
         
-        sigma_corr = np.array(vf.STD_DEV_MEAN(the_rs, mrs_f_rs, the_type_rs))
+        the_sigma_corr = np.array(vf.STD_DEV_MEAN(the_rs, the_mrs_f_rs, the_type_rs))
         
-        cov_corr = np.array(vf.COV_MATRIX(the_rs, mrs_f_rs, the_type_rs))
+        the_cov_corr = np.array(vf.COV_MATRIX(the_rs, the_mrs_f_rs, the_type_rs))
         
-        group_corr_real.create_dataset('Mean', data = mrs_f) 
-        group_corr_real.create_dataset('Sigmas', data = sigma_corr)
+        group_corr_real.create_dataset('Mean', data = the_mrs_f) 
+        group_corr_real.create_dataset('Sigmas', data = the_sigma_corr)
         group_corr_real.create_dataset('Resampled', data = the_rs) 
-        group_corr_real.create_dataset('Covariance_matrix', data = cov_corr)
+        group_corr_real.create_dataset('Covariance_matrix', data = the_cov_corr)
         j+=1
         print('Irrep nr.: '+ str(j) + ' out of ' +str(len(the_irreps)))
     the_single_correlator_data.close()
@@ -120,6 +134,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
 
 def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
+    ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
             rb, the_re_bin = 1, '' 
@@ -129,19 +144,23 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
             the_re_bin = '_bin'+str(rb)
     else:
         rb, the_re_bin = 1, ''  
-
-    op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
     
+    ### The list of operators
+    the_op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
+    
+    ### How many irreps do you want to study
     if kwargs.get('nr_irreps')!=None:
         the_nr_irreps = int(kwargs.get('nr_irreps'))
     else:
         the_nr_irreps = len(the_irreps)    
     
+    ### If not all configs, this can be changed.
     if kwargs.get('number_cfgs')==None:
         the_number_cnfgs = np.array(the_archivo[the_irreps[0]+'/data']).shape[0]
     else:
         the_number_cnfgs = int(kwargs.get('number_cfgs'))
 
+    ### Resampling scheme
     if the_type_rs=='jk':
         the_resampling_scheme = 'Jackknife'
     elif the_type_rs=='bt':
@@ -152,21 +171,28 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         else:
             k_bt = int(kwargs.get('kbt'))
         bt_cfgs = vf.RANDOM_GENERATOR(k_bt, int(the_number_cnfgs/rb))
-
+    
+    ### The reweighting factors are renormalized according to the configs taken.
     the_weight = the_weight[:the_number_cnfgs]
 
+    ### The binning now also includes the reweighting factors
     binned_rw = vf.BINNING(the_weight, rb)
+    
+    ### Normalized again with the binning
     norm_reweight = vf.RW_NORMALIZATION(binned_rw, len(binned_rw))
     
+    ### This is the single correlators data
     the_matrix_correlator_data = h5py.File(the_location + '/Matrix_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version,'w')    
     
     begin_time = time.time()
-    
+    ### Start of the analysis for the nr. of irreps.
     for j in range(the_nr_irreps):
-        the_op_list = list(the_archivo[the_irreps[j]].attrs[op])
+        the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
         the_size_matrix = len(the_op_list)
-        datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]    
-            
+        
+        the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
+        
+        ### Time slices
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
         the_max_nt = int(the_times[1][the_times[1].index('= ')+2:])
@@ -175,7 +201,8 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         print('\n----------------------------------------------')
         print(' -->   IRREP (%s/'%str(j+1) + str(len(the_irreps)) +'): ', the_irreps[j])
         
-        re_datos = vf.RESHAPING(datos_raw.real ,the_size_matrix)
+        ### Reweighted data set
+        re_datos = vf.RESHAPING(the_datos_raw.real)
         the_datos_n1_n2=[]
         if kwargs.get('rebin_on')=='rb':
             for n1 in range(the_size_matrix):
@@ -197,6 +224,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
                 the_datos_n1_n2.append(np.array(the_datos_n1))
             the_datos = np.array(the_datos_n1_n2,dtype=np.float64)
         
+        ### Resampling
         if the_type_rs=='jk':
             the_rs=[]
             for n1 in range(the_size_matrix):
@@ -233,31 +261,30 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         group_corr = g_i.create_group('Correlators')
         group_corr_real = group_corr.create_group('Real')
 
-        mrs_f_real=[]
-        rs_mean_real = []
+        the_mrs_f_real, the_rs_mean_real = [], []
         for n1 in range(the_size_matrix):
-            mrs_f_real_n1=[]
-            rs_mean_real_n1=[]
+            the_mrs_f_real_n1, the_rs_mean_real_n1 = [], []
             for n2 in range(the_size_matrix):
-                mrs_f_real_n1.append(np.array(vf.MEAN(the_datos[n1][n2])))
-                rs_mean_real_n1.append(np.array(vf.MEAN(the_rs[n1][n2])))
-            mrs_f_real.append(np.array(mrs_f_real_n1))
-            rs_mean_real.append(np.array(rs_mean_real_n1))
-        mrs_f = np.array(mrs_f_real)
-        mrs_f_rs = np.array(rs_mean_real)
+                the_mrs_f_real_n1.append(np.array(vf.MEAN(the_datos[n1][n2])))
+                the_rs_mean_real_n1.append(np.array(vf.MEAN(the_rs[n1][n2])))
+            the_mrs_f_real.append(np.array(the_mrs_f_real_n1))
+            the_rs_mean_real.append(np.array(the_rs_mean_real_n1))
         
-        sigmas_corr = []
+        the_mrs_f = np.array(the_mrs_f_real)
+        the_mrs_f_rs = np.array(the_rs_mean_real)
+        
+        the_sigmas_corr = []
         for ss in range(the_size_matrix):
-            sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], mrs_f_rs[ss][ss], the_type_rs)))
-        sigmas_corr=np.array(sigmas_corr)
+            the_sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], the_mrs_f_rs[ss][ss], the_type_rs)))
+        the_sigmas_corr=np.array(the_sigmas_corr)
         
         re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs, the_size_matrix)
-        re_mean = vf.RESHAPING_EIGENVALS_MEAN(mrs_f, the_size_matrix)
-        re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(mrs_f_rs, the_size_matrix)
-
+        re_mean = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f, the_size_matrix)
+        re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f_rs, the_size_matrix)
+        
         group_corr_real.create_dataset('Resampled',data=re_rs)
         group_corr_real.create_dataset('Mean', data= re_mean)
-        group_corr_real.create_dataset('Sigmas', data= sigmas_corr)
+        group_corr_real.create_dataset('Sigmas', data= the_sigmas_corr)
         j+=1
     the_matrix_correlator_data.close()
     end_time = time.time()

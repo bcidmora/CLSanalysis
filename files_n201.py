@@ -15,7 +15,6 @@ f = h5py.File(location+'data/N201/'+hdf5NameMulti,'r')
 f1 = h5py.File(location+'data/N201/'+hdf5NameSingle,'r')
 
 ### Reweighting factors
-# weight_raw = np.array([1.0]*len(f[list(f.keys())[0]+'/data'])) ###OLD
 weight_raw = np.array(np.loadtxt(location + 'data/N201/N201r001.ms1.dat_ascii', unpack=True))[1]
 
 ### How many irreps has each?
@@ -31,15 +30,18 @@ weight = np.array(vf.RW_NORMALIZATION(weight_raw, ncfgs), dtype=np.float64)
 ### List of tmaxs used for the fitting procedure. 
 listTMaxSingleHads = [np.array(f1[name1[0]+'/data']).shape[-1]]*len(name1)
 
+### TMax used for the fits of correlation matrices
 listTMaxMultiHads=[]
 for ix in range(0,len(name)):
     list_tmax_multihads_ix=[]
     for jx in range(0,np.array(f[name[ix]+'/data']).shape[1]):
         list_tmax_multihads_ix.append(np.array(f[name[ix]+'/data']).shape[-1])
     listTMaxMultiHads.append(list_tmax_multihads_ix)
-    
+
+### Minimum time slices used for the fits of single hadron correlators.    
 singleTMinsFitPlots = [6]*len(name1)
 
+### Minimum time slices for the fits of multihadron correlators
 multiTMinsFitPlots = []
 for ix in range(0,len(name)):
     multiTMinsFitPlots_ij=[]

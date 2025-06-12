@@ -21,6 +21,9 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         the_nt = [int(x) for x in dis_set[0]]
         the_nt_max = int(dis_set[1][0])
         the_nt_ticks = np.arange(the_nt[0], the_nt[-1], 2)
+        
+        the_op = list(the_single_fit_data[s_irreps[irrep]+'/Operators'])[0]
+        OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
                 
         da_irrep = vf.IrrepInfo(s_irreps[irrep])
         MomentumIrrep = da_irrep.TotalMomPlot
@@ -35,25 +38,26 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         plt.legend()
         plt.xlabel(r'$t_{min}$')
         plt.ylabel(r'$a_{t} \;\Delta E_{lab}$')
-        plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        # plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
         plt.xticks(the_nt_ticks)
         plt.tight_layout()
-        #plt.show()
+        # plt.show()
         fit_fig.savefig(the_location + 'Tmin_Fits_' + s_irreps[irrep][:4] +'_%s'%s_irreps[irrep][-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
         
         
-        print('Zoom Fits vs tmin plot in progress...')
-        zoom_fit_fig = plt.figure()
-        plt.errorbar(the_nt[5:int(len(the_nt)/2)], the_mean_corr[5:int(len(the_nt)/2)], yerr = the_sigmas_corr[5:int(len(the_nt)/2)], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5)
-        plt.errorbar([the_nt[the_tmins[irrep]- the_nt[0] ]], [the_mean_corr[the_tmins[irrep]- the_nt[0] ]], yerr = [the_sigmas_corr[the_tmins[irrep]] - the_nt[0] ], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, markerfacecolor = 'white' , capsize=2.5, label = r'$t_{min} = %s$'%str(int(the_nt[the_tmins[irrep]-the_nt[0]])) + '\n' +  r'$t_{max} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_tmins[irrep]-the_nt[0]],3) + '\n' + r'$E_{fit} = %s$'%np.round(the_mean_corr[the_tmins[irrep]-the_nt[0]], 5))
-        plt.legend()
-        plt.xlabel(r'$t_{min}$')
-        plt.ylabel(r'$a_{t} \;\Delta E_{lab}$')
-        plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
-        plt.xticks(the_nt_ticks[3:6])
-        plt.tight_layout()
-        #plt.show()
-        zoom_fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + s_irreps[irrep][:4] +'_%s'%s_irreps[irrep][-1] + '_%sexp'%the_nr_exps + the_rebin +'_v%s.pdf'%the_version)
+        # print('Zoom Fits vs tmin plot in progress...')
+        # zoom_fit_fig = plt.figure()
+        # plt.errorbar(the_nt[5:int(len(the_nt)/2)], the_mean_corr[5:int(len(the_nt)/2)], yerr = the_sigmas_corr[5:int(len(the_nt)/2)], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, capsize=2.5)
+        # plt.errorbar([the_nt[the_tmins[irrep]- the_nt[0] ]], [the_mean_corr[the_tmins[irrep]- the_nt[0] ]], yerr = [the_sigmas_corr[the_tmins[irrep]] - the_nt[0] ], marker='o', ls='None', ms=4, markeredgewidth=1.1, lw=0.85, elinewidth=0.85, zorder=3, markerfacecolor = 'white' , capsize=2.5, label = r'$t_{min} = %s$'%str(int(the_nt[the_tmins[irrep]-the_nt[0]])) + '\n' +  r'$t_{max} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_tmins[irrep]-the_nt[0]],3) + '\n' + r'$E_{fit} = %s$'%np.round(the_mean_corr[the_tmins[irrep]-the_nt[0]], 5))
+        # plt.legend()
+        # plt.xlabel(r'$t_{min}$')
+        # plt.ylabel(r'$a_{t} \;\Delta E_{lab}$')
+        # plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        # plt.xticks(the_nt_ticks[3:6])
+        # plt.tight_layout()
+        # #plt.show()
+        # zoom_fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + s_irreps[irrep][:4] +'_%s'%s_irreps[irrep][-1] + '_%sexp'%the_nr_exps + the_rebin +'_v%s.pdf'%the_version)
         
         
         
@@ -65,7 +69,8 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         plt.legend()
         plt.xlabel(r'$t_{min}$')
         plt.ylabel(r'$\chi^{2}/d.o.f $')
-        plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        # plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
         plt.xticks(the_chi_nt_ticks)
         plt.tight_layout()
         #plt.show()
@@ -80,7 +85,8 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         plt.legend()
         plt.xlabel(r'$t_{min}$')
         plt.ylabel(r'$\chi^{2}$')
-        plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        # plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
         plt.xticks(the_chi_nt_ticks)
         plt.tight_layout()
         total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + s_irreps[irrep][:4] +'_%s'%s_irreps[irrep][-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
@@ -93,7 +99,8 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         plt.legend()
         plt.xlabel(r'$t_{min}$')
         plt.ylabel(r'$\Delta\chi^{2}$')
-        plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        # plt.title( s_irreps[irrep][-1] + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
+        plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
         plt.xticks(the_chi_nt_ticks)
         plt.tight_layout()
         #plt.show()
@@ -231,7 +238,6 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
-
 
 
 ### --------------------------------------------------------------------------------------------------
