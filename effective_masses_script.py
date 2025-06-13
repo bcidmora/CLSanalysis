@@ -14,39 +14,53 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
     if kwargs.get('dist_eff_mass')!=None and kwargs.get('dist_eff_mass')!=1:
         the_dist_eff_mass = int(kwargs.get('dist_eff_mass'))
     else:
-        the_dist_eff_mass = 1 
+        the_dist_eff_mass = 1 # Default is 1
     
     ### The irreps
     the_list_name_irreps = list(the_single_correlator_data.keys())
     
     begin_time = time.time()
     for j in range(len(the_list_name_irreps)):
+        
+        ### Extracting data from file
         this_data = the_single_correlator_data[the_list_name_irreps[j]]
                 
+        ### Getting the operators list and the time interval
         the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         
-        the_size_matrix = len(the_op_list)
+        ### 
+        # the_size_matrix = len(the_op_list)
         
+        ### The real part of the resampled data
         the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
         the_rs_real = vf.NT_TO_NCFGS(the_rs_real)
         
+        ### If the Effective Masses were already computed, this part gets deleted and created a new branch.
         if 'Effective_masses' in this_data.keys(): del the_single_correlator_data[the_list_name_irreps[j]+'/Effective_masses']
         
         group_em = this_data.create_group('Effective_masses')
-        the_mrs_f_real = np.array(this_data.get('Correlators/Real/Mean'))
         
-        the_em_rs_f =  vf.EFF_MASS(the_mrs_f_real, the_dist_eff_mass)
+        ### Mean values of the real part of the correlator to get the effective masses
+        the_mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))
         
-        l=0; the_em_rs=[]
+        ### Effective Mass computation
+        the_em_rs_f =  vf.EFF_MASS(the_mean_corr_real, the_dist_eff_mass)
+        
+        ### Loop over the resampled data
+        l, the_em_rs = 0, []
         for l in range(len(the_rs_real)):
             the_em_rs.append(vf.EFF_MASS(the_rs_real.real[l],the_dist_eff_mass))
+        
+        ### Reshaping data
         the_em_rs = vf.NCFGS_TO_NT(the_em_rs)
         
+        ### Getting the mean value of the resamples
         the_mrs_f_real_rs  = []
         for tt in range(len(the_em_rs)):
             the_mrs_f_real_rs.append(np.mean(the_em_rs[tt]))
         the_mrs_f_real_rs = np.array(the_mrs_f_real_rs)
         
+        ### Sigma values for the resamples
         the_sigma_eff_mass = vf.STD_DEV_MEAN(the_em_rs, the_mrs_f_real_rs, the_type_rs)
         
         group_em.create_dataset('Mean', data=the_em_rs_f)
@@ -71,38 +85,55 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
         
     begin_time = time.time()
     for j in range(len(the_list_name_irreps)): 
+        
+        ### Extracting data from file
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
         
+        ### Getting the operators list and the time interval
         the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        
+        ### This is the size of the correlator matrices
         the_size_matrix = len(the_op_list)
 
+        ### The real part of the resampled data
         the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
+        
+        ### Mean values of the real part of the correlator to get the effective masses
         the_mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))
-
+        
+        ### Reshaping data
         the_reshaped_mean_corr = vf.RESHAPING_CORRELATORS(the_mean_corr_real)
         the_reshaped_rs_corr = vf.RESHAPING_CORRELATORS_RS(the_rs_real)
         
+        ### Loop over the nr. of operators = size of the correlator matrix
         ii, the_efm_mass, the_sigma_efm = 0, [], []
         for ii in range(the_size_matrix):
+            
+            ### Effective Masses of the entral values of the correlators
             the_mean_eff = vf.EFF_MASS(the_reshaped_mean_corr[ii][ii],the_dist_eff_mass)
             
             the_efm_mass.append(the_mean_eff)
+            
+            ### Loop over the resamples
             the_rs_eff = []
             for xyz in range(len(the_rs_real[0])):
                 the_rs_eff.append(vf.EFF_MASS(the_reshaped_rs_corr[ii][ii][xyz], the_dist_eff_mass))
             
+            ### Reshaping data
             the_rs_eff = np.array(vf.NCFGS_TO_NT(the_rs_eff))
             
+            ### MEan value of the resampled data to compute the sigma vals.
             the_rs_mean_eff = vf.MEAN(the_rs_eff)
             the_sigma_efm.append(vf.STD_DEV_MEAN(the_rs_eff, the_rs_mean_eff, the_type_rs))
                 
+            ### If the branch Effective Masses exists in the file, then it gets deleted and created a new one with the new values.
             if 'Effective_masses' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses']
             this_data.get('Correlators/Real').create_dataset('Effective_masses', data=np.array(the_efm_mass))
             
             if 'Effective_masses_sigmas' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses_sigmas']
             this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(the_sigma_efm))
             
-        
+        ### If the GEVP was performed, then it will identify this section.
         if 'GEVP' not in this_data.keys(): j+=1; print('Irrep nr.: '+ str(j) + ' out of ' +str(len(the_list_name_irreps))); continue
         else:
             
@@ -117,31 +148,37 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
                 the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
                 the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
                 
+                ### Loop over the total number of eigenvalues
                 the_eff_mass_mean , the_cov_eff_mass = [], []
                 for ls in range(the_size_matrix):
                     the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
                     the_eff_mass_mean.append(the_average)
                     
+                    ### Loop over the resamples of the eigenvalues
                     the_eff_mass_rs = []
                     for zz in range(the_evalues_rs_f.shape[1]):
                         the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
+                    
+                    ### Reshaping the data
                     the_eff_mass_rs = np.array(vf.NCFGS_TO_NT(the_eff_mass_rs))
+                    
+                    ### Here the statistical errors of the resampled data are computed
                     the_eff_rs_mean = vf.MEAN(np.array(the_eff_mass_rs))
                     the_cov_eff_mass.append(vf.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
                 
                 group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
                 group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
                 
-               
+            ### If the Operator Analysis was performed, this section will also be identified. 
             if 'Operators_Analysis' in this_data.keys():
                 
                 print("Effective Masses of NEW GEVP eigenvalues in process...")
                 
-                for op in range(the_size_matrix):
+                for the_op in range(the_size_matrix):
                     
-                    print("Eigenvalue = %s"%str(op))
+                    print("Eigenvalue = %s"%str(the_op))
                     
-                    gevp_group = this_data.get('Operators_Analysis/Op_%s'%op)
+                    gevp_group = this_data.get('Operators_Analysis/Op_%s'%the_op)
                     for item in gevp_group.keys():
                         if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
                         
@@ -149,11 +186,13 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
                         the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
                         the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
                         
+                        ### Loop over the eigenvalues
                         eff_mass_rs_f=[]; the_eff_mass_mean = []; the_cov_eff_mass=[]; 
                         for ls in range(len(the_evalues_rs_f)):
                             the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
                             the_eff_mass_mean.append(the_average)
                             
+                            ### Loop over their resamples
                             the_eff_mass_rs = []
                             for zz in range(the_evalues_rs_f.shape[1]):
                                 the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
