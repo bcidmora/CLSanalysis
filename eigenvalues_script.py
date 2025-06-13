@@ -29,27 +29,45 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
     the_sorting = kwargs.get('sorting')
     if the_sorting==None or the_sorting=='eigenvals':
         print("Sorting states based on Eigenvalues.")
+        ### This function returns the eigenvalues sorted from the largest to the smallest.
         the_sorting_process = vf.SORTING_EIGENVALUES
+        
     elif the_sorting=='vecs_fix':
         print("Sorting states by Eigenvectors with a fixed reference time slice.")
+        ### This function returns the eigenvalues sorted based on the orthogonality of the eigenvectors based on a reference time slice where the eigenstated are already sorted.
         the_sorting_process = vf.SORTING_EIGENVECTORS        
+        
     elif the_sorting=='vecs_fix_norm':
+        ### This function returns the eigenvalues sorted based on the orthogonality of the normalized eigenvectors based on a reference time slice where the eigenstated are already sorted.
         print("Sorting states by normalized Eigenvectors with a fixed reference time slice.")
         the_sorting_process = vf.SORTING_EIGENVECTORS_NORMALIZED
+        
     elif the_sorting=='vecs_var':
         print("Sorting states by Eigenvectors with a varying reference time slice.")
+        ### This function returns the eigenvalues sorted based on the orthogonality of the eigenvectors based on the previous reference time slice.
         the_sorting_process = vf.SORTING_EIGENVECTORS_CHANGING_TSLICE
+        
     elif the_sorting=='vecs_var_norm':
         print("Sorting states by normalized Eigenvectors with a varying reference time slice.")
+        ### This function returns the eigenvalues sorted based on the orthogonality of the normalized eigenvectors based on the previous reference time slice.
         the_sorting_process = vf.SORTING_EIGENVECTORS_NORMALIZED_CHANGING_TSLICE
 
     begin_time = time.time()
     for j in range(len(the_list_name_irreps)):        
+        
+        ### The data to analise is extracted here
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
+        
+        ### The list of operators of the correlation matrix and the time slices.
         the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        
+        ### The size of each correlation matrix
         the_size_matrix = len(the_op_list)
         
+        ### The resampled correlators
         the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
+        
+        ### The central values of the original correlators
         the_mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))    
         the_mean_corr = np.array(the_mean_corr_real, dtype=np.float128)
         
@@ -63,13 +81,17 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         if 'GEVP' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/GEVP']
         group_gevp = this_data.create_group('GEVP')
         
+        ### This is a loop over the t0s
         the_t0_init=0
         for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):               
+            
+            ### This is the reference correlation matrix for the GEVP
             the_ct0_mean = np.array(the_mean_corr[the_t0_init])
             
             the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
             the_evalues_rs, the_evectors_rs, the_evectors_rs_ct0 =[], [], []
             
+            ### Loop over the time slices. Diagonalization in each time slice.
             ttt=0
             for ttt in range(len(the_mean_corr)):
                 try:
@@ -81,14 +103,18 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                 except np.linalg.LinAlgError:
                     print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                     break
+            ### The eigenvalues are sorted once by order of magnitude and then with whatever method chosen
             the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
             if the_sorting!=None or the_sorting!='eigenvals':
                 the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
+            
+            ### Loop over the time slices. Diagonalization in each time slice.
             ttt=0
             for ttt in range(len(the_mean_corr)):
                 the_evalues_rs_raw, the_evectors_rs_raw, the_evectors_rs_ct0_raw = [], [], []
                 xyz = 0
                 try:
+                    ### Loop over the resamples
                     for xyz in range(the_rs_real.shape[1]):
                         the_ct0 = np.array(the_rs_real[the_t0_init][xyz])
                         dis_resample = the_rs_real[ttt][xyz]
@@ -106,12 +132,15 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
             
             if len(the_evalues_rs)>0:
                 
+                ### Reshaping eigenvectors and eigenvalues for sorting
                 the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                 the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
                 
+                ### Loop over the resamples (sorting)
                 for xyz in range(len(the_mod_evals_rs)):
                     the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
                 
+                ### Reshaping again to save them in a file
                 the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
                 the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
                 
@@ -120,20 +149,31 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                 the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
                 the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_size_matrix), dtype=np.float128)
                 
+                ### Getting the statistical error and the covariance matrix for each eigenvalue.
                 l, the_sigma_2 = 0, []
                 for l in range(the_size_matrix):
                     dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
                     the_evals_fits_rs_mean = vf.MEAN(dis_eign)
                     the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
                 
-                the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
-                # the_evecs_mean = np.array(the_evecs_mean)
+                ### Here we could save the eigenvectors from the GEVP or from the NON-GEVP
+                
+                ### GEVP eigenvectors (central values)
+                # the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
+                ### NON-GEVP eigenvectors (central values)
+                the_evecs_mean = np.array(the_evecs_mean)
                 
                 group_eigvecs = group_t0.create_group('Eigenvectors')
-                group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
-                # group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-                group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
-                # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+                
+                ### GEVP eigenvectors
+                # group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
+                ### NON-GEVP eigenvectors
+                group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+                
+                ### GEVP eigenvectors (resamples)
+                # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
+                ### NON-GEVP eigenvectors (resamples
+                group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
                 
                 group_eigns = group_t0.create_group('Eigenvalues')
                 group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
@@ -147,7 +187,6 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
-
 
 
 
@@ -183,7 +222,7 @@ if __name__=="__main__":
     
     myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
     
-    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, t0_min = myT0Min, t0_max = myT0Max)
+    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting='vecs_fix' )
     myMatrixCorrelatorData.close()   
     
     print('-'*(len(myArchivo)+1))
