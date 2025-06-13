@@ -24,7 +24,7 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
         print('Error: T0 min or T0 max not valid.')
         sys.exit('Quitting.')
     else:
-        t0_min, t0_max = int(kwargs.get('t0_min')), int(kwargs.get('t0_max'))
+        the_t0_min, the_t0_max = int(kwargs.get('t0_min')), int(kwargs.get('t0_max'))
     
     ### What type of sorting of the eigenstates
     the_sorting = kwargs.get('sorting')
@@ -47,7 +47,7 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
     begin_time = time.time()
     for j in range(the_nr_irreps):
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
-        the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         the_size_matrix = len(the_op_list)
         
         if 'Operators_Analysis' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis']
@@ -71,12 +71,12 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             the_mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,the_size_matrix-1)
             the_rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,the_size_matrix-1)
             
-            print('Size of the Correlation matrix: ' + str(the_size_matrix-1)+ 'x' + str(the_size_matrix-1) +  '\nTime slices: '+str(nt[0])+' - '+str(nt[-1]) + '\nResampling data: %s '%the_type_rs+ '\n----------------------------------------------')
+            print('Size of the Correlation matrix: ' + str(the_size_matrix-1)+ 'x' + str(the_size_matrix-1) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data: %s '%the_type_rs+ '\n----------------------------------------------')
             print('      OPERATOR REMOVED \n----------------------------------------------')
             print('       '+str(the_op_list[ii].decode('utf-8')))
             
             the_t0_init=0
-            for the_t0_init in range(np.abs(t0_min - nt[0]), (t0_max - nt[0]) + 1):                   
+            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):                   
                 the_ct0_mean = np.array(the_mean_corr[the_t0_init])
                 
                 the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
@@ -91,7 +91,7 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                         the_evecs_mean_ct0.append(the_evc_mean)
                         the_evecs_mean.append(the_evec_mean_nongevp)
                     except np.linalg.LinAlgError:
-                        print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + nt[0]))
+                        print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                         break
                 the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
                 if the_sorting!=None or the_sorting!='eigenvals':
@@ -125,29 +125,29 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
                     the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
                     
-                    group_t0 = group_i.create_group('t0_%s'%(the_t0_init+nt[0]))
+                    group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
                     
                     the_evecs_mean = np.array(the_evecs_mean)
 
                     the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
                     
-                    evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(evalues_rs), the_size_matrix-1), dtype=np.float64)
+                    the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(evalues_rs), the_size_matrix-1), dtype=np.float128)
                     
                     group_eigvecs = group_t0.create_group('Eigenvectors')
                     group_eigvecs.create_dataset('Resampled', data=evectors_rs)
                     group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
                     
-                    l, the_sigma_2 = 0, []
-                    for l in range(the_size_matrix):
-                        dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
+                    the_l, the_sigma_2 = 0, []
+                    for the_l in range(the_size_matrix):
+                        dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[the_l])
                         evals_fits_rs_mean = vf.MEAN(dis_eign)
                         the_sigma_2.append(vf.COV_MATRIX(dis_eign, evals_fits_rs_mean, the_type_rs))
 
                     group_eigns = group_t0.create_group('Eigenvalues')
-                    group_eigns.create_dataset('Resampled', data = evals_fits_rs)
+                    group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
                     group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
-                    group_eigns.create_dataset('Covariance_matrix', data = np.array(sigma_2))
-                    print('T0 = %s'%str(the_t0_init + nt[0]) + '... DONE')
+                    group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
+                    print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
         j+=1
     end_time = time.time()
             
@@ -200,7 +200,7 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
     for j in range(the_nr_irreps):
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
         
-        the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         the_size_matrix = len(the_op_list)
         
         if 'Operators_Analysis' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis']
@@ -220,86 +220,91 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             the_mean_corr = np.array(the_new_corrs[0], dtype=np.float128)
             the_rs_real = np.array(the_new_corrs[1], dtype=np.float128)
             
-            mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,len(the_mean_corr))
-            rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,len(the_rs_real))
+            the_mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,len(the_mean_corr))
+            the_rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,len(the_rs_real))
             
-            print('Size of the Correlation matrix: ' + str(len(the_mean_corr))+ 'x' + str(len(the_mean_corr)) +  '\nTime slices: '+str(nt[0])+' - '+str(nt[-1]) + '\nResampling data (%s) '%the_resampling_scheme + str(the_rs_real.shape[-1]) + '\n----------------------------------------------')
+            print('Size of the Correlation matrix: ' + str(len(the_mean_corr))+ 'x' + str(len(the_mean_corr)) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s) '%the_resampling_scheme + str(the_rs_real.shape[-1]) + '\n----------------------------------------------')
             print('      OPERATOR ADDED \n----------------------------------------------')
             print('       '+str(the_op_list[ii].decode('utf-8')))
-            
-            
 
-            t0_init=0
-            for t0_init in range(np.abs(the_t0_min - nt[0]), (the_t0_max - nt[0]) + 1):                   
-                my_ct0_mean = np.array(mean_corr[t0_init])
+            the_t0_init=0
+            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):                   
+                the_ct0_mean = np.array(the_mean_corr[the_t0_init])
                 
-                evals_mean, evecs_mean, evecs_mean_ct0 = [], [], []
-                evalues_rs, evectors_rs, evectors_rs_ct0 =[], [], []
+                the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
+                the_evalues_rs, the_evectors_rs, the_evectors_rs_ct0 =[], [], []
                 
                 ttt=0
-                for ttt in range(len(mean_corr)):
+                for ttt in range(len(the_mean_corr)):
                     try:
-                        evs_mean, evc_mean = eigh(mean_corr[ttt], b=my_ct0_mean, eigvals_only=False, type=1, driver='gv')   
-                        if ttt>t0_init:
-                            evals_mean.append(np.flip(np.array(evs_mean)))
-                            evec = np.flip(evc_mean); ppp=0
-                            for ppp in range(len(evec)):
-                                evec[ppp] = np.array(np.flip(evec[ppp]))
-                            evc_mean = evec
-                        else:
-                            evals_mean.append(np.array(evs_mean))
-                            evc_mean = np.array(evc_mean)
-                        evecs_mean.append(evc_mean)
+                        the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) # GEVP   
+                        the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr[ttt], eigvals_only=False) #NON-GEVP
+                        the_evals_mean.append(the_evs_mean)
+                        the_evecs_mean_ct0.append(the_evc_mean)
+                        the_evecs_mean.append(the_evec_mean_nongevp)
                     except np.linalg.LinAlgError:
-                        print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(t0_init + nt[0]))
+                        print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                         break
-                    
+                the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
+                if the_sorting!=None or the_sorting!='eigenvals':
+                    the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
+                
                 ttt=0
-                for ttt in range(len(mean_corr)):
-                    evalues_rs_raw, evectors_rs_raw, evectors_rs_ct0_raw = [], [], []
+                for ttt in range(len(the_mean_corr)):
+                    the_evalues_rs_raw, the_evectors_rs_raw, the_evectors_rs_ct0_raw = [], [], []
                     xyz = 0
                     try:
-                        for xyz in range(rs_real.shape[1]):
-                            my_ct0 = np.array(rs_real[t0_init][xyz])
-                            dis_resample = rs_real[ttt][xyz]
-                            ew_rs, ev_rw = eigh(dis_resample, b= my_ct0, eigvals_only=False,type=1,driver='gv')
-                            if ttt>t0_init: 
-                                evalues_rs_raw.append(np.flip(np.array(ew_rs)))
-                                evecs = np.flip(ev_rw); ppp=0
-                                for ppp in range(len(evecs)):
-                                    evecs[ppp] = np.array(np.flip(evecs[ppp]), dtype=np.float128)
-                                evecs_flip = evecs
-                            else: 
-                                evalues_rs_raw.append(np.array(ew_rs))
-                                evecs_flip = np.array(ev_rw, dtype=np.float128)
-                            evectors_rs_raw.append(np.array(evecs_flip))
-                        evalues_rs.append(np.array(evalues_rs_raw)); 
-                        evectors_rs.append(np.array(evectors_rs_raw))
+                        for xyz in range(the_rs_real.shape[1]):
+                            the_ct0 = np.array(the_rs_real[the_t0_init][xyz])
+                            dis_resample = the_rs_real[ttt][xyz]
+                            the_ew_rs, the_ev_rw = eigh(dis_resample, b=the_ct0, eigvals_only=False) #GEVP 
+                            the_ew_rs_nongevp, the_ev_rw_nongevp = eigh(dis_resample, eigvals_only=False) #NON-GEVP
+                            
+                            the_evalues_rs_raw.append(np.array(the_ew_rs))
+                            the_evectors_rs_ct0_raw.append(np.array(the_ev_rw, dtype=np.float128))
+                            the_evectors_rs_raw.append(np.array(the_ev_rw_nongevp,dtype=np.float128))
+                        the_evalues_rs.append(np.array(the_evalues_rs_raw))
+                        the_evectors_rs_ct0.append(np.array(the_evectors_rs_ct0_raw))
+                        the_evectors_rs.append(np.array(the_evectors_rs_raw))
+                        
                     except np.linalg.LinAlgError: break
                 
-                if len(evalues_rs)>0:
-                    group_t0 = group_i.create_group('t0_%s'%(t0_init+nt[0]))
+                if len(the_evalues_rs)>0:
                     
-                    evecs_mean = np.array(evecs_mean)
+                    the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
+                    the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+                    
+                    for xyz in range(len(the_mod_evals_rs)):
+                        the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+                    
+                    the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
+                    the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
+                    
+                    group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
 
-                    eigevals_final_mean = vf.NT_TO_NCFGS(evals_mean)
-                    evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(evalues_rs), len(the_mean_corr)), dtype=np.float128)
+                    the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
+                    the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_evalues_rs.shape[-1]), dtype=np.float128)
+                    
+                    l, the_sigma_2 = 0, []
+                    for l in range(the_evals_fits_rs.shape[0]):
+                        dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
+                        the_evals_fits_rs_mean = vf.MEAN(dis_eign)
+                        the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
+
+                    the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
+                    # the_evecs_mean = np.array(the_evecs_mean)
                     
                     group_eigvecs = group_t0.create_group('Eigenvectors')
-                    group_eigvecs.create_dataset('Resampled', data=evectors_rs)
-                    group_eigvecs.create_dataset('Mean', data=evecs_mean)
+                    group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
+                    # group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+                    group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
+                    # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
                     
-                    l=0; sigma_2 = []
-                    for l in range(len(the_mean_corr)):
-                        dis_eign = vf.NCFGS_TO_NT(evals_fits_rs[l])
-                        evals_fits_rs_mean = vf.MEAN(dis_eign)
-                        sigma_2.append(vf.COV_MATRIX(dis_eign, evals_fits_rs_mean, the_type_rs))
-
                     group_eigns = group_t0.create_group('Eigenvalues')
-                    group_eigns.create_dataset('Resampled', data = evals_fits_rs)
-                    group_eigns.create_dataset('Mean', data = eigevals_final_mean)
-                    group_eigns.create_dataset('Covariance_matrix', data = np.array(sigma_2))
-                    print('T0 = %s'%str(t0_init + nt[0]) + '... DONE')
+                    group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
+                    group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
+                    group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
+                    print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
         j+=1
     end_time = time.time()
                 
