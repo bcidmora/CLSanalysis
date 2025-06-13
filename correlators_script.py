@@ -4,6 +4,7 @@ import time
 import sys
 import set_of_functions as vf
 
+
 ### ------------------------------- START FUNCTIONS ----------------------------------------------------
 
 def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
@@ -64,21 +65,34 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     begin_time = time.time()
     ### Start of the analysis for the nr. of irreps.
     for j in range(the_nr_irreps):
+        
+        ### The list of operators 
         the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
+        
+        ### The size of the matrix for the single hadrons is always 1
         the_size_matrix = len(the_op_list)
         
+        ### Extracting the original/raw data for the analysis
         the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
         
         ### Time slices
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
+        
+        ### Min time slice
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
+        
+        ### Max time slice
         the_max_nt = int(the_times[1][the_times[1].index('= ')+2:])
+        
+        ### Total range
         the_nt = np.arange(the_min_nt,the_max_nt+1)
         
         print('-->   IRREP (%s/'%str(j+1) + str(len(the_irreps)) +'): ', the_irreps[j])
         
         ### Reweighted data set
         rw_datos = vf.REWEIGHTED_CORR(the_datos_raw.real, the_weight)
+        
+        ### If there is binning, then this applies to the  data and to the reweighting factors
         if kwargs.get('rebin_on')=='rb':
             the_datos=[]
             for tt in range(len(rw_datos)):
@@ -88,7 +102,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         else: 
             the_datos = np.array(rw_datos)
         
-        ### Resampling
+        ### Resampling must be done with the normalized reweighting factors
         if the_type_rs=='jk':
             the_rs = []
             for tt in range(len(the_datos)):
@@ -97,13 +111,20 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
             the_rs=[]
             for tt in range(len(the_datos)):
                 the_rs.append(np.array(vf.BOOTSTRAP(the_datos[tt], bt_cfgs, norm_reweight)))
+                
+        ### The resampled data
         the_rs = np.array(the_rs)
         
+        ### Information about the ongoing analysis
         print('----------------------------------------------\n               DATA SHAPE \n----------------------------------------------\nNr. of gauge configurations: ' +  str(len(the_datos[0])) + '\n' + 'Time slices: '+str(the_nt[0])+' to '+str(the_nt[-1]) +'\nResampling data (%s): '%the_resampling_scheme + str(len(the_rs[0])) + '\n....................................')
         print('      OPERATORS LIST ')
+        
+        ### Printing operators
         i=0
         for i in range(the_size_matrix):
             print('      -->>  '+str(the_op_list[i]))
+            
+        
         g_i = the_single_correlator_data.create_group(the_irreps[j]) 
         
         g_i.create_dataset('Time_slices', data=the_nt)
@@ -111,12 +132,16 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         group_corr_real = group_corr.create_group('Real')
         g_i.create_dataset('Operators', data=the_op_list) 
         
+        ### This is the mean value of the resampled correlators
         the_mrs_f_rs = np.array(vf.MEAN(the_rs))
         
+        ### This is the mean value of the original/raw correlators
         the_mrs_f = np.array(vf.MEAN(the_datos))
         
+        ### The statistical error of the resampled data
         the_sigma_corr = np.array(vf.STD_DEV_MEAN(the_rs, the_mrs_f_rs, the_type_rs))
         
+        ### The covariance matrix
         the_cov_corr = np.array(vf.COV_MATRIX(the_rs, the_mrs_f_rs, the_type_rs))
         
         group_corr_real.create_dataset('Mean', data = the_mrs_f) 
@@ -145,9 +170,6 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     else:
         rb, the_re_bin = 1, ''  
     
-    ### The list of operators
-    the_op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
-    
     ### How many irreps do you want to study
     if kwargs.get('nr_irreps')!=None:
         the_nr_irreps = int(kwargs.get('nr_irreps'))
@@ -160,6 +182,9 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     else:
         the_number_cnfgs = int(kwargs.get('number_cfgs'))
 
+    ### The list of operators
+    the_op = list(the_archivo[the_irreps[0]].attrs.keys())[1]
+    
     ### Resampling scheme
     if the_type_rs=='jk':
         the_resampling_scheme = 'Jackknife'
@@ -187,15 +212,25 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     begin_time = time.time()
     ### Start of the analysis for the nr. of irreps.
     for j in range(the_nr_irreps):
+         ### The list of operators 
         the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
+        
+        ### The size of the matrix
         the_size_matrix = len(the_op_list)
         
+        ### Extracting the original/raw data for the analysis
         the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
         
         ### Time slices
         the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
+        
+        ### Min time slice
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
+        
+        ### Max time slice
         the_max_nt = int(the_times[1][the_times[1].index('= ')+2:])
+        
+         ### Total range
         the_nt = np.arange(the_min_nt, the_max_nt+1)
         
         print('\n----------------------------------------------')
@@ -203,6 +238,8 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         
         ### Reweighted data set
         re_datos = vf.RESHAPING(the_datos_raw.real)
+        
+        ### If there is binning, then this applies to the  data and to the reweighting factors
         the_datos_n1_n2=[]
         if kwargs.get('rebin_on')=='rb':
             for n1 in range(the_size_matrix):
@@ -224,7 +261,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
                 the_datos_n1_n2.append(np.array(the_datos_n1))
             the_datos = np.array(the_datos_n1_n2,dtype=np.float64)
         
-        ### Resampling
+        ### Resampling must be done with the normalized reweighting factors
         if the_type_rs=='jk':
             the_rs=[]
             for n1 in range(the_size_matrix):
@@ -236,7 +273,6 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
                         rs_n1_t.append(vf.JACKKNIFE(dis_data[tt], norm_reweight))
                     rs_n1.append(np.array(rs_n1_t))
                 the_rs.append(rs_n1)
-            the_rs = np.array(the_rs)
         elif the_type_rs=='bt':
             the_rs=[]
             for n1 in range(the_size_matrix):
@@ -248,7 +284,9 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
                         rs_n1_t.append(vf.BOOTSTRAP(dis_data[tt], bt_cfgs, norm_reweight))
                     rs_n1.append(np.array(rs_n1_t))
                 the_rs.append(rs_n1)
-            the_rs = np.array(the_rs)     
+        
+        ### The resampled data    
+        the_rs = np.array(the_rs)     
         
         print('----------------------------------------------\n               DATA SHAPE \n----------------------------------------------\nNr. of gauge configurations: ' +  str(the_datos.shape[-1]) + '\nSize of the Correlation matrix: ' + str(the_size_matrix)+ 'x' + str(the_size_matrix) +  '\nTime slices: '+str(the_nt[0])+' to '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme+ str(the_rs.shape[-1])+ '\n....................................')
         print('      OPERATORS LIST ')
@@ -260,24 +298,30 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         g_i.create_dataset('Operators', data=the_op_list) 
         group_corr = g_i.create_group('Correlators')
         group_corr_real = group_corr.create_group('Real')
-
+        
+        ### Calculating the mean values of the datasets
         the_mrs_f_real, the_rs_mean_real = [], []
         for n1 in range(the_size_matrix):
             the_mrs_f_real_n1, the_rs_mean_real_n1 = [], []
             for n2 in range(the_size_matrix):
+                ### This is the mean value of the original/raw correlators
                 the_mrs_f_real_n1.append(np.array(vf.MEAN(the_datos[n1][n2])))
+                ### This is the mean value of the resampled correlators
                 the_rs_mean_real_n1.append(np.array(vf.MEAN(the_rs[n1][n2])))
             the_mrs_f_real.append(np.array(the_mrs_f_real_n1))
             the_rs_mean_real.append(np.array(the_rs_mean_real_n1))
         
+        
         the_mrs_f = np.array(the_mrs_f_real)
         the_mrs_f_rs = np.array(the_rs_mean_real)
         
+        ### The statistical error of the resampled data
         the_sigmas_corr = []
         for ss in range(the_size_matrix):
             the_sigmas_corr.append(np.array(vf.STD_DEV_MEAN(the_rs[ss][ss], the_mrs_f_rs[ss][ss], the_type_rs)))
         the_sigmas_corr=np.array(the_sigmas_corr)
         
+        ### Reshaping the data for later diagonizalization and extraction of eigenvalues
         re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs, the_size_matrix)
         re_mean = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f, the_size_matrix)
         re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f_rs, the_size_matrix)
@@ -296,10 +340,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
 
-
 ### --------------------------------------------------------------------------------------------------
-
-
 
 
 ### ------------------------------- START EXECUTING --------------------------------------------------
