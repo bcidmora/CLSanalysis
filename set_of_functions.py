@@ -22,7 +22,15 @@ def RANDOM_GENERATOR(k_size, cfgs_nr):
 # It receives a list [Ncfgs]
 # It returns the normalization factor
 def NORM_FACTOR(a_list):
-    return np.double(np.mean(a_list))
+    # return np.double(np.mean(a_list)) #OLD
+    return np.double(np.mean(a_list, dtype=np.float128))
+
+
+# It checks for hermiticity
+# a_matrix: is the matrix [N,N]
+def MAKES_HERMITIAN(a_matrix):
+    return np.float128(0.5)*(np.matrix(a_matrix)+np.conj(np.matrix(a_matrix).T))     
+    
 
 
 ### Comments:
@@ -85,8 +93,9 @@ def GETTING_MIN_MAX_CONFIGS(a_string):
 #This function is meant to reshape the multihadron correlators from [Ncfgs, N,N,nt] -> [N,N, Ncfgs,nt]. It receives:
 # a: The original data with that shape
 # s: the amount of operators to construct the NxN "matrix".
-def RESHAPING(a, s):
+def RESHAPING(a):
     ncfgs = len(a)
+    s = len(a[0])
     reshaped_corr=[]
     for n1 in range(s):
         reshaped_corr_n1=[]
@@ -102,8 +111,9 @@ def RESHAPING(a, s):
 # This function reshapes the correlators as: [nt, N, N] --> [N,N,nt]
 # a: the list to reshape
 # s: size of the matrix
-def RESHAPING_CORRELATORS(a,s):
+def RESHAPING_CORRELATORS(a):
     new_corr=[]
+    s=len(a[0])
     for n1 in range(s):
         new_corr_n =[]
         for n2 in range(s):
@@ -117,8 +127,9 @@ def RESHAPING_CORRELATORS(a,s):
 # This function reshapes the correlators as: [nt, Ncfgs, N, N] --> [N, N, Ncgfs, nt]
 # a: the list to reshape
 # s: size of the matrix
-def RESHAPING_CORRELATORS_RS(a,s):
+def RESHAPING_CORRELATORS_RS(a):
     new_corr=[]
+    s = a.shape[-1]
     for n1 in range(s):
         new_corr_n =[]
         for n2 in range(s):
@@ -135,7 +146,8 @@ def RESHAPING_CORRELATORS_RS(a,s):
 # This function reshapes the correlators as: [nt, Ncfgs, N, N] --> [N, N, nt, Ncgfs]
 # a: the list to reshape
 # s: size of the matrix
-def RESHAPING_CORRELATORS_RS_NT(a,s):
+def RESHAPING_CORRELATORS_RS_NT(a):
+    s=a.shape[-1]
     new_corr=[]
     for n1 in range(s):
         new_corr_n =[]
@@ -204,7 +216,35 @@ def RESHAPING_EIGENVALS_FOR_FITS(a,s):
         eig_corrs.append(np.array(corr_n))
     return np.array(eig_corrs)
 
-# This function reshapes the eigenvalues fro[Neigens, Ncfgs, nt] -->> [nt, Ncfgs, Neigens] 
+
+# This function reshapes the eigenvalues from [nt, Ncfgs, Neigens] -->> [Ncfgs, nt, Neigens]. This is used to obatin the fits easier later. 
+# a: is the list of eigenvals, n configs, and time slices.
+def RESHAPING_EIGEN_FOR_SORTING(a):
+    t_slices = a.shape[0]
+    ncfgs = a.shape[1]
+    eig_corrs = []
+    for nf in range(ncfgs):
+        corr_n=[]
+        for t_s in range(t_slices):
+            corr_n.append(np.array(a[t_s][nf]))
+        eig_corrs.append(np.array(corr_n))
+    return np.array(eig_corrs)
+
+
+# This function reshapes the eigenvalues from [Ncfgs, nt, Neigens] -->> [nt, Ncfgs, Neigens] . This is used to obatin the fits easier later. 
+# a: is the list of eigenvals, n configs, and time slices.
+def RESHAPING_EIGEN_FOR_SORTING_REVERSE(a):
+    t_slices = a.shape[1]
+    ncfgs = a.shape[0]
+    eig_corrs = []
+    for t_s in range(t_slices):
+        corr_n=[]
+        for nf in range(ncfgs):
+            corr_n.append(np.array(a[nf][t_s]))
+        eig_corrs.append(np.array(corr_n))
+    return np.array(eig_corrs) 
+
+# This function reshapes the eigenvalues from [Neigens, Ncfgs, nt] -->> [nt, Ncfgs, Neigens] 
 # a: is the list of eigenvals, n configs, and time slices.
 def RESHAPING_EIGENVALS_NN(a):
     t_slices = a.shape[2]
@@ -260,7 +300,7 @@ def SHRINK_MATRIX(c,low,up):
 
 #Comments:
 # This functions removes cols and rows from  a correlation matrix, leaving it squared as it should be. 
-# c: this is the mean value of correlator matrix. It has a shapre of [N, N, nt]
+# c: this is the mean value of correlator matrix. It has a shape of [N, N, nt]
 # r: This is the resampled correlator matrix. It has the shape [N, N, nt, Ncfgs]
 # ss: this is the index of the row/column to be removed
 def REMOVE_ROWS_COLS(c,r,ss):
@@ -277,6 +317,25 @@ def REMOVE_ROWS_COLS(c,r,ss):
             modified_mean_corr.append(np.array(the_mean_corr_ij))
             modified_rs_corr.append(np.array(the_rs_corr_ij))
     return [np.array(modified_mean_corr), np.array(modified_rs_corr)]
+
+
+#Comments:
+# This functions adds cols and rows from  a correlation matrix, leaving it squared as it should be. 
+# c: this is the mean value of correlator matrix. It has a shape of [N, N, nt]
+# r: This is the resampled correlator matrix. It has the shape [N, N, nt, Ncfgs]
+# ss: this is the index of the row/column to be added
+def ADD_ROWS_COLS(c,r,ss):
+    modified_mean_corr = []
+    modified_rs_corr  = []
+    for ij in range(ss):
+        the_mean_corr_ij = []
+        the_rs_corr_ij = []
+        for ji in range(ss):
+            the_mean_corr_ij.append(np.array(c[ij][ji]))
+            the_rs_corr_ij.append(np.array(r[ij][ji]))
+        modified_mean_corr.append(np.array(the_mean_corr_ij))
+        modified_rs_corr.append(np.array(the_rs_corr_ij))
+    return [np.array(modified_mean_corr), np.array(modified_rs_corr)]
             
 
 ## ------------------- EFFECTIVE MASSES -----------------------------------
@@ -284,11 +343,11 @@ def REMOVE_ROWS_COLS(c,r,ss):
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
 # a: shape [nt]
 # This is the old version of the Effective Masses. It can still be used, but the other one is more general
-# def EFF_MASS(a):
-#     meff=[]
-#     for i in range(len(a)-1):
-#         meff.append(np.log(np.double(a[i])/np.double(a[i+1])))
-#     return np.array(meff)
+def EFF_MASS_CLASSIC(a):
+    meff=[]
+    for i in range(len(a)-1):
+        meff.append(np.log(np.double(a[i])/np.double(a[i+1])))
+    return np.array(meff)
 
 
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
@@ -297,8 +356,165 @@ def REMOVE_ROWS_COLS(c,r,ss):
 def EFF_MASS(a,d):
     meff=[]
     for i in range(len(a)-d):
-        meff.append(np.log(np.double(a[i])/np.double(a[i+d])))
+        meff.append(np.log(np.abs(np.double(a[i])/np.double(a[i+d]))))
     return np.array(meff)
+
+# This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
+# a: shape [nt]
+# d: distance of two points, by default this is 1
+def EFF_MASS_COSH(a,d):
+    meff=[]
+    for i in range(len(a)-d):
+        meff.append(np.acosh(np.abs((np.double(a[i+d]) + np.double(a[i-d]))/np.double(2.*a[i]))))
+    return np.array(meff)
+
+
+## ------------------- SORTING STATES --------------------------------------
+
+
+# Comments: This function returns the new order based on the eigenvalues. They are ordered such that the largest eigenvalue and its corresponding eigenvector is at the right spot for all time slices based on a reference time slice. 
+# the_t0: this is the t0 used for the GEVP, the eigenvalues must be sorted after this reference time slice.
+# the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
+# the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
+def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
+    the_final_eigens = list(the_eigenvals[:the_t0+1])
+    the_final_eigenvecs = list(the_eigenvecs[:the_t0+1])
+    for ii in range(the_t0+1, len(the_eigenvals)):
+        the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)  
+        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+        the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+    return [the_final_eigens, the_final_eigenvecs]
+
+
+# Comments: This function checks for orthogonality of eigenvectors and returns the new order with the eigenvectors ordered such that they are associated to the corresponding state time slice by time slice. No normalization of the vectors
+# the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
+# the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
+def SORTING_EIGENVECTORS(the_t0, the_eigenvals, the_eigenvecs):
+    the_ref_tslice_eigenval = int((len(the_eigenvals)-the_t0)/3)
+    the_final_eigens, the_final_eigenvecs = list(the_eigenvals[:the_ref_tslice_eigenval+1]), list(the_eigenvecs[:the_ref_tslice_eigenval+1])
+    the_ref_eigenvec = the_eigenvecs[the_ref_tslice_eigenval]
+    for ii in range(the_ref_tslice_eigenval+1, len(the_eigenvals)):
+        ckl_k = []
+        for kk in range(len(the_ref_eigenvec)):
+            ckl_l = []
+            for ll in range(len(the_ref_eigenvec)):
+                ckl_l.append(np.abs(np.dot(the_ref_eigenvec[kk], the_eigenvecs[ii][ll].T)))
+            ckl_k.append(ckl_l)
+        ckl_k = np.matrix(ckl_k)
+        ckl = sorted([(ckl_k[i, j], i, j) for i in range(ckl_k.shape[0]) for j in range(ckl_k.shape[1])], reverse=True)
+        the_used_rows, the_used_cols, the_selected = set(), set(), []
+        the_top_n=None
+        for the_value, the_i, the_j in ckl:
+            if the_i not in the_used_rows and the_j not in the_used_cols:
+                the_selected.append([the_i, the_j]); the_used_rows.add(the_i) ; the_used_cols.add(the_j)
+                if the_top_n is not None and len(the_selected) >= the_top_n:
+                    break
+        the_sorted_indices = sorted(the_selected, key=lambda x: (x[0], x[1]))
+        the_sorted_indices = [the_sorted_indices[i][1] for i in range(len(the_sorted_indices))]
+        the_sorted_eigenvecs = np.array([the_eigenvecs[ii][i] for i in the_sorted_indices])
+        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+        the_final_eigenvecs.append(the_sorted_eigenvecs)
+    return [the_final_eigens, the_final_eigenvecs]
+
+
+
+# Comments: This function checks for orthogonality of eigenvectors and returns the new order with the eigenvectors ordered such that they are associated to the corresponding state time slice by time slice. Each vector is normalized first.
+# the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
+# the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
+def SORTING_EIGENVECTORS_NORMALIZED(the_t0, the_eigenvals, the_eigenvecs):
+    the_ref_tslice_eigenval = int((len(the_eigenvals)-the_t0)/3)
+    the_final_eigens, the_final_eigenvecs = list(the_eigenvals[:the_ref_tslice_eigenval+1]), list(the_eigenvecs[:the_ref_tslice_eigenval+1])
+    the_ref_eigenvec = the_eigenvecs[the_ref_tslice_eigenval]
+    for vec in range(len(the_ref_eigenvec)):
+        the_ref_eigenvec[vec] = np.abs(the_ref_eigenvec[vec]/np.linalg.norm(the_ref_eigenvec[vec]))
+    for ii in range(the_ref_tslice_eigenval+1, len(the_eigenvals)):
+        ckl_k = []
+        for kk in range(len(the_ref_eigenvec)):
+            ckl_l = []
+            for ll in range(len(the_ref_eigenvec)):
+                ckl_l.append(np.abs(np.dot(the_ref_eigenvec[kk], the_eigenvecs[ii][ll]/np.linalg.norm(the_eigenvecs[ii][ll].T))))
+            ckl_k.append(ckl_l)
+        ckl_k = np.matrix(ckl_k)
+        ckl = sorted([(ckl_k[i, j], i, j) for i in range(ckl_k.shape[0]) for j in range(ckl_k.shape[1])], reverse=True)
+        the_used_rows, the_used_cols, the_selected = set(), set(), []
+        the_top_n=None
+        for the_value, the_i, the_j in ckl:
+            if the_i not in the_used_rows and the_j not in the_used_cols:
+                the_selected.append([the_i, the_j]); the_used_rows.add(the_i) ; the_used_cols.add(the_j)
+                if the_top_n is not None and len(the_selected) >= the_top_n:
+                    break
+        the_sorted_indices = sorted(the_selected, key=lambda x: (x[0], x[1]))
+        the_sorted_indices = [the_sorted_indices[i][1] for i in range(len(the_sorted_indices))]
+        the_sorted_eigenvecs = np.array([the_eigenvecs[ii][i] for i in the_sorted_indices])
+        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+        the_final_eigenvecs.append(the_sorted_eigenvecs)
+    return [the_final_eigens, the_final_eigenvecs]
+
+
+# Comments: This function checks for orthogonality of eigenvectors and returns the new order with the eigenvectors ordered such that they are associated to the corresponding state time slice by time slice. No normalization of the vectors, and changing the reference time slice to compare with.
+# the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
+# the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
+def SORTING_EIGENVECTORS_CHANGING_TSLICE(the_t0, the_eigenvals, the_eigenvecs):
+    the_ref_tslice_eigenval = int((len(the_eigenvals)-the_t0)/3)
+    the_final_eigens, the_final_eigenvecs = list(the_eigenvals[:the_ref_tslice_eigenval+1]), list(the_eigenvecs[:the_ref_tslice_eigenval+1])
+    the_ref_eigenvec = the_eigenvecs[the_ref_tslice_eigenval]
+    for ii in range(the_ref_tslice_eigenval+1, len(the_eigenvals)):
+        ckl_k = []
+        for kk in range(len(the_ref_eigenvec)):
+            ckl_l = []
+            for ll in range(len(the_ref_eigenvec)):
+                ckl_l.append(np.abs(np.dot(the_ref_eigenvec[kk], the_eigenvecs[ii][ll].T)))
+            ckl_k.append(ckl_l)
+        ckl_k = np.matrix(ckl_k)
+        ckl = sorted([(ckl_k[i, j], i, j) for i in range(ckl_k.shape[0]) for j in range(ckl_k.shape[1])], reverse=True)
+        the_used_rows, the_used_cols, the_selected = set(), set(), []
+        the_top_n=None
+        for the_value, the_i, the_j in ckl:
+            if the_i not in the_used_rows and the_j not in the_used_cols:
+                the_selected.append([the_i, the_j]); the_used_rows.add(the_i) ; the_used_cols.add(the_j)
+                if the_top_n is not None and len(the_selected) >= the_top_n:
+                    break
+        the_sorted_indices = sorted(the_selected, key=lambda x: (x[0], x[1]))
+        the_sorted_indices = [the_sorted_indices[i][1] for i in range(len(the_sorted_indices))]
+        the_sorted_eigenvecs = np.array([the_eigenvecs[ii][i] for i in the_sorted_indices])
+        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+        the_final_eigenvecs.append(the_sorted_eigenvecs)
+        the_ref_eigenvec = the_sorted_eigenvecs # This is the part where the new sorted eigenvectors plays a role
+    return [the_final_eigens, the_final_eigenvecs]
+
+
+
+# Comments: This function checks for orthogonality of eigenvectors and returns the new order with the eigenvectors ordered such that they are associated to the corresponding state time slice by time slice
+# the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
+# the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
+def SORTING_EIGENVECTORS_NORMALIZED_CHANGING_TSLICE(the_t0, the_eigenvals, the_eigenvecs):
+    the_ref_tslice_eigenval = int((len(the_eigenvals)-the_t0)/3)
+    the_final_eigens, the_final_eigenvecs = list(the_eigenvals[:the_ref_tslice_eigenval+1]), list(the_eigenvecs[:the_ref_tslice_eigenval+1])
+    the_ref_eigenvec = the_eigenvecs[the_ref_tslice_eigenval]
+    for vec in range(len(the_ref_eigenvec)):
+        the_ref_eigenvec[vec] = np.abs(the_ref_eigenvec[vec]/np.linalg.norm(the_ref_eigenvec[vec]))
+    for ii in range(the_ref_tslice_eigenval+1, len(the_eigenvals)):
+        ckl_k = []
+        for kk in range(len(the_ref_eigenvec)):
+            ckl_l = []
+            for ll in range(len(the_ref_eigenvec)):
+                ckl_l.append(np.abs(np.dot(the_ref_eigenvec[kk], the_eigenvecs[ii][ll]/np.linalg.norm(the_eigenvecs[ii][ll].T))))
+            ckl_k.append(ckl_l)
+        ckl_k = np.matrix(ckl_k)
+        ckl = sorted([(ckl_k[i, j], i, j) for i in range(ckl_k.shape[0]) for j in range(ckl_k.shape[1])], reverse=True)
+        the_used_rows, the_used_cols, the_selected = set(), set(), []
+        the_top_n=None
+        for the_value, the_i, the_j in ckl:
+            if the_i not in the_used_rows and the_j not in the_used_cols:
+                the_selected.append([the_i, the_j]); the_used_rows.add(the_i) ; the_used_cols.add(the_j)
+                if the_top_n is not None and len(the_selected) >= the_top_n:
+                    break
+        the_sorted_indices = sorted(the_selected, key=lambda x: (x[0], x[1]))
+        the_sorted_indices = [the_sorted_indices[i][1] for i in range(len(the_sorted_indices))]
+        the_sorted_eigenvecs = np.array([the_eigenvecs[ii][i] for i in the_sorted_indices])
+        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+        the_final_eigenvecs.append(the_sorted_eigenvecs)
+    return [the_final_eigens, the_final_eigenvecs]
 
 
 ## ------------------- BINNING -------------------------------------------
@@ -312,7 +528,7 @@ def BINNING(a_list, bin_size):
     len_a = len(a_list)
     for hh in range(0,len_a, bin_size):
         if hh<len_a and len(rebinned_list)<int(len_a / bin_size):
-            rebinned_list.append(np.mean(a_list[hh:hh+bin_size]))
+            rebinned_list.append(np.mean(a_list[hh:hh+bin_size], dtype=np.float128))
     return np.array(rebinned_list, dtype=np.double)
 
 
@@ -364,7 +580,7 @@ def BOOTSTRAP(a_list, c_conf, dis_rw):
             bt_corr_k.append( np.double(a_list[k_th]) * np.double(dis_rw[k_th]))
             rw_bt_k.append(np.double(dis_rw[k_th]))
         k_norm_factor = NORM_FACTOR(rw_bt_k)
-        k_mean_corr = np.double(np.mean(bt_corr_k))
+        k_mean_corr = np.double(np.mean(bt_corr_k,dtype=np.float128))
         bt_corr.append(k_mean_corr / k_norm_factor)
     return np.array(bt_corr, dtype=np.double)
 
@@ -381,7 +597,7 @@ def JACKKNIFE(a, dis_rw):
                 corr.append(np.double(a[i]) * np.double(dis_rw[i]))
                 new_rw.append(dis_rw[i])
         j_norm_factor = np.double(NORM_FACTOR(new_rw))
-        corr_jack.append(np.double(np.mean(corr)) * j_norm_factor)
+        corr_jack.append(np.double(np.mean(corr,dtype=np.float128)) * j_norm_factor)
     return np.array(corr_jack,dtype=np.double)
 
 
@@ -393,8 +609,8 @@ def JACKKNIFE(a, dis_rw):
 def MEAN(a):
     tt=0; mean_val = []
     for tt in range(len(a)):
-        mean_val.append(np.double(np.mean(a[tt])))
-    return np.array(mean_val,dtype=np.double)
+        mean_val.append(np.double(np.mean(a[tt], dtype=np.float128)))
+    return np.array(mean_val,dtype=np.float128)
 
 # STATISTICAL ERROR
 # a: list generated from resampling, it has the shape [ nt, nconfigs]
@@ -431,6 +647,7 @@ def STD_DEV(a,b,c):
         sigma.append(np.double((np.double(a[ii]) - np.double(b))**2))
     sigma = np.sum(sigma)
     return np.sqrt(sigma*pre_factor)
+
 
 # STATISTICAL ERROR
 # a: list generated from resampling, it has the shape [nt, nconfigs]
@@ -535,6 +752,13 @@ class My_Fits:
 
 ### ------------------  PLOTTING STUFF --------------------------------------------------
 
+
+def SQUARED_MOM(the_mom_str):
+    the_mod_str = list(the_mom_str.split(','))
+    the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
+    return the_sqrd_mom
+    
+
 ### Comments:
 # This function receives an operator name and returns a string in a nice way to put in the plots. 
 def OPERATORS_SH(operator_name):
@@ -545,9 +769,72 @@ def OPERATORS_SH(operator_name):
             OperatorPlot = 'P[%s]'%new_op[-1].replace('_','')
         elif new_op[0].lower()=='kaon':
             OperatorPlot = 'k[%s]'%new_op[-1].replace('_','')
+        elif new_op[0].lower()=='nucleon':
+            OperatorPlot = 'N[%s]'%new_op[-1].replace('_','')
+        elif new_op[0].lower()=='lambda':
+            OperatorPlot = 'L[%s]'%new_op[-1].replace('_','')
+        elif new_op[0].lower()=='sigma':
+            OperatorPlot = 'S[%s]'%new_op[-1].replace('_','')
+        elif new_op[0].lower()=='xi':
+            OperatorPlot = 'X[%s]'%new_op[-1].replace('_','')
     elif 'GI{' in operator_name:
         OperatorPlot = str(new_op[-2])
     return str(OperatorPlot)
+
+
+### Comments:
+# This function receives an operator name and returns a string in a nice way to put in the plots. 
+def OPERATORS_MH(the_operator_name):
+    new_op = list(the_operator_name.split(' '))
+    if "CG" in the_operator_name: the_shift = 1
+    else: the_shift=0
+    OperatorPlot = ''
+    if 'GI{' not in the_operator_name:
+        if '_' in new_op[0]:
+            the_hads = list(new_op[0].split('_'))
+            for ii in range(1,len(the_hads)):
+                the_mom = str(SQUARED_MOM(new_op[2+the_shift+((ii-1)*3)]))
+                the_irrep = str(new_op[3+the_shift+((ii-1)*3)])
+                the_site = str(new_op[4+the_shift+((ii-1)*3)][:-1]).replace('_','')
+                if the_hads[ii].lower()=='pion':
+                    OperatorPlot += 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='kaon':
+                    OperatorPlot += 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='nucleon':
+                    OperatorPlot += 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='lambda':
+                    OperatorPlot += 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='sigma':
+                    OperatorPlot += 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='xi':
+                    OperatorPlot += 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            
+        elif '_' not in new_op[0]:
+            the_mom = str(SQUARED_MOM(new_op[1]))
+            the_irrep = str(new_op[2][:new_op[2].index('_')]) 
+            the_site = str(new_op[-1]).replace('_','')
+            if new_op[0].lower()=='pion':
+                OperatorPlot = 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='kaon':
+                OperatorPlot = 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='nucleon':
+                OperatorPlot = 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='lambda':
+                OperatorPlot = 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='sigma':
+                OperatorPlot = 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='xi':
+                OperatorPlot = 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+    elif 'GI{' in the_operator_name:
+        if '_' in new_op[4]:
+            OperatorPlot = new_op[4]
+        else:
+            the_mom = str(SQUARED_MOM(new_op[2]))
+            the_irrep = new_op[3]
+            if '}' in new_op[4]: new_op[4] = new_op[4][:-1]
+            OperatorPlot = new_op[4][:new_op[4].index('[')+1] + the_mom + '_' + the_irrep + '_' + new_op[4][new_op[4].index('[')+1:-1] + ']'
+    return str(OperatorPlot)
+
 
 
 ### Comments:
@@ -609,4 +896,7 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
 
 
 if __name__=="__main__":
-    print('Nothing to run here, unless you want to change something.')
+   print('Nothing to run here, unless you want to change something.')
+
+
+

@@ -7,7 +7,6 @@ import os
 import set_of_functions as vf
 
 
-
 def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):   
     
     ### The list of total irreps
@@ -47,7 +46,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
     begin_time = time.time()
     for j in range(len(the_list_name_irreps)):        
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
-        the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         the_size_matrix = len(the_op_list)
         
         the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
@@ -56,7 +55,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         
         print('\n----------------------------------------------')
         print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
-        print('Size of the Correlation matrix: ' + str(the_size_matrix)+ 'x' + str(the_size_matrix) +  '\nTime slices: '+str(nt[0])+' - '+str(nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme+ str(the_rs_real.shape[1]) +  '\n----------------------------------------------')
+        print('Size of the Correlation matrix: ' + str(the_size_matrix)+ 'x' + str(the_size_matrix) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme+ str(the_rs_real.shape[1]) +  '\n----------------------------------------------')
         print('      OPERATORS LIST \n----------------------------------------------')
         for i in range(the_size_matrix):
             print('       '+str(the_op_list[i].decode('utf-8')))
@@ -65,7 +64,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         group_gevp = this_data.create_group('GEVP')
         
         the_t0_init=0
-        for the_t0_init in range(np.abs(the_t0_min - nt[0]), (the_t0_max - nt[0]) + 1):               
+        for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):               
             the_ct0_mean = np.array(the_mean_corr[the_t0_init])
             
             the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
@@ -80,7 +79,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                     the_evecs_mean_ct0.append(the_evc_mean)
                     the_evecs_mean.append(the_evec_mean_nongevp)
                 except np.linalg.LinAlgError:
-                    print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + nt[0]))
+                    print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                     break
             the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
             if the_sorting!=None or the_sorting!='eigenvals':
@@ -106,42 +105,49 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                 except np.linalg.LinAlgError: break
             
             if len(the_evalues_rs)>0:
+                
                 the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                 the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+                
                 for xyz in range(len(the_mod_evals_rs)):
                     the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+                
                 the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
                 the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
                 
-                group_t0 = group_gevp.create_group('t0_%s'%(the_t0_init+nt[0]))
+                group_t0 = group_gevp.create_group('t0_%s'%(the_t0_init+the_nt[0]))
                 
                 the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
                 the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_size_matrix), dtype=np.float128)
                 
-                group_eigvecs = group_t0.create_group('Eigenvectors')
-                group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
-                
                 l, the_sigma_2 = 0, []
                 for l in range(the_size_matrix):
                     dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
-                    evals_fits_rs_mean = vf.MEAN(dis_eign)
-                    the_sigma_2.append(vf.COV_MATRIX(dis_eign, evals_fits_rs_mean, the_type_rs))
+                    the_evals_fits_rs_mean = vf.MEAN(dis_eign)
+                    the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
                 
                 the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
+                # the_evecs_mean = np.array(the_evecs_mean)
                 
-                group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)
+                group_eigvecs = group_t0.create_group('Eigenvectors')
+                group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
+                # group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+                group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
+                # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+                
                 group_eigns = group_t0.create_group('Eigenvalues')
                 group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
                 group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
                 group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
                 print(".......................")
-                print('T0 = %s'%str(the_t0_init + nt[0]) + '... DONE')
+                print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
         j+=1
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
+
 
 
 
