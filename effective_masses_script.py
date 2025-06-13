@@ -28,9 +28,6 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
         ### Getting the operators list and the time interval
         the_op_list, nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
         
-        ### 
-        # the_size_matrix = len(the_op_list)
-        
         ### The real part of the resampled data
         the_rs_real = np.array(this_data.get('Correlators/Real/Resampled'))
         the_rs_real = vf.NT_TO_NCFGS(the_rs_real)
