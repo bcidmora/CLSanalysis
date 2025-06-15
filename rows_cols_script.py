@@ -46,14 +46,22 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
         
     begin_time = time.time()
     for j in range(the_nr_irreps):
+        
+        ### The data to analyse. 
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
+        
+        ### The operators list and the time slices
         the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        
+        ### The size of the correlation matrix 
         the_size_matrix = len(the_op_list)
         
+        ### If this analysis was done before, then that branch gets deleted and a new one is created.
         if 'Operators_Analysis' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis']
         
         the_group_rows_cols = this_data.create_group('Operators_Analysis')
         
+        ### This is just reshaping the data to make it easier to analyse
         the_mod_data = vf.RESHAPING_CORRELATORS(np.array(this_data.get('Correlators/Real/Mean')))
         the_mod_data_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(this_data.get('Correlators/Real/Resampled')))
         
@@ -62,11 +70,17 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             
         for ii in range(the_size_matrix):
             group_i = the_group_rows_cols.create_group('Op_%s'%str(ii))
+            
+            ### Removing one operator (column and row)
             the_new_corrs = vf.REMOVE_ROWS_COLS(the_mod_data,the_mod_data_rs,ii)
             
+            ### The mean values of this new correlation matrix
             the_mean_corr = np.array(the_new_corrs[0], dtype=np.float128)
             
+            ### The resampled values of this new correlation matrix
             the_rs_real = np.array(the_new_corrs[1], dtype=np.float128)
+            
+            print(the_mean_corr.shape,the_rs_real)
             
             the_mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,the_size_matrix-1)
             the_rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,the_size_matrix-1)
@@ -307,6 +321,8 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
         j+=1
     end_time = time.time()
+                
+
                 
 
 
