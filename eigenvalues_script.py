@@ -89,8 +89,8 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
             ### This is the reference correlation matrix for the GEVP
             the_ct0_mean = np.array(the_mean_corr[the_t0_init])
             
-            the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
-            the_evalues_rs, the_evectors_rs, the_evectors_rs_ct0 =[], [], []
+            the_evals_mean, the_evecs_mean = [], []
+            the_evalues_rs, the_evectors_rs =[], []
             
             ### Loop over the time slices. Diagonalization in each time slice.
             ttt=0
@@ -99,14 +99,15 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                     ### This matrix is to compute the modified GEVP
                     the_ct0_root = fractional_matrix_power(the_ct0_mean, -1/2)
                     the_mean_corr_mod = the_ct0_root@the_mean_corr[ttt]@(the_ct0_root.conj().T)
+                                     
+                    # the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) #GEVP
                     
-                    # the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) #GEVP                    
-                    the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr_mod, eigvals_only=False) #Modified-GEVP (Same eigenvalues, correct eigenvectors)
-                
-                    # the_evals_mean.append(the_evs_mean)
+                    ### Modified-GEVP (Same eigenvalues, correct eigenvectors for a hermitian matrix)
+                    the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr_mod, eigvals_only=False) 
+
                     the_evals_mean.append(the_evs_mean_nongevp)
-                    # the_evecs_mean_ct0.append(the_evc_mean)
                     the_evecs_mean.append(the_evec_mean_nongevp)
+                    
                 except np.linalg.LinAlgError:
                     print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                     break
@@ -119,7 +120,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
             ### Loop over the time slices. Diagonalization in each time slice.
             ttt=0
             for ttt in range(len(the_mean_corr)):
-                the_evalues_rs_raw, the_evectors_rs_raw, the_evectors_rs_ct0_raw = [], [], []
+                the_evalues_rs_raw, the_evectors_rs_raw = [], []
                 xyz = 0
                 try:
                     ### Loop over the resamples
@@ -134,13 +135,10 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                         
                         # the_ew_rs, the_ev_rw = eigh(dis_resample, b=the_ct0_rs, eigvals_only=False) #GEVP 
                         the_ew_rs_nongevp, the_ev_rw_nongevp = eigh(dis_resample_mod, eigvals_only=False) #Modified-GEVP
-                        # the_evalues_rs_raw.append(np.array(the_ew_rs))
                         the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
-                        # the_evectors_rs_ct0_raw.append(np.array(the_ev_rw, dtype=np.float128))
                         the_evectors_rs_raw.append(np.array(the_ev_rw_nongevp,dtype=np.float128))
                         
                     the_evalues_rs.append(np.array(the_evalues_rs_raw))
-                    # the_evectors_rs_ct0.append(np.array(the_evectors_rs_ct0_raw))
                     the_evectors_rs.append(np.array(the_evectors_rs_raw))
                     
                 except np.linalg.LinAlgError: break
@@ -148,16 +146,16 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
             if len(the_evalues_rs)>0:
                 
                 ### Reshaping eigenvectors and eigenvalues for sorting
-                the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                 the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+                the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                 
                 ### Loop over the resamples (sorting)
                 for xyz in range(len(the_mod_evals_rs)):
                     the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
                 
                 ### Reshaping again to save them in a file
-                the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
                 the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
+                the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
                 
                 group_t0 = group_gevp.create_group('t0_%s'%(the_t0_init+the_nt[0]))
                 
@@ -165,29 +163,17 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                 the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_size_matrix), dtype=np.float128)
                 
                 ### Getting the statistical error and the covariance matrix for each eigenvalue.
-                l, the_sigma_2 = 0, []
+                the_l, the_sigma_2 = 0, []
                 for l in range(the_size_matrix):
-                    dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
+                    dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[the_l])
                     the_evals_fits_rs_mean = vf.MEAN(dis_eign)
                     the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
                 
-                ### Here we could save the eigenvectors from the GEVP or from the NON-GEVP
-                
-                ### GEVP eigenvectors (central values)
-                # the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
-                ### NON-GEVP eigenvectors (central values)
+                ### Modified-GEVP eigenvectors (central values)
                 the_evecs_mean = np.array(the_evecs_mean)
-                
+        
                 group_eigvecs = group_t0.create_group('Eigenvectors')
-                
-                ### GEVP eigenvectors
-                # group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
-                ### NON-GEVP eigenvectors
                 group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-                
-                ### GEVP eigenvectors (resamples)
-                # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
-                ### NON-GEVP eigenvectors (resamples
                 group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
                 
                 group_eigns = group_t0.create_group('Eigenvalues')
@@ -204,11 +190,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
 
-
-
-
 ### --------------------------------------------------------------------------------------------------
-
 
 
 
