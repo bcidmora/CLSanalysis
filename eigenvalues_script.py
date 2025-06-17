@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.linalg import eigh
+from scipy.linalg import fractional_matrix_power
 import h5py
 import time
 import sys
@@ -69,7 +70,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         
         ### The central values of the original correlators
         the_mean_corr_real = np.array(this_data.get('Correlators/Real/Mean'))    
-        the_mean_corr = np.array(the_mean_corr_real, dtype=np.float128)
+        the_mean_corr = np.array(the_mean_corr_real, dtype=np.float64)
         
         print('\n----------------------------------------------')
         print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
@@ -95,14 +96,21 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
             ttt=0
             for ttt in range(len(the_mean_corr)):
                 try:
-                    the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) #GEVP
-                    the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr[ttt], eigvals_only=False) #NON-GEVP
-                    the_evals_mean.append(the_evs_mean)
-                    the_evecs_mean_ct0.append(the_evc_mean)
+                    ### This matrix is to compute the modified GEVP
+                    the_ct0_root = fractional_matrix_power(the_ct0_mean, -1/2)
+                    the_mean_corr_mod = the_ct0_root@the_mean_corr[ttt]@(the_ct0_root.conj().T)
+                    
+                    # the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) #GEVP                    
+                    the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr_mod, eigvals_only=False) #Modified-GEVP (Same eigenvalues, correct eigenvectors)
+                
+                    # the_evals_mean.append(the_evs_mean)
+                    the_evals_mean.append(the_evs_mean_nongevp)
+                    # the_evecs_mean_ct0.append(the_evc_mean)
                     the_evecs_mean.append(the_evec_mean_nongevp)
                 except np.linalg.LinAlgError:
                     print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                     break
+                
             ### The eigenvalues are sorted once by order of magnitude and then with whatever method chosen
             the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
             if the_sorting!=None or the_sorting!='eigenvals':
@@ -116,16 +124,23 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
                 try:
                     ### Loop over the resamples
                     for xyz in range(the_rs_real.shape[1]):
-                        the_ct0 = np.array(the_rs_real[the_t0_init][xyz])
-                        dis_resample = the_rs_real[ttt][xyz]
-                        the_ew_rs, the_ev_rw = eigh(dis_resample, b=the_ct0, eigvals_only=False) #GEVP 
-                        the_ew_rs_nongevp, the_ev_rw_nongevp = eigh(dis_resample, eigvals_only=False) #NON-GEVP
+                        the_ct0_rs = np.array(the_rs_real[the_t0_init][xyz])
                         
-                        the_evalues_rs_raw.append(np.array(the_ew_rs))
-                        the_evectors_rs_ct0_raw.append(np.array(the_ev_rw, dtype=np.float128))
+                        ### This matrix is to compute the modified GEVP
+                        the_ct0_rs_root = fractional_matrix_power(the_ct0_rs, -1/2)
+                        
+                        dis_resample = the_rs_real[ttt][xyz]
+                        dis_resample_mod = the_ct0_rs_root@dis_resample@(the_ct0_rs_root.conj().T)
+                        
+                        # the_ew_rs, the_ev_rw = eigh(dis_resample, b=the_ct0_rs, eigvals_only=False) #GEVP 
+                        the_ew_rs_nongevp, the_ev_rw_nongevp = eigh(dis_resample_mod, eigvals_only=False) #Modified-GEVP
+                        # the_evalues_rs_raw.append(np.array(the_ew_rs))
+                        the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
+                        # the_evectors_rs_ct0_raw.append(np.array(the_ev_rw, dtype=np.float128))
                         the_evectors_rs_raw.append(np.array(the_ev_rw_nongevp,dtype=np.float128))
+                        
                     the_evalues_rs.append(np.array(the_evalues_rs_raw))
-                    the_evectors_rs_ct0.append(np.array(the_evectors_rs_ct0_raw))
+                    # the_evectors_rs_ct0.append(np.array(the_evectors_rs_ct0_raw))
                     the_evectors_rs.append(np.array(the_evectors_rs_raw))
                     
                 except np.linalg.LinAlgError: break
@@ -187,6 +202,8 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
+
+
 
 
 
