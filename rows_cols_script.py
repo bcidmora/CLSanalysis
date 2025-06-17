@@ -13,6 +13,12 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
     ### The list of total irreps
     the_list_name_irreps =  list(the_matrix_correlator_data.keys())
     
+    ### Resampling scheme
+    if the_type_rs=='jk':
+        the_resampling_scheme = 'Jackknife'
+    elif the_type_rs=='bt':
+        the_resampling_scheme = 'Bootstrap'
+        
     ### If not all irreps are analysed, this number can be changed.
     if kwargs.get('nr_irreps')!=None:
         the_nr_irreps = int(kwargs.get('nr_irreps'))
@@ -67,7 +73,8 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
         
         print('\n----------------------------------------------')
         print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
-            
+        
+         ### Loop over the operators
         for ii in range(the_size_matrix):
             group_i = the_group_rows_cols.create_group('Op_%s'%str(ii))
             
@@ -80,8 +87,7 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             ### The resampled values of this new correlation matrix
             the_rs_real = np.array(the_new_corrs[1], dtype=np.float128)
             
-            print(the_mean_corr.shape,the_rs_real)
-            
+            ### Reshaping the datasets
             the_mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,the_size_matrix-1)
             the_rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,the_size_matrix-1)
             
@@ -89,13 +95,16 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             print('      OPERATOR REMOVED \n----------------------------------------------')
             print('       '+str(the_op_list[ii].decode('utf-8')))
             
+            ### Loop over the t0's chosen
             the_t0_init=0
-            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):                   
+            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1): 
+                ### The chosen C(t0) to do the GEVP
                 the_ct0_mean = np.array(the_mean_corr[the_t0_init])
                 
                 the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
                 the_evalues_rs, the_evectors_rs, the_evectors_rs_ct0 =[], [], []
                 
+                ### Loop over the time slices (diagonalization at each time slice)
                 ttt=0
                 for ttt in range(len(the_mean_corr)):
                     try:
@@ -107,15 +116,21 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     except np.linalg.LinAlgError:
                         print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                         break
+                
+                ### Sorting first by eigenvalues
                 the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
+                
+                ### Now if wanted, sorting by whatever else
                 if the_sorting!=None or the_sorting!='eigenvals':
                     the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
                     
+                ### Loop over the time slices for the resamples
                 ttt=0
                 for ttt in range(len(the_mean_corr)):
                     the_evalues_rs_raw, the_evectors_rs_raw, the_evectors_rs_ct0_raw = [], [], []
                     xyz = 0
                     try:
+                        ### Loop over each resampled config
                         for xyz in range(the_rs_real.shape[1]):
                             the_ct0 = np.array(the_rs_real[the_t0_init][xyz])
                             dis_resample = the_rs_real[ttt][xyz]
@@ -130,33 +145,55 @@ def REMOVING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                         the_evectors_rs.append(np.array(the_evectors_rs_raw))
                         
                     except np.linalg.LinAlgError: break
+                
+                ### Here the final eigenvalues and eigenvectors are saved
+                if len(the_evalues_rs)>0:
                     
-                if len(evalues_rs)>0:
                     the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                     the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+                    
+                    ### Loop over the resamped gauge configs for sorting
                     for xyz in range(len(the_mod_evals_rs)):
                         the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+                        
                     the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)
                     the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
                     
                     group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
                     
+                    ### These eigenvectors are from the GEVP diagonalization
+                    # the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
                     the_evecs_mean = np.array(the_evecs_mean)
-
+                    
+                     ### These are the final eigenvalues sorted and ordered for plotting
                     the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
                     
-                    the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(evalues_rs), the_size_matrix-1), dtype=np.float128)
-                    
-                    group_eigvecs = group_t0.create_group('Eigenvectors')
-                    group_eigvecs.create_dataset('Resampled', data=evectors_rs)
-                    group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-                    
+                    ### These are the final resampled eigenvalues sorted and ordered for plotting
+                    the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_size_matrix-1), dtype=np.float128)
+
+                    ### Loop over the resamples to compute the covariance matrix
                     the_l, the_sigma_2 = 0, []
-                    for the_l in range(the_size_matrix):
+                    for the_l in range(the_evals_fits_rs.shape[0]):
                         dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[the_l])
                         evals_fits_rs_mean = vf.MEAN(dis_eign)
                         the_sigma_2.append(vf.COV_MATRIX(dis_eign, evals_fits_rs_mean, the_type_rs))
 
+                    group_eigvecs = group_t0.create_group('Eigenvectors')
+                    ### These eigenvectors are from the GEVP diagonalization
+                    # group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)     
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
+                    group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+                    
+                     ### These eigenvectors are from the GEVP diagonalization
+                    # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
+                    group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+                    
+                    
                     group_eigns = group_t0.create_group('Eigenvalues')
                     group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
                     group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
@@ -212,28 +249,42 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
     
     begin_time = time.time()
     for j in range(the_nr_irreps):
+        
+         ### The data to analyse. 
         this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
         
+        ### The operators list and the time slices
         the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
+        
+        ### The size of the correlation matrix 
         the_size_matrix = len(the_op_list)
         
+         ### If this analysis was done before, then that branch gets deleted and a new one is created.
         if 'Operators_Analysis' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis']
         
         the_group_rows_cols = this_data.create_group('Operators_Analysis')
         
+        ### This is just reshaping the data to make it easier to analyse
         the_mod_data = vf.RESHAPING_CORRELATORS(np.array(this_data.get('Correlators/Real/Mean')))
         the_mod_data_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(this_data.get('Correlators/Real/Resampled')))
         
         print('\n----------------------------------------------')
         print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
             
+        ### Loop over the operators
         for ii in range(the_size_matrix):
             group_i = the_group_rows_cols.create_group('Op_%s'%str(ii))
             
+            ### Adding one operator (column and row)
             the_new_corrs = vf.ADD_ROWS_COLS(the_mod_data,the_mod_data_rs,ii+1)
+            
+            ### The mean values of this new correlation matrix
             the_mean_corr = np.array(the_new_corrs[0], dtype=np.float128)
+            
+             ### The resampled values of this new correlation matrix
             the_rs_real = np.array(the_new_corrs[1], dtype=np.float128)
             
+            ### Reshaping the datasets
             the_mean_corr = vf.RESHAPING_EIGENVALS_MEAN(the_mean_corr,len(the_mean_corr))
             the_rs_real = vf.RESHAPING_EIGENVALS_RS(the_rs_real,len(the_rs_real))
             
@@ -241,13 +292,16 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
             print('      OPERATOR ADDED \n----------------------------------------------')
             print('       '+str(the_op_list[ii].decode('utf-8')))
 
+            ### Loop over the t0's chosen
             the_t0_init=0
-            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):                   
+            for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):    
+                ### The chosen C(t0) to do the GEVP
                 the_ct0_mean = np.array(the_mean_corr[the_t0_init])
                 
                 the_evals_mean, the_evecs_mean, the_evecs_mean_ct0 = [], [], []
                 the_evalues_rs, the_evectors_rs, the_evectors_rs_ct0 =[], [], []
                 
+                 ### Loop over the time slices (diagonalization at each time slice)
                 ttt=0
                 for ttt in range(len(the_mean_corr)):
                     try:
@@ -259,15 +313,21 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     except np.linalg.LinAlgError:
                         print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                         break
+                
+                ### Sorting first by eigenvalues
                 the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
+                
+                 ### Now if wanted, sorting by whatever else
                 if the_sorting!=None or the_sorting!='eigenvals':
                     the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
                 
+                ### Loop over the time slices for the resamples
                 ttt=0
                 for ttt in range(len(the_mean_corr)):
                     the_evalues_rs_raw, the_evectors_rs_raw, the_evectors_rs_ct0_raw = [], [], []
                     xyz = 0
                     try:
+                        ### Loop over each resampled config
                         for xyz in range(the_rs_real.shape[1]):
                             the_ct0 = np.array(the_rs_real[the_t0_init][xyz])
                             dis_resample = the_rs_real[ttt][xyz]
@@ -283,11 +343,13 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                         
                     except np.linalg.LinAlgError: break
                 
+                ### Here the final eigenvalues and eigenvectors are saved
                 if len(the_evalues_rs)>0:
                     
                     the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
                     the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
                     
+                    ### Loop over the resamped gauge configs for sorting
                     for xyz in range(len(the_mod_evals_rs)):
                         the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
                     
@@ -295,24 +357,40 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
                     
                     group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
+                    
+                    ### These eigenvectors are from the GEVP diagonalization
+                    # the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
+                    the_evecs_mean = np.array(the_evecs_mean)
 
+                    ### These are the final eigenvalues sorted and ordered for plotting
                     the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
+                    
+                    ### These are the final resampled eigenvalues sorted and ordered for plotting
                     the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_evalues_rs.shape[-1]), dtype=np.float128)
                     
-                    l, the_sigma_2 = 0, []
-                    for l in range(the_evals_fits_rs.shape[0]):
-                        dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[l])
+                    ### Loop over the resamples to compute the covariance matrix
+                    the_l, the_sigma_2 = 0, []
+                    for the_l in range(the_evals_fits_rs.shape[0]):
+                        dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[the_l])
                         the_evals_fits_rs_mean = vf.MEAN(dis_eign)
                         the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
 
-                    the_evecs_mean_ct0 = np.array(the_evecs_mean_ct0)
-                    # the_evecs_mean = np.array(the_evecs_mean)
                     
                     group_eigvecs = group_t0.create_group('Eigenvectors')
-                    group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)       
-                    # group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-                    group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
-                    # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+                    
+                    ### These eigenvectors are from the GEVP diagonalization
+                    # group_eigvecs.create_dataset('Mean', data=the_evecs_mean_ct0)     
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
+                    group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+                    
+                     ### These eigenvectors are from the GEVP diagonalization
+                    # group_eigvecs.create_dataset('Resampled', data=the_evectors_rs_ct0)
+                    
+                    ### These eigenvectors are from the NON-GEVP diagonalization
+                    group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
                     
                     group_eigns = group_t0.create_group('Eigenvalues')
                     group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
@@ -321,7 +399,6 @@ def ADDING_COLS_ROWS(the_matrix_correlator_data, the_type_rs, **kwargs):
                     print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
         j+=1
     end_time = time.time()
-                
 
                 
 
