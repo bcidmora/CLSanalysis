@@ -131,79 +131,46 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
             this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(the_sigma_efm))
             
         ### If the GEVP was performed, then it will identify this section.
-        if 'GEVP' not in this_data.keys(): j+=1; print('Irrep nr.: '+ str(j) + ' out of ' +str(len(the_list_name_irreps))); continue
-        else:
+        if 'GEVP' in this_data.keys(): 
             
             gevp_group = this_data.get('GEVP')
                 
             print("Effective Masses of GEVP eigenvalues in process...")
+            
+            vf.DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs)
                 
-            for item in gevp_group.keys():
-                if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
+        ### If the Operator Analysis was performed, this section will also be identified. 
+        if 'Operators_Analysis' in this_data.keys():
+            
+            ### Checks if the keys of ops_chosen is in the list of the operator analysis
+            if any('Ops_chosen_' in the_keys for the_keys in this_data['Operators_Analysis'].keys()):
                 
-                group_em_t0 = gevp_group.get(item).create_group('Effective_masses')
-                the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
-                the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
+                the_list_of_chosen_ops = list(filter(lambda x: 'Ops_chosen' in x, this_data['Operators_Analysis'].keys()))
                 
-                ### Loop over the total number of eigenvalues
-                the_eff_mass_mean , the_cov_eff_mass = [], []
-                for ls in range(the_size_matrix):
-                    the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
-                    the_eff_mass_mean.append(the_average)
+                for the_op_item in the_list_of_chosen_ops:
+                    gevp_group = this_data['Operators_Analysis/'].get(the_op_item)
+                
+                    vf.DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs)
                     
-                    ### Loop over the resamples of the eigenvalues
-                    the_eff_mass_rs = []
-                    for zz in range(the_evalues_rs_f.shape[1]):
-                        the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
+            if any('Add_Op' in the_keys for the_keys in this_data['Operators_Analysis'].keys()):
+                the_list_of_chosen_ops = list(filter(lambda x: "Add_Op" in x, this_data['Operators_Analysis'].keys()))
+                
+                for the_op_item in the_list_of_chosen_ops:
+                    gevp_group = this_data['Operators_Analysis/'].get(the_op_item)
                     
-                    ### Reshaping the data
-                    the_eff_mass_rs = np.array(vf.NCFGS_TO_NT(the_eff_mass_rs))
+                    vf.DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs)
+#                     
+            if any('Remove_Op' in the_keys for the_keys in this_data['Operators_Analysis'].keys()):
+                the_list_of_chosen_ops = list(filter(lambda x: "Remove_Op" in x, this_data['Operators_Analysis'].keys()))
+                
+                for the_op_item in the_list_of_chosen_ops:
+                    gevp_group = this_data['Operators_Analysis/'].get(the_op_item)
                     
-                    ### Here the statistical errors of the resampled data are computed
-                    the_eff_rs_mean = vf.MEAN(np.array(the_eff_mass_rs))
-                    the_cov_eff_mass.append(vf.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
-                
-                group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
-                group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
-                
-            ### If the Operator Analysis was performed, this section will also be identified. 
-            if 'Operators_Analysis' in this_data.keys():
-                
-                print("Effective Masses of NEW GEVP eigenvalues in process...")
-                
-                for the_op in range(the_size_matrix):
-                    
-                    print("Eigenvalue = %s"%str(the_op))
-                    
-                    gevp_group = this_data.get('Operators_Analysis/Op_%s'%the_op)
-                    for item in gevp_group.keys():
-                        if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
-                        
-                        group_em_t0 = gevp_group.get(item).create_group('Effective_masses')
-                        the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
-                        the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
-                        
-                        ### Loop over the eigenvalues
-                        eff_mass_rs_f=[]; the_eff_mass_mean = []; the_cov_eff_mass=[]; 
-                        for ls in range(len(the_evalues_rs_f)):
-                            the_average = np.array(vf.EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
-                            the_eff_mass_mean.append(the_average)
-                            
-                            ### Loop over their resamples
-                            the_eff_mass_rs = []
-                            for zz in range(the_evalues_rs_f.shape[1]):
-                                the_eff_mass_rs.append(np.array(vf.EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
-                            the_eff_mass_rs = np.array(vf.NCFGS_TO_NT(the_eff_mass_rs))
-                            the_eff_rs_mean = vf.MEAN(np.array(the_eff_mass_rs))
-                            the_cov_eff_mass.append(vf.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
-                        
-                        group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
-                        group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
-                
+                    vf.DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs)
+            
             print('Irrep nr.: '+ str(j+1) + ' out of ' +str(len(the_list_name_irreps)))
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
-
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 

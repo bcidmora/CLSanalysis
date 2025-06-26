@@ -1,6 +1,9 @@
 import numpy as np
 import os
 from pathlib import Path
+import matplotlib.pyplot as plt
+from scipy.linalg import eigh
+from scipy.linalg import fractional_matrix_power
 
 
 ## ------------------- SOME USEFUL FUNCTIONS -----------------------------------
@@ -29,9 +32,15 @@ def NORM_FACTOR(a_list):
 # It checks for hermiticity
 # a_matrix: is the matrix [N,N]
 def MAKES_HERMITIAN(a_matrix):
-    return np.float128(0.5)*(np.matrix(a_matrix)+np.conj(np.matrix(a_matrix).T))     
+    return np.float128(1/2)*(np.matrix(a_matrix)+np.conj(np.matrix(a_matrix).T))     
     
 
+def LINEAR_COMBINATION(the_list_of_operators, the_list_of_coeff, the_prefactor):
+    the_new_correlator = np.float128(0.)
+    ## OpLambda=(sqrt(3)/2)*(-Op27 +Op28 -Op33 -2*Op36 + Op37)
+    for ii in range(len(the_list_of_operators)):
+        the_new_correlator+=np.float128(the_prefactor*the_list_of_operators[ii]*the_list_of_coeff[ii])
+    return the_new_correlator
 
 ### Comments:
 # This receives a list d_list that is a file with the tmax for the fitting
@@ -166,8 +175,9 @@ def RESHAPING_CORRELATORS_RS_NT(a):
 
 # This function reshapes the data in the way: [N, N, nt] -> [nt,N,N] This is used to later get the eigenvalues easier form the matrices.
 # a: list with the data
-def RESHAPING_EIGENVALS_MEAN(a,s):
+def RESHAPING_EIGENVALS_MEAN(a):
     t_slices = a.shape[-1]
+    s = a.shape[0]
     eig_corrs = []
     for da_times in range(t_slices):
         time_corrs = []
@@ -182,9 +192,10 @@ def RESHAPING_EIGENVALS_MEAN(a,s):
 
 # This function reshapes the data in the way: [N, N, nt, Ncfgs] -> [nt,Ncfgs N,N]
 # a: list with the data
-def RESHAPING_EIGENVALS_RS(a,s):
+def RESHAPING_EIGENVALS_RS(a):
     t_slices = a.shape[-2]
     ncfgs = a.shape[-1]
+    s = a.shape[0]
     eig_corrs = []
     for da_times in range(t_slices):
         time_corrs = []
@@ -202,9 +213,10 @@ def RESHAPING_EIGENVALS_RS(a,s):
 # This function reshapes the eigenvalues from [nt, Ncfgs, Neigens] -->> [Neigens, Ncfgs, nt]. This is used to obatin the fits easier later. 
 # a: is the list of eigenvals, n configs, and time slices.
 # s: size of the matrix or amount of eigenvalues
-def RESHAPING_EIGENVALS_FOR_FITS(a,s):
+def RESHAPING_EIGENVALS_FOR_FITS(a):
     t_slices = a.shape[0]
     ncfgs = a.shape[1]
+    s = a.shape[-1]
     eig_corrs = []
     for n1 in range(s):
         corr_n=[]
@@ -327,10 +339,30 @@ def REMOVE_ROWS_COLS(c,r,ss):
 def ADD_ROWS_COLS(c,r,ss):
     modified_mean_corr = []
     modified_rs_corr  = []
+    ss +=1
     for ij in range(ss):
         the_mean_corr_ij = []
         the_rs_corr_ij = []
         for ji in range(ss):
+            the_mean_corr_ij.append(np.array(c[ij][ji]))
+            the_rs_corr_ij.append(np.array(r[ij][ji]))
+        modified_mean_corr.append(np.array(the_mean_corr_ij))
+        modified_rs_corr.append(np.array(the_rs_corr_ij))
+    return [np.array(modified_mean_corr), np.array(modified_rs_corr)]
+
+
+#Comments:
+# This functions adds cols and rows from  a correlation matrix, leaving it squared as it should be. 
+# c: this is the mean value of correlator matrix. It has a shape of [N, N, nt]
+# r: This is the resampled correlator matrix. It has the shape [N, N, nt, Ncfgs]
+# ss: This is a list of operators to be included
+def CHOOSE_OPS(c,r,ss):
+    modified_mean_corr = []
+    modified_rs_corr  = []
+    for ij in ss:
+        the_mean_corr_ij = []
+        the_rs_corr_ij = []
+        for ji in ss:
             the_mean_corr_ij.append(np.array(c[ij][ji]))
             the_rs_corr_ij.append(np.array(r[ij][ji]))
         modified_mean_corr.append(np.array(the_mean_corr_ij))
@@ -367,6 +399,154 @@ def EFF_MASS_COSH(a,d):
     for i in range(len(a)-d):
         meff.append(np.acosh(np.abs((np.double(a[i+d]) + np.double(a[i-d]))/np.double(2.*a[i]))))
     return np.array(meff)
+
+
+
+def DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs):
+    for item in gevp_group.keys():
+        if 'Effective_masses' in gevp_group.get(item).keys(): del gevp_group[item+'/Effective_masses']
+
+        group_em_t0 = gevp_group.get(item).create_group('Effective_masses')
+        the_evalues_rs_f = np.array(gevp_group[item+'/Eigenvalues/Resampled'])
+        the_evalues_mean_f = np.array(gevp_group[item+'/Eigenvalues/Mean'])
+        
+        ### Loop over the total number of eigenvalues
+        the_eff_mass_mean , the_cov_eff_mass = [], []
+        for ls in range(the_evalues_mean_f.shape[0]):
+            the_average = np.array(EFF_MASS(the_evalues_mean_f[ls], the_dist_eff_mass),dtype=np.float64)
+            the_eff_mass_mean.append(the_average)
+            
+            ### Loop over the resamples of the eigenvalues
+            the_eff_mass_rs = []
+            for zz in range(the_evalues_rs_f.shape[1]):
+                the_eff_mass_rs.append(np.array(EFF_MASS(the_evalues_rs_f[ls][zz], the_dist_eff_mass), dtype=np.float64))
+            
+            ### Reshaping the data
+            the_eff_mass_rs = np.array(NCFGS_TO_NT(the_eff_mass_rs))
+            
+            ### Here the statistical errors of the resampled data are computed
+            the_eff_rs_mean = MEAN(np.array(the_eff_mass_rs))
+            the_cov_eff_mass.append(STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
+        
+        group_em_t0.create_dataset('Mean', data=np.array(the_eff_mass_mean))
+        group_em_t0.create_dataset('Sigmas',data=np.array(the_cov_eff_mass))
+        
+        
+## ------------------- GEVP --------------------------------------
+
+### Comments:
+# This function solves the GEVP using the modified regular eigenvalue problem, since it is more stable:
+# the_ct0_mean: This is the reference Correlation matrix [N, N]
+# the_mean_corr: This is the correlation matrix at a certain time slice t [N, N]
+# It uses the definition: C^{-1/2}(t_{0}) C(t) C^{-1/2}(t_{0})^{\dagger} \vec{v}(t)= \lambda(t) \vec{v}(t), where the eigenvalues are the same than the ones obtained from the GEVP directly, but the eigenvectors are the correct ones associated to physical states. 
+def SOLVING_GEVP(the_ct0_mean, the_mean_corr):
+    ### This matrix is to compute the modified GEVP
+    the_ct0_root = fractional_matrix_power(the_ct0_mean, -1/2)
+    the_mean_corr_mod = the_ct0_root @ the_mean_corr @ (the_ct0_root.conj().T)
+    return eigh(the_mean_corr_mod, eigvals_only=False) 
+
+
+### Comments:
+# This function does the GEVP for each time slice for each chosen t0 and for each resample. Sorting everything by eigenvalue by default. If a different sorting is required, then it is done separately.
+# the_t0_min_max: is a list with (t0 min, t0 max) to do the GEVP
+# the_nt: range where the GEVP will be solved
+# the_mean_corr: this is the data to be used for the GEVP, shape = [nt, N, N]
+# the_rs_real: This is the resmapled data to be used for the GEVP: shape = [nt, Ncnfgs, N, N]
+# the_type_rs: this is the resample type for the covariance matrix computation
+# group_i: This is the "folder" in which the information will be saved in the hdf5 file.
+# the_sorting: This is the method chosen for sorting
+# the_sorting_process: This is the function that will be called with the sorting.
+def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i):    
+    ### Loop over the t0's chosen
+    the_t0_init=0
+    for the_t0_init in range(np.abs(the_t0_min_max[0] - the_nt[0]), (the_t0_min_max[1] - the_nt[0]) + 1): 
+        
+        ### This is the reference correlation matrix for the GEVP
+        the_ct0_mean = np.array(the_mean_corr[the_t0_init])
+    
+        the_evals_mean, the_evecs_mean = [], []
+        the_evalues_rs, the_evectors_rs =[], []
+        
+        ### Loop over the time slices (diagonalization at each time slice)
+        ttt=0
+        for ttt in range(len(the_mean_corr)):
+            try:
+                ### This matrix is to compute the modified GEVP
+                the_evs_mean_nongevp, the_evec_mean_nongevp = SOLVING_GEVP(the_ct0_mean, the_mean_corr[ttt])
+                
+                the_evals_mean.append(the_evs_mean_nongevp)
+                the_evecs_mean.append(the_evec_mean_nongevp)
+                
+            except np.linalg.LinAlgError:
+                print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
+                break
+        
+            ### The eigenvalues are sorted once by order of magnitude and then with whatever method chosen
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
+        
+        ### Now if wanted, sorting by whatever else
+        if the_sorting!=None or the_sorting!='eigenvals':
+            the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
+            
+        ### Loop over the time slices for the resamples
+        ttt=0
+        for ttt in range(len(the_mean_corr)):
+            the_evalues_rs_raw, the_evectors_rs_raw = [], []
+            xyz = 0
+            try:
+                ### Loop over the resamples
+                for xyz in range(the_rs_real.shape[1]):
+                    the_ew_rs_nongevp, the_ev_rw_nongevp = SOLVING_GEVP(np.array(the_rs_real[the_t0_init][xyz]), the_rs_real[ttt][xyz] )
+                        
+                    the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
+                    the_evectors_rs_raw.append(np.array(the_ev_rw_nongevp,dtype=np.float128))              
+                    
+                the_evalues_rs.append(np.array(the_evalues_rs_raw))
+                the_evectors_rs.append(np.array(the_evectors_rs_raw))
+                
+            except np.linalg.LinAlgError: break
+        
+        ### Here the final eigenvalues and eigenvectors are saved
+        if len(the_evalues_rs)>0:
+            
+            ### Reshaping eigenvectors and eigenvalues for sorting
+            the_mod_evals_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+            the_mod_evectors_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
+            
+            ### Loop over the resamples (sorting)
+            for xyz in range(len(the_mod_evals_rs)):
+                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+                
+                ### Reshaping again to save them in a file
+            the_evalues_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
+            the_evectors_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
+            
+            group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
+            
+            the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
+            the_evals_fits_rs = np.array(RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs)), dtype=np.float128)
+
+            ### Getting the statistical error and the covariance matrix for each eigenvalue.
+            the_l, the_sigma_2 = 0, []
+            for l in range(len(the_evals_fits_rs)):
+                dis_eign = NCFGS_TO_NT(the_evals_fits_rs[the_l])
+                the_evals_fits_rs_mean = MEAN(dis_eign)
+                the_sigma_2.append(COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
+            
+            ### Modified-GEVP eigenvectors (central values)
+            the_evecs_mean = np.array(the_evecs_mean)
+            
+            group_eigvecs = group_t0.create_group('Eigenvectors')
+            group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+            group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+            
+            group_eigns = group_t0.create_group('Eigenvalues')
+            group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
+            group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
+            group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
+            print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
+            
+
 
 
 ## ------------------- SORTING STATES --------------------------------------
@@ -893,6 +1073,33 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
         out_precision=False
     return [the_error_string+")", out_precision]
 
+
+def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, the_x_axis_label, the_y_axis_label, the_marker, the_title_info, **kwargs):
+    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker=the_marker, ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85, label = the_rs_scheme)
+    plt.xlabel(the_x_axis_label)
+    plt.ylabel(the_y_axis_label)
+    plt.title(the_title_info)
+    plt.xticks(the_nt_ticks)
+    if kwargs.get('yscale')!=None: plt.yscale(str(kwargs.get('yscale')))
+    else:
+        if kwargs.get('ymin')!=None: plt.ylim(ymin=kwargs.get('ymin'), ymax=the_mean_corr[0]*1.05)
+    plt.legend()
+    plt.tight_layout()
+    # plt.show()
+    
+    
+def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_mean, the_label_mean_nt, the_title_info, the_bins,  the_x_axis_label):
+    counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label)
+    padding = counts.max() * 0.1  # 10% padding on top
+    plt.vlines(the_mean_rs, 0, 200, colors= 'red', label = the_label_mean_rs)
+    plt.vlines(the_nt_mean, 0, 200, colors='black', label = the_label_mean_nt)
+    plt.title( the_title_info)
+    plt.ylabel('Frequency')
+    plt.xlabel(the_x_axis_label)
+    plt.legend()
+    plt.tight_layout()
+    plt.ylim(0, counts.max() + padding)
+    # plt.show()
 
 
 if __name__=="__main__":

@@ -10,8 +10,8 @@ location = os.path.expanduser('~')+'$YOUR_PATH_TO_THE_DATA$'
 ### lambdas_analysis: If False: It does the analysis over the single hadrons only, which were the first 20 gauge configs for the pion and 100 gauge configs 
 ### nucleon_analysis: If True, it only analyses the new nucleon (100 cnfgs) averaged over irrep row and over source time.
 
-lambdas_analysis = False
-nucleon_analysis = True
+lambdas_analysis = True
+nucleon_analysis = False
 
 hdf5NameMulti = 'cls21_X451_r001_isosinglet_Sm1_fwd_t01.hdf5'
 
@@ -22,9 +22,7 @@ else:
     hdf5NameSingle = 'cls21_X451_r001_singles.hdf5'
 
 ### ENSEMBLE FILES: N451
-# f = h5py.File(location+'data/X451/cls21_X451_r001_isosinglet_Sm1_fwd.hdf5','r') #lambdas
-# f = h5py.File(location+'data/X451/cls21_X451_r001_isosinglet_Sm1_fwd_t00.hdf5','r') #lambdas T00
-# f = h5py.File(location+'data/X451/cls21_X451_r001_isosinglet_Sm1_fwd_t01.hdf5','r') #lambdas T01
+
 # f1 = h5py.File(location+'data/X451/cls21_X451_r001_singles.hdf5','r') #SH
 f = h5py.File(location+'data/X451/'+hdf5NameMulti,'r') #lambdas T01
 f1 = h5py.File(location+'data/X451/'+hdf5NameSingle,'r') #SH
@@ -52,6 +50,8 @@ if lambdas_analysis:
     # cnfgs_list = np.arange(39,2010,40) # lambdas T00 
     # cnfgs_list = np.arange(19,2010,40) # lambdas T01 
     cnfgs_list = np.arange(19,2010,20) # ALL t00 and t01 
+    # chosen_operators_list = [[0,1,2,3,4],  [0,1,2,3,4,5], [0,1], [0,1,2,3,4,5,6,7,8,9]]
+    chosen_operators_list = [[0,1,2,3,4],  [0,1,2,3,4,5], [0,1], [0,5,6,7,8,9]]
 else:
     ncfgs = np.array(f1[name1[0]+'/data']).shape[0] # SH
     if nucleon_analysis:

@@ -322,9 +322,9 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         the_sigmas_corr=np.array(the_sigmas_corr)
         
         ### Reshaping the data for later diagonizalization and extraction of eigenvalues
-        re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs, the_size_matrix)
-        re_mean = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f, the_size_matrix)
-        re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f_rs, the_size_matrix)
+        re_rs = vf.RESHAPING_EIGENVALS_RS(the_rs)
+        re_mean = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f)
+        re_mean_rs = vf.RESHAPING_EIGENVALS_MEAN(the_mrs_f_rs)
         
         group_corr_real.create_dataset('Resampled',data=re_rs)
         group_corr_real.create_dataset('Mean', data= re_mean)
@@ -334,7 +334,6 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')    
     return the_location + '/Matrix_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version
-
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
@@ -351,10 +350,10 @@ if __name__== "__main__":
     myWhichCorrelator = str(sys.argv[2]).lower()
     myTypeRs = str(sys.argv[3]).lower()
     myRebinOn = str(sys.argv[4]).lower()
-    myRb = 2
+    myRb = 1
     myVersion = 'test'
     myKbt = 500
-    myNrIrreps=1 #None #2
+    myNrIrreps= None #2 #1
     
     if myEns == 'N451': from files_n451 import *
     elif myEns == 'N201': from files_n201 import * 

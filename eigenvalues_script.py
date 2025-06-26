@@ -83,108 +83,11 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         group_gevp = this_data.create_group('GEVP')
         
         ### This is a loop over the t0s
-        the_t0_init=0
-        for the_t0_init in range(np.abs(the_t0_min - the_nt[0]), (the_t0_max - the_nt[0]) + 1):               
-            
-            ### This is the reference correlation matrix for the GEVP
-            the_ct0_mean = np.array(the_mean_corr[the_t0_init])
-            
-            the_evals_mean, the_evecs_mean = [], []
-            the_evalues_rs, the_evectors_rs =[], []
-            
-            ### Loop over the time slices. Diagonalization in each time slice.
-            ttt=0
-            for ttt in range(len(the_mean_corr)):
-                try:
-                    ### This matrix is to compute the modified GEVP
-                    the_ct0_root = fractional_matrix_power(the_ct0_mean, -1/2)
-                    the_mean_corr_mod = the_ct0_root@the_mean_corr[ttt]@(the_ct0_root.conj().T)
-                                     
-                    # the_evs_mean, the_evc_mean = eigh(the_mean_corr[ttt], b=the_ct0_mean, eigvals_only=False) #GEVP
-                    
-                    ### Modified-GEVP (Same eigenvalues, correct eigenvectors for a hermitian matrix)
-                    the_evs_mean_nongevp, the_evec_mean_nongevp = eigh(the_mean_corr_mod, eigvals_only=False) 
-
-                    the_evals_mean.append(the_evs_mean_nongevp)
-                    the_evecs_mean.append(the_evec_mean_nongevp)
-                    
-                except np.linalg.LinAlgError:
-                    print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
-                    break
-                
-            ### The eigenvalues are sorted once by order of magnitude and then with whatever method chosen
-            the_evals_mean, the_evecs_mean = vf.SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
-            if the_sorting!=None or the_sorting!='eigenvals':
-                the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
-            
-            ### Loop over the time slices. Diagonalization in each time slice.
-            ttt=0
-            for ttt in range(len(the_mean_corr)):
-                the_evalues_rs_raw, the_evectors_rs_raw = [], []
-                xyz = 0
-                try:
-                    ### Loop over the resamples
-                    for xyz in range(the_rs_real.shape[1]):
-                        the_ct0_rs = np.array(the_rs_real[the_t0_init][xyz])
-                        
-                        ### This matrix is to compute the modified GEVP
-                        the_ct0_rs_root = fractional_matrix_power(the_ct0_rs, -1/2)
-                        
-                        dis_resample = the_rs_real[ttt][xyz]
-                        dis_resample_mod = the_ct0_rs_root@dis_resample@(the_ct0_rs_root.conj().T)
-                        
-                        # the_ew_rs, the_ev_rw = eigh(dis_resample, b=the_ct0_rs, eigvals_only=False) #GEVP 
-                        the_ew_rs_nongevp, the_ev_rw_nongevp = eigh(dis_resample_mod, eigvals_only=False) #Modified-GEVP
-                        the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
-                        the_evectors_rs_raw.append(np.array(the_ev_rw_nongevp,dtype=np.float128))
-                        
-                    the_evalues_rs.append(np.array(the_evalues_rs_raw))
-                    the_evectors_rs.append(np.array(the_evectors_rs_raw))
-                    
-                except np.linalg.LinAlgError: break
-            
-            if len(the_evalues_rs)>0:
-                
-                ### Reshaping eigenvectors and eigenvalues for sorting
-                the_mod_evals_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
-                the_mod_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
-                
-                ### Loop over the resamples (sorting)
-                for xyz in range(len(the_mod_evals_rs)):
-                    the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = vf.SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
-                
-                ### Reshaping again to save them in a file
-                the_evalues_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
-                the_evectors_rs = vf.RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
-                
-                group_t0 = group_gevp.create_group('t0_%s'%(the_t0_init+the_nt[0]))
-                
-                the_eigevals_final_mean = vf.NT_TO_NCFGS(the_evals_mean)
-                the_evals_fits_rs = np.array(vf.RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs), the_size_matrix), dtype=np.float128)
-                
-                ### Getting the statistical error and the covariance matrix for each eigenvalue.
-                the_l, the_sigma_2 = 0, []
-                for l in range(the_size_matrix):
-                    dis_eign = vf.NCFGS_TO_NT(the_evals_fits_rs[the_l])
-                    the_evals_fits_rs_mean = vf.MEAN(dis_eign)
-                    the_sigma_2.append(vf.COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
-                
-                ### Modified-GEVP eigenvectors (central values)
-                the_evecs_mean = np.array(the_evecs_mean)
-        
-                group_eigvecs = group_t0.create_group('Eigenvectors')
-                group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-                group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
-                
-                group_eigns = group_t0.create_group('Eigenvalues')
-                group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
-                group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
-                group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
-                print(".......................")
-                print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
+        vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp)
         j+=1
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
+
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
@@ -204,6 +107,7 @@ if __name__=="__main__":
     myRebinOn = str(sys.argv[3]).lower()
     myRb = sys.argv[4]
     
+    mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
     myVersion = 'test'
     
     myT0Min = int(input('T0 min: '))
@@ -221,7 +125,7 @@ if __name__=="__main__":
     
     myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
     
-    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting='vecs_fix' )
+    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting )
     myMatrixCorrelatorData.close()   
     
     print('-'*(len(myArchivo)+1))
