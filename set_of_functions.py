@@ -871,6 +871,14 @@ def SINGLE_EXPONENTIAL(x,e0,*a):
 def DOUBLE_EXPONENTIAL(x,e0,*a):
     return e0[0] * np.exp(-(x-a) * e0[1]) * (1. + e0[2] * np.exp(-x * (e0[3]**2)))
 
+# Comments:
+# This is the function for a geometric fit form: Ae^{-E0(nt-t0)}/ (1 - B e^{- nt*M})
+# x: is the t_slices
+# e0: is a list (amplitud, energy E0, Amplitude shift of energy)
+# *a: this is a variable size arguments, in thie case corresponds to t0.
+def GEOMETRIC_FORM(x,e0,*a):
+    return e0[0] * np.exp(-(x-a) * e0[1]) / (1. - e0[2] * np.exp(-x * e0[3]))
+
 
 # Comments:
 # This is the function for an alternative double exponential fit. Ae^{-E0*(nt-t0)}(1+ B e^{-nt (E1-E0)})
