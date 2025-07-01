@@ -20,11 +20,28 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     else:
         rb, the_re_bin = 1, ''  
     
-    ### How many irreps do you want to study
+    ### How many irreps do you want to study    
+    the_s_irreps = list(the_archivo.keys())
+    ### How many irreps do you want to study    
     if kwargs.get('nr_irreps')!=None:
-        the_nr_irreps = int(kwargs.get('nr_irreps'))
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('nr_irreps'))+1
     else:
-        the_nr_irreps = len(the_irreps)    
+        ### This one checks for an irrep in particular
+        if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
+            the_first_irrep = int(kwargs.get('first_irrep'))-1
+            the_last_irrep = int(kwargs.get('last_irrep'))
+        elif kwargs.get('last_irrep')!=None and kwargs.get('first_irrep')==None:
+            the_first_irrep = 0
+            the_last_irrep = int(kwargs.get('last_irrep'))
+        elif kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')==None:
+            the_first_irrep = int(kwargs.get('first_irrep'))-1
+            the_last_irrep = len(the_s_irreps)
+        elif kwargs.get('first_irrep')==None and kwargs.get('last_irrep')==None:
+            the_first_irrep = 0
+            the_last_irrep = len(the_s_irreps)
+    
+    s_irreps = the_s_irreps[the_first_irrep:the_last_irrep]
     
     ### If not all configs, this can be changed.
     if kwargs.get('number_cfgs')==None:
@@ -64,19 +81,19 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     
     begin_time = time.time()
     ### Start of the analysis for the nr. of irreps.
-    for j in range(the_nr_irreps):
+    for the_irrep in s_irreps:
         
         ### The list of operators 
-        the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
+        the_op_list = list(the_archivo[the_irrep].attrs[the_op])
         
         ### The size of the matrix for the single hadrons is always 1
         the_size_matrix = len(the_op_list)
         
         ### Extracting the original/raw data for the analysis
-        the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
+        the_datos_raw = np.array(the_archivo[the_irrep+'/data'])[:the_number_cnfgs]
         
         ### Time slices
-        the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
+        the_times = str(the_archivo[the_irrep].attrs['Other_Info']).split(' \n ')
         
         ### Min time slice
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
@@ -87,7 +104,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         ### Total range
         the_nt = np.arange(the_min_nt,the_max_nt+1)
         
-        print('-->   IRREP (%s/'%str(j+1) + str(len(the_irreps)) +'): ', the_irreps[j])
+        print('-->   IRREP (%s/'%str(the_s_irreps.index(the_irrep)+1) + str(len(the_irreps)) +'): ', the_irrep)
         
         ### Reweighted data set
         rw_datos = vf.REWEIGHTED_CORR(the_datos_raw.real, the_weight)
@@ -125,7 +142,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
             print('      -->>  '+str(the_op_list[i]))
             
         
-        g_i = the_single_correlator_data.create_group(the_irreps[j]) 
+        g_i = the_single_correlator_data.create_group(the_irrep) 
         
         g_i.create_dataset('Time_slices', data=the_nt)
         group_corr= g_i.create_group('Correlators')
@@ -148,8 +165,6 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         group_corr_real.create_dataset('Sigmas', data = the_sigma_corr)
         group_corr_real.create_dataset('Resampled', data = the_rs) 
         group_corr_real.create_dataset('Covariance_matrix', data = the_cov_corr)
-        j+=1
-        print('Irrep nr.: '+ str(j) + ' out of ' +str(len(the_irreps)))
     the_single_correlator_data.close()
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
@@ -170,11 +185,27 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     else:
         rb, the_re_bin = 1, ''  
     
-    ### How many irreps do you want to study
+    the_m_irreps = list(the_archivo.keys())
+    ### How many irreps do you want to study    
     if kwargs.get('nr_irreps')!=None:
-        the_nr_irreps = int(kwargs.get('nr_irreps'))
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('nr_irreps'))
     else:
-        the_nr_irreps = len(the_irreps)    
+        ### This one checks for an irrep in particular
+        if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
+            the_first_irrep = int(kwargs.get('first_irrep'))-1
+            the_last_irrep = int(kwargs.get('last_irrep'))
+        elif kwargs.get('last_irrep')!=None and kwargs.get('first_irrep')==None:
+            the_first_irrep = 0
+            the_last_irrep = int(kwargs.get('last_irrep'))
+        elif kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')==None:
+            the_first_irrep = int(kwargs.get('first_irrep'))-1
+            the_last_irrep = len(the_m_irreps)
+        elif kwargs.get('first_irrep')==None and kwargs.get('last_irrep')==None:
+            the_first_irrep = 0
+            the_last_irrep = len(the_m_irreps)
+    
+    m_irreps = the_m_irreps[the_first_irrep:the_last_irrep]
     
     ### If not all configs, this can be changed.
     if kwargs.get('number_cfgs')==None:
@@ -211,18 +242,18 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     
     begin_time = time.time()
     ### Start of the analysis for the nr. of irreps.
-    for j in range(the_nr_irreps):
+    for the_irrep in m_irreps:
          ### The list of operators 
-        the_op_list = list(the_archivo[the_irreps[j]].attrs[the_op])
+        the_op_list = list(the_archivo[the_irrep].attrs[the_op])
         
         ### The size of the matrix
         the_size_matrix = len(the_op_list)
         
         ### Extracting the original/raw data for the analysis
-        the_datos_raw = np.array(the_archivo[the_irreps[j]+'/data'])[:the_number_cnfgs]
+        the_datos_raw = np.array(the_archivo[the_irrep+'/data'])[:the_number_cnfgs]
         
         ### Time slices
-        the_times = str(the_archivo[the_irreps[j]].attrs['Other_Info']).split(' \n ')
+        the_times = str(the_archivo[the_irrep].attrs['Other_Info']).split(' \n ')
         
         ### Min time slice
         the_min_nt = int(the_times[0][the_times[0].index('= ')+2:])
@@ -234,7 +265,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         the_nt = np.arange(the_min_nt, the_max_nt+1)
         
         print('\n----------------------------------------------')
-        print(' -->   IRREP (%s/'%str(j+1) + str(len(the_irreps)) +'): ', the_irreps[j])
+        print(' -->   IRREP (%s/'%str(the_m_irreps.index(the_irrep)+1) + str(len(the_irreps)) +'): ', the_irrep)
         
         ### Reweighted data set
         re_datos = vf.RESHAPING(the_datos_raw.real)
@@ -292,8 +323,8 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         print('      OPERATORS LIST ')
         for i in range(the_size_matrix):
             print('      -->>  '+str(the_op_list[i]))
-                
-        g_i = the_matrix_correlator_data.create_group(the_irreps[j]) 
+
+        g_i = the_matrix_correlator_data.create_group(the_irrep) 
         g_i.create_dataset('Time_slices', data=the_nt)
         g_i.create_dataset('Operators', data=the_op_list) 
         group_corr = g_i.create_group('Correlators')
@@ -329,7 +360,6 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
         group_corr_real.create_dataset('Resampled',data=re_rs)
         group_corr_real.create_dataset('Mean', data= re_mean)
         group_corr_real.create_dataset('Sigmas', data= the_sigmas_corr)
-        j+=1
     the_matrix_correlator_data.close()
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')    
