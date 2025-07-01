@@ -4,7 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.linalg import eigh
 from scipy.linalg import fractional_matrix_power
-
+from iminuit import Minuit
 
 ## ------------------- SOME USEFUL FUNCTIONS -----------------------------------
 # Comments
@@ -936,7 +936,126 @@ class My_Fits:
         ym = self.model(self.x, *par, self.arg)
         return np.dot(np.dot(self.y - ym, self.cov), self.y - ym)/np.double((np.double(len(self.x))-self.nrPars))
     
+
+
+def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin_data, the_type_correlated_fit, the_type_fit, the_only_one_tmin, the_t0, the_list_tmaxs, da_minimization, the_fit_params):
     
+    ### Loop over all the t0 chosen
+    the_corr_fit = np.array(the_corr.get('Eigenvalues/Mean')).real 
+    the_corr_fit_rs = np.array(the_corr.get('Eigenvalues/Resampled')).real 
+    
+    ### Retrieving the covariance matrix for the fits
+    the_cov_matrix = np.array(the_corr.get('Eigenvalues/Covariance_matrix')).real 
+    
+    ### Effective Masses are used as a prior
+    the_eff_energy_hint = np.array(the_corr.get('Effective_masses/Mean'))
+    
+    ### Creating a folder for correlated or uncorrelated fits
+    if the_type_correlated_fit=='Correlated':
+        if 'Correlated' in tmin_data.keys(): del tmin_data['Correlated']
+        the_fit_data = tmin_data.create_group('Correlated')
+    elif the_type_correlated_fit=='Uncorrelated':
+        if 'Uncorrelated' in tmin_data.keys(): del tmin_data['Uncorrelated']
+        the_fit_data = tmin_data.create_group('Uncorrelated')
+    
+    ### Creating a folder for the fits of the central values
+    the_mean_data = the_fit_data.create_group('Mean')
+    
+    ### Creating a folder for the resampled data fits
+    the_rs_data = the_fit_data.create_group('Resampled')
+    
+    ### Loop over the nr. of eigenvalues
+    for ls in range(len(the_corr_fit)):
+        
+        ### This is the modified time range to go from item 0 until the end without caring about labeling
+        nt_mod = np.arange(0,len(the_nt))
+        if the_only_one_tmin: 
+            
+            ### Upper limit for the fit
+            the_ul = [x-the_nt[0] for x in the_list_tmaxs[the_irreps.index(the_irrep)]]
+            
+            ### Lower limit for the fit
+            the_ll = [nt_mod[5]]                    
+        else: 
+            ### Upper limir for the fit
+            the_ul = [x-the_nt[0] for x in the_list_tmaxs[the_irreps.index(the_irrep)]]
+            
+            ### Lower limit for the fit depends on the upper limit
+            the_ll = np.arange(nt_mod[0]+1, int(the_ul[ls]*(.8 - (0.025*ls))))
+        
+        ### Choosing the covariance matrix depending on the type of correlated fit
+        if the_type_correlated_fit=='Correlated':
+            the_cov_matrix_fit = the_cov_matrix[ls]
+        elif the_type_correlated_fit=='Uncorrelated':
+            the_cov_matrix_fit = np.zeros((len(the_cov_matrix[ls]), len(the_cov_matrix[ls])))
+            np.fill_diagonal(the_cov_matrix_fit, np.diag(the_cov_matrix[ls]))  
+        
+        
+        the_energies_list, the_sigmas_list, the_chi_vals_list, the_sigmas_chi_list = [], [], [], []
+        another_list = []
+        ### Loop over all the tmins
+        for yy in the_ll:
+            print('Tmin = ' + str(yy+the_nt[0]) + '|| TMax = %s'%(the_ul[ls]+the_nt[0]))
+            another_useful_list = []
+            
+            ### This is finding a good guess to make the fit converge easier.
+            da_hint = BEST_GUESS(the_corr_fit[ls][yy:the_ul[ls]], the_nt[yy:the_ul[ls]], the_type_fit) 
+            if False in np.isnan(da_hint):
+                the_dof = da_hint
+            else: 
+                the_dof = np.zeros((1,len(da_hint)));
+                the_dof = the_dof[0]
+                the_dof[0] = np.float64(0.1)
+                the_dof[1] = np.float64(the_eff_energy_hint[ls][yy])
+            
+            ### Reduces the covariance matrix to the size of the time range chosen
+            the_small_cov = SHRINK_MATRIX(the_cov_matrix_fit, yy, the_ul[ls])
+            the_sigma_matrix = np.array(the_small_cov, dtype=np.float64)
+            
+            ### This takes the inverse of the covariance matrix
+            the_inverse_cov_m = np.linalg.inv(the_sigma_matrix)
+            
+            ### This chooses the fit function to use 
+            the_fit_choice = My_Fits(da_minimization, the_nt[yy:the_ul[ls]], the_corr_fit[ls][yy:the_ul[ls]], the_inverse_cov_m, the_dof, np.float64(the_t0))
+            
+            ### Fitting started
+            the_fit = Minuit(the_fit_choice, the_dof, name=the_fit_params)
+            
+            the_fit.errordef, the_fit.tol = 1e-8, 1e-10
+            the_fit.scan()
+            the_fit.migrad(iterate=10,ncall=5000)
+            
+            ### Energy values
+            e0 = np.float128(the_fit.values['e0'])
+            
+            ### The fitted energy results from the central values are used as an initial guess for the resamples
+            the_dof_rs = the_dof
+            the_dof_rs[0], the_dof_rs[1] = np.float64(the_fit.values['a0']), e0
+            
+            the_energies_list.append(e0); the_chi_vals_list.append(np.float64(the_fit.fval)); another_useful_list.append(e0)
+            
+            zz=0
+            chi_vals_rs_list = []
+            ### Loop over the resamples
+            for zz in range(the_corr_fit_rs.shape[1]):
+                my_fit_choice_rs = My_Fits(da_minimization, the_nt[yy:the_ul[ls]], the_corr_fit_rs[ls][zz][yy:the_ul[ls]], the_inverse_cov_m, the_dof_rs, np.float64(the_t0))
+                the_fit_rs = Minuit(my_fit_choice_rs, the_dof_rs, name=the_fit_params)
+                
+                the_fit_rs.errordef, the_fit_rs.tol = 1e-8, 1e-7
+                the_fit_rs.scan()
+                the_fit_rs.migrad(iterate=10, ncall=5000)
+                
+                e0_rs = np.float64(the_fit_rs.values['e0']); chi_vals_rs_list.append(the_fit_rs.fval); another_useful_list.append(e0_rs)
+            
+            ### This is the sigma for the fittings
+            sigma_fit_rs = STD_DEV(another_useful_list[1:], np.mean(another_useful_list[1:]), the_type_rs)
+            sigma_chi_rs = STD_DEV(chi_vals_rs_list, np.mean(chi_vals_rs_list), the_type_rs)
+            
+            the_sigmas_list.append(sigma_fit_rs); the_sigmas_chi_list.append(sigma_chi_rs); another_list.append(np.array(another_useful_list))
+        print('E = %s READY'%ls)    
+        
+        the_rs_data.create_dataset('lambda_%s'%ls, data=np.array(another_list))
+        the_mean_data.create_dataset('lambda_%s'%ls, data =np.array([the_ll + the_nt[0], [the_ul[ls]+the_nt[0]]*len(the_ll), the_energies_list, the_sigmas_list, the_chi_vals_list, the_sigmas_chi_list]))         
 
 ### ------------------  PLOTTING STUFF --------------------------------------------------
 
