@@ -16,6 +16,7 @@ runRowsCols = False
 runEffMass = False
 runFits = False
 
+
 ### ------ MAIN VARIABLES ---------
 
 myEns = str(sys.argv[1]).upper()
@@ -25,7 +26,10 @@ myRebinOn = str(sys.argv[4]).lower()
 myRb = 1
 myVersion = 'test'
 myKbt = 500
+
 myNrIrreps = None # 2 # 1
+myFirstIrrep = None # 1 # 2
+myLastIrrep = None
 
 ### Fitting parameters
 myTypeFit = '1' #'2'
@@ -41,7 +45,7 @@ mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var'
 ### Oher parameters
 myKbtSamples = None #np.array(np.loadtxt('bootstrap_samples.txt')) 
 myEffMassDistance = 1 #None #2 #3
-myOperatorAnalysisMethod = 'removing' # 'adding' # 'removing' # 'from_list'
+myOperatorAnalysisMethod = 'from_list' # 'adding' # 'removing' # 'from_list'
 
 if myRebinOn=='rb': 
     reBin = '_bin'+str(myRb)
@@ -75,7 +79,7 @@ if myWhichCorrelator =='s':
 
     ### Correlators analysis
     if runCorrs: 
-        locationWorkedCorrelators = cs.SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples)
+        locationWorkedCorrelators = cs.SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
         locationWorkedCorrelators = myLocation + 'Single_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
     
@@ -100,7 +104,7 @@ elif myWhichCorrelator=='m':
     
     ### Correlators analysis
     if runCorrs: 
-        locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples)
+        locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
         locationWorkedCorrelators = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
     
@@ -112,11 +116,11 @@ elif myWhichCorrelator=='m':
         myT0Max = int(input('T0 max: ')) 
     
     if runEigenvals:
-        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting)
+        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, myIrreps, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting)
     
     ### Operators Analysis
     if runRowsCols:
-        rcs.OperatorsAnalysis(myCorrelator, myTypeRs, myOperatorAnalysisMethod, t0_min = myT0Min, t0_max = myT0Max, ops_analysis_list = myChosenOpsList)
+        rcs.OperatorsAnalysis(myCorrelator, myTypeRs, myOperatorAnalysisMethod, myIrreps, t0_min = myT0Min, t0_max = myT0Max, ops_analysis_list = myChosenOpsList)
     
     ### Effective Masses analysis
     if runEffMass: 
