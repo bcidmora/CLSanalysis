@@ -1083,6 +1083,7 @@ def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_
     if kwargs.get('yscale')!=None: plt.yscale(str(kwargs.get('yscale')))
     else:
         if kwargs.get('ymin')!=None: plt.ylim(ymin=kwargs.get('ymin'), ymax=the_mean_corr[0]*1.05)
+        # else: plt.ylim(ymin=(the_mean_corr[0]/2.)*.9, ymax=the_mean_corr[0]*1.05)
     plt.legend()
     plt.tight_layout()
     # plt.show()
