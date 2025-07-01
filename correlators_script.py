@@ -9,6 +9,8 @@ import set_of_functions as vf
 
 def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
+    print("                 CORRELATORS ANALYSIS \n")
+    
     ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
@@ -174,6 +176,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
 
 def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
+    print("                 CORRELATORS ANALYSIS \n")
     ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
@@ -369,10 +372,13 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
 
+
 ### --------------------------------------------------------------------------------------------------
 
 
+
 ### ------------------------------- START EXECUTING --------------------------------------------------
+
 
 
 if __name__== "__main__":

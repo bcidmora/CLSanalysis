@@ -10,6 +10,7 @@ import set_of_functions as vf
 
 def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, **kwargs):   
     
+    print("                 SOLVING GEVP \n")
     ### The list of total irreps
     the_m_irreps =  list(the_matrix_correlator_data.keys())
     
@@ -88,16 +89,18 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, *
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
 
 
-
-
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
+
 
 
 ### --------------------------------------------------------------------------------------------------
 
 
 
+
 ### ------------------------------- START EXECUTING --------------------------------------------------
+
+
 
 
 if __name__=="__main__":

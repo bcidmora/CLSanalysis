@@ -9,6 +9,7 @@ import set_of_functions as vf
 
 def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_analysis_method, the_irreps, **kwargs):
     
+    print("                 OPERATORS ANALYSIS PROCESS \n")
     ### The list of total irreps
     the_m_irreps =  list(the_matrix_correlator_data.keys())
     
@@ -153,10 +154,19 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
                 print('Size of the Correlation matrix: ' + str(the_mean_corr.shape[-1])+ 'x' + str(the_mean_corr.shape[-1]) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme + str(the_rs_real.shape[1]) + '\n----------------------------------------------')
         
                 vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i)
-    end_time = time.time()
-            
+    end_time = time.time()   
 
-                
+
+### ------------------------------- END FUNCTIONS ----------------------------------------------------
+
+
+
+### --------------------------------------------------------------------------------------------------
+
+
+
+
+### ------------------------------- START EXECUTING --------------------------------------------------
 
 
 if __name__=="__main__":

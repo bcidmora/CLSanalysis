@@ -24,15 +24,16 @@ myWhichCorrelator = str(sys.argv[2]).lower()
 myTypeRs = str(sys.argv[3]).lower()
 myRebinOn = str(sys.argv[4]).lower()
 myRb = 1
-myVersion = 'test'
+myVersion = '_test' 
 myKbt = 500
 
+### This is the amount of irreps to compute or when to start and when to finish the analysis
 myNrIrreps = None # 2 # 1
 myFirstIrrep = None # 1 # 2
 myLastIrrep = None
 
 ### Fitting parameters
-myTypeFit = '1' #'2'
+myTypeFit = '1' #'2' #'g'
 myTypeCorrelation =  'Correlated' # 'Uncorrelated'
 
 ### GEVP parameters
@@ -77,7 +78,7 @@ vf.INFO_PRINTING(myWhichCorrelator, myEns)
 if myWhichCorrelator =='s':
     myArchivo, myIrreps = f1, name1 
 
-    ### Correlators analysis
+     ### Correlators analysis
     if runCorrs: 
         locationWorkedCorrelators = cs.SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
@@ -94,7 +95,7 @@ if myWhichCorrelator =='s':
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(myFitsLocation + 'Single_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        fs.FitSingleCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxSingleHads, one_tmin = myOneTMin, type_fit = myTypeFit, type_correlation = myTypeCorrelation)
+        fs.FitSingleCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxSingleHads, myIrreps, one_tmin = myOneTMin, type_fit = myTypeFit, type_correlation = myTypeCorrelation)
         
         myFitCorrelator.close()
         
@@ -102,7 +103,7 @@ if myWhichCorrelator =='s':
 elif myWhichCorrelator=='m':        
     myArchivo, myIrreps = f, name
     
-    ### Correlators analysis
+     ### Correlators analysis
     if runCorrs: 
         locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
@@ -131,7 +132,7 @@ elif myWhichCorrelator=='m':
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        fs.FitMultiCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxMultiHads, type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0)
+        fs.FitMultiCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxMultiHads, myIrreps,  type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0, gevp=True, operators_analysis = False, the_operator_analysis_method = myOperatorAnalysisMethod)
         
         myFitCorrelator.close()
         
