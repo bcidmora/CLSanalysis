@@ -27,6 +27,9 @@ ncfgs = np.array(f[name[0]+'/data']).shape[0]
 ### Final reweighting factors (normalized to the total)
 weight = np.array(vf.RW_NORMALIZATION(weight_raw,ncfgs), dtype=np.float64)
 
+### This is the list of chosen operators 
+chosen_operators_list = []
+
 ### List of tmaxs used for the fitting procedure. 
 listTMaxSingleHads = [np.array(f1[name1[0]+'/data']).shape[-1]]*len(name1)
 

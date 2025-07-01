@@ -33,6 +33,9 @@ ncfgs = 2000
 ### Final reweighting factors
 weight = np.array(vf.RW_NORMALIZATION(weight_sarah, ncfgs), dtype=np.float64)
 
+### This is the list of chosen operators 
+chosen_operators_list = []
+
 ### This part here is only in case you have a subset of the original data, for my case it was 100 cnfgs, every 20 starting on 20 until 2000.
 if '-' in hdf5NameMulti:
     ncfgs = np.array(f[name[0]+'/data']).shape[0]
