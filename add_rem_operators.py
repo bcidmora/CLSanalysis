@@ -7,10 +7,10 @@ import os
 import sys
 import set_of_functions as vf
 
-def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_analysis_method, **kwargs):
+def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_analysis_method, the_irreps, **kwargs):
     
     ### The list of total irreps
-    the_list_name_irreps =  list(the_matrix_correlator_data.keys())
+    the_m_irreps =  list(the_matrix_correlator_data.keys())
     
     ### Resampling scheme
     if the_type_rs=='jk':
@@ -22,7 +22,7 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
     if kwargs.get('nr_irreps')!=None:
         the_nr_irreps = int(kwargs.get('nr_irreps'))
     else:
-        the_nr_irreps = len(the_list_name_irreps)    
+        the_nr_irreps = len(the_m_irreps)    
     
     ### Getting the t0 min and t0 max to do the GEVP
     if kwargs.get('t0_min')==None or kwargs.get('t0_max')==None:
@@ -65,15 +65,15 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
     elif the_operator_analysis_method=='from_list':
         the_op_method = vf.CHOOSE_OPS
         the_chosen_op_list = kwargs.get('ops_analysis_list') # This list contains the operators that stay
-        if the_chosen_op_list==None:
+        if the_chosen_op_list==None or len(the_chosen_op_list)==0:
            sys.exit('Exit Error: No list of operators chosen, please choose one.')
         
         
     begin_time = time.time()
-    for j in range(the_nr_irreps):
+    for the_irrep in the_m_irreps:
         
         ### The data to analyse. 
-        this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
+        this_data = the_matrix_correlator_data[the_irrep]
         
         ### The operators list and the time slices
         the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
@@ -88,22 +88,22 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
         the_mod_data_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(this_data.get('Correlators/Real/Resampled')))
         
         print('\n----------------------------------------------')
-        print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
+        print('     IRREP (%s/'%str(the_irreps.index(the_irrep)+1) + str(len(the_irreps)) +'): ', the_irrep)
         
         ### If you want to choose from a list, then you have to provide the list.
         if the_operator_analysis_method=='from_list':
             
             ### Here is checking if the list of operators chosen is the same than the original to not repeat the process
-            if len(the_chosen_op_list[j])<len(the_op_list):
+            if len(the_chosen_op_list[the_irreps.index(the_irrep)])<len(the_op_list) and len(the_chosen_op_list[the_irreps.index(the_irrep)])!=0:
                 
-                the_chosen_op_list_j = the_chosen_op_list[j]
+                the_chosen_op_list_j = the_chosen_op_list[the_irreps.index(the_irrep)]
                 
                 ### The string has the positions of the chosen operators from the original full list
                 the_ops_chosen_string = 'Ops_chosen_'
                 for ss in the_chosen_op_list_j:
                     the_ops_chosen_string+=str(ss)
                 
-                if the_ops_chosen_string in this_data['Operators_Analysis'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis/'+the_ops_chosen_string]
+                if the_ops_chosen_string in this_data['Operators_Analysis'].keys(): del the_matrix_correlator_data[the_irrep+'/Operators_Analysis/'+the_ops_chosen_string]
                 
                 group_i = the_group_rows_cols.create_group(the_ops_chosen_string)
                 
@@ -132,7 +132,7 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
             for ii in the_chosen_op_list_j:
                 ### Checking that the branch for this analysis was created before
                 if (the_name_ops_analysis + 'Op_%s'%str(ii)) in this_data['Operators_Analysis'].keys(): 
-                    del the_matrix_correlator_data[the_list_name_irreps[j]+'/Operators_Analysis/' + the_name_ops_analysis + 'Op_%s'%str(ii)]
+                    del the_matrix_correlator_data[the_irrep+'/Operators_Analysis/' + the_name_ops_analysis + 'Op_%s'%str(ii)]
             
                 ### It creates now the branch for this specific operator
                 group_i = the_group_rows_cols.create_group(the_name_ops_analysis + 'Op_%s'%str(ii))
@@ -153,9 +153,9 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
                 print('Size of the Correlation matrix: ' + str(the_mean_corr.shape[-1])+ 'x' + str(the_mean_corr.shape[-1]) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme + str(the_rs_real.shape[1]) + '\n----------------------------------------------')
         
                 vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i)
-            
-        j+=1
     end_time = time.time()
+            
+
                 
 
 
