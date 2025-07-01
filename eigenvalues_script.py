@@ -8,10 +8,10 @@ import os
 import set_of_functions as vf
 
 
-def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):   
+def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, **kwargs):   
     
     ### The list of total irreps
-    the_list_name_irreps =  list(the_matrix_correlator_data.keys())
+    the_m_irreps =  list(the_matrix_correlator_data.keys())
     
     ### Resampling scheme
     if the_type_rs=='jk':
@@ -53,11 +53,11 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         ### This function returns the eigenvalues sorted based on the orthogonality of the normalized eigenvectors based on the previous reference time slice.
         the_sorting_process = vf.SORTING_EIGENVECTORS_NORMALIZED_CHANGING_TSLICE
 
-    begin_time = time.time()
-    for j in range(len(the_list_name_irreps)):        
+    begin_time = time.time()       
+    for the_irrep in the_m_irreps:
         
         ### The data to analise is extracted here
-        this_data = the_matrix_correlator_data[the_list_name_irreps[j]]
+        this_data = the_matrix_correlator_data[the_irrep]
         
         ### The list of operators of the correlation matrix and the time slices.
         the_op_list, the_nt = list(this_data.get('Operators')), np.array(this_data.get('Time_slices'))
@@ -73,20 +73,20 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, **kwargs):
         the_mean_corr = np.array(the_mean_corr_real, dtype=np.float64)
         
         print('\n----------------------------------------------')
-        print('     IRREP (%s/'%str(j+1) + str(len(the_list_name_irreps)) +'): ', the_list_name_irreps[j])
+        print('     IRREP (%s/'%str(the_irreps.index(the_irrep)+1) + str(len(the_irreps)) +'): ', the_irrep)
         print('Size of the Correlation matrix: ' + str(the_size_matrix)+ 'x' + str(the_size_matrix) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme+ str(the_rs_real.shape[1]) +  '\n----------------------------------------------')
         print('      OPERATORS LIST \n----------------------------------------------')
         for i in range(the_size_matrix):
             print('       '+str(the_op_list[i].decode('utf-8')))
         
-        if 'GEVP' in this_data.keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/GEVP']
+        if 'GEVP' in this_data.keys(): del the_matrix_correlator_data[the_irrep+'/GEVP']
         group_gevp = this_data.create_group('GEVP')
         
         ### This is a loop over the t0s
         vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp)
-        j+=1
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
+
 
 
 
