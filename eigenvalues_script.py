@@ -105,7 +105,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, *
 
 if __name__=="__main__":
     
-    ### Ensemble you want to analyse
+   ### Ensemble you want to analyse
     myEns = str(sys.argv[1]).upper()
     
     ### Type of resampling 'bt' or 'jk'
@@ -119,7 +119,7 @@ if __name__=="__main__":
     mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
     
     ### Name of this version of analysis
-    myVersion = '_test'
+    myVersion = 'test'
     
     ### Min and Max t0 to do the GEVP
     myT0Min = int(input('T0 min: '))
@@ -135,12 +135,19 @@ if __name__=="__main__":
     else:
         reBin = ''  
     
+    if myEns == 'N451': from files_n451 import name
+    elif myEns == 'N201': from files_n201 import name 
+    elif myEns == 'D200': from files_d200 import name
+    elif myEns == 'X451': from files_x451 import name
+    
+    myIrreps = name
+    
     ### This is the file that cotains the averaged correlators and stuff
     myArchivo = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
     
     myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
     
-    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting )
+    EigenvaluesExtraction(myMatrixCorrelatorData, myTypeRs, myIrreps, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting)
     myMatrixCorrelatorData.close()   
     
     print('-'*(len(myArchivo)+1))
