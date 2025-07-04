@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 
 def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwargs):   
     
-    print("                 EFFECTIVE MASSES COMPUTATION \n")
+    print("                     EFFECTIVE MASSES COMPUTATION \n")
     
     ### Defining distance between time-slice elements of the correlator
     if kwargs.get('dist_eff_mass')!=None and kwargs.get('dist_eff_mass')!=1:
@@ -72,7 +72,7 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
             
 def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwargs):
     
-    print("                 EFFECTIVE MASSES COMPUTATION \n")
+    print("                     EFFECTIVE MASSES COMPUTATION \n")
     
     ### Defining distance between time-slice elements of the correlator
     if kwargs.get('dist_eff_mass')!=None and kwargs.get('dist_eff_mass')!=1:
@@ -190,12 +190,22 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
 
 
 if __name__=="__main__":
+    
+    ### This is the ensemble to study
     myEns = str(sys.argv[1]).upper()
+    
+    ### Single 's' or multihadron 'm' correlators
     myWhichCorrelator = str(sys.argv[2]).lower()
+    
+    ### Type of resampling
     myTypeRs = str(sys.argv[3]).lower()
+    
+    ### Rebinning
     myRebinOn = str(sys.argv[4]).lower()
     myRb = 1
-    myVersion = 'test'
+    
+    ### Version of the analysis
+    myVersion = '_test'
     myEffMassDistance = 1 #None #2 #3
     
     if myRebinOn=='rb': 
@@ -204,15 +214,19 @@ if __name__=="__main__":
     else:
         reBin = ''  
     
+    ### Info of the ensembles. If you have a new ensemble you have to add this type of file here
     if myEns == 'N451': from files_n451 import location
     elif myEns == 'N201': from files_n201 import location
     elif myEns == 'D200': from files_d200 import location
     elif myEns == 'X451': from files_x451 import location
     
+    ### Root directory where the averaged correlators are stored.    
     myLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(TOTAL_SAME_THAN_CORRS_SCRIPT)$/%s/'%myEns)
     
+    ### Just priunting some information
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
     
+    ### Here it will run the effective masses over the single hadrons, multihadrons or a ratio of correlation functions
     if myWhichCorrelator=='s':
         myNameArchivo = myLocation + 'Single_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
         mySingleCorrelatorData = h5py.File(myNameArchivo,'r+')            
@@ -225,6 +239,7 @@ if __name__=="__main__":
         MultiCorrelatorEffectiveMass(myMatrixCorrelatorData, myTypeRs, dist_eff_mass = myEffMassDistance)
         myMatrixCorrelatorData.close()
     
+    ### The ratio of correlators has not been implemented yet.
     elif myWhichCorrelator=='mr':
         myNameArchivo = myLocation + 'Matrix_correlators_ratios_' + myTypeRs + reBin + '_v%s.h5'%myVersion
         myRatioMatrixCorrelatorData = h5py.File(myNameArchivo, 'r+')
