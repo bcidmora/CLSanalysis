@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 
 def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, the_irreps, **kwargs): 
     
-    print("                 FITTING \n")
+    print("                     FITTING \n")
     
     ### If only one tmin needs to be done for the fitting
     the_only_one_tmin = kwargs.get('one_tmin')
@@ -154,7 +154,7 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
     
 def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, the_irreps, **kwargs):
     
-    print("                 FITTING \n")
+    print("                     FITTING \n")
     
     ### Fits only one minimum time slice
     the_only_one_tmin = kwargs.get('one_tmin')
@@ -293,32 +293,47 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, the
                     vf.DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin_data, the_type_correlated_fit, the_type_fit, the_only_one_tmin, the_t0, the_list_tmaxs, da_minimization, the_fit_params)
                 end_time_tmin=time.time()
                 print('Time taken: ' + str(round((end_time_tmin-begin_time_tmin)/60,2))+' min')
-                print('Minimization %s exp: E vs Tmin DONE!'%the_type_fit)            
-            
+                print('Minimization %s exp: E vs Tmin DONE!'%the_type_fit)  
     
         
 
 if __name__=="__main__":
     
+    ### This is the ensemble you are analysing
     myEns = str(sys.argv[1]).upper()
+    
+    ### Single hadrons 's' or multihadrons 'm' correlators
     myWhichCorrelator = str(sys.argv[2]).lower()[0]
+    
+    ### type of resampling done before
     myTypeRs = str(sys.argv[3]).lower()
+    
+    ### Rebinning
     myRebinOn = str(sys.argv[4])
     
-    myRb = 2
-    myVersion = 'test'
+    myRb = 1
+    myVersion = '_test'
     
-    myTypeFit = '1'
-    myTypeCorrelation = 'Correlated'
+    ### Type of fit, it could be 1-exp '1', 2-exp '2' or geometric 'g'
+    myTypeFit = '1' # '2' # 'g'
+    
+    ### Correlated or uncorrelated fit
+    myTypeCorrelation = 'Correlated' # 'Uncorrelated'
+    
+    ### One can choose only 1 tmin to do or all of them in a certain range.
     myOneTMin = True 
+    
+    ### ALso for the gevp results, one can do all t0s or just one
     myOneT0 =  True
     myT0 = 4
     
-    if myEns == 'N451': from files_n451 import listTMaxSingleHads, listTMaxMultiHads
-    elif myEns == 'N201': from files_n201 import listTMaxSingleHads, listTMaxMultiHads 
-    elif myEns == 'D200': from files_d200 import listTMaxSingleHads, listTMaxMultiHads
-    elif myEns == 'X451': from files_x451 import listTMaxSingleHads, listTMaxMultiHads
+    ### Info for the fits form the ensembles files
+    if myEns == 'N451': from files_n451 import listTMaxSingleHads, listTMaxMultiHads, name, name1
+    elif myEns == 'N201': from files_n201 import listTMaxSingleHads, listTMaxMultiHads, name, name1 
+    elif myEns == 'D200': from files_d200 import listTMaxSingleHads, listTMaxMultiHads, name, name1
+    elif myEns == 'X451': from files_x451 import listTMaxSingleHads, listTMaxMultiHads, name, name1
     
+    ### Root directory where the averaged correlators are stored
     myLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
     
     if myRebinOn=='rb':
@@ -326,23 +341,36 @@ if __name__=="__main__":
     else:
         reBin=''  
     
+    ### Just printing some info
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
     
+    
     if myWhichCorrelator=='s':
+        myIrreps = name1
+        
         myData = h5py.File(myLocation + 'Single_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion, 'r') 
         
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_SingleHadrons/')
+        
         myFitData = h5py.File(myFitsLocation + 'Single_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        FitSingleCorrelators(myData, myFitData, myTypeRs, listTMaxSingleHads, one_tmin=myOneTMin, type_fit=myTypeFit, type_correlation=myTypeCorrelation)
+        FitSingleCorrelators(myData, myFitData, myTypeRs, listTMaxSingleHads, myIrreps, one_tmin = myOneTMin, type_fit = myTypeFit, type_correlation = myTypeCorrelation)
+
         
     elif myWhichCorrelator=='m':
+        myIrreps = name
+        
+        myOperatorAnalysisMethod = 'from_list' # 'adding' # 'removing' # 'from_list'
+        
         myData = h5py.File(myLocation + '/Matrix_correlators_' +  myTypeRs + reBin + '_v%s.h5'%myVersion,'r')
+        
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Matrices/')
+        
         myFitData = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        FitMultiCorrelators(myData, myFitData, myTypeRs, listTMaxMultiHads, type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0)
-     
+        FitMultiCorrelators(myData, myFitData, myTypeRs, listTMaxMultiHads, myIrreps,  type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0, gevp=True, operators_analysis = False, the_operator_analysis_method = myOperatorAnalysisMethod)
+        
+    ### This ratio of correlators has not been fixed yet. Probably it doesnt work
     elif myWhichCorrelator=='mr':
         myData = h5py.File(myLocation + '/Matrix_correlators_ratios_' + ratioStr + myTypeRs + reBin + '_v%s.h5'%myVersion,'r')
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Ratios/')
