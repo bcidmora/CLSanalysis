@@ -10,7 +10,7 @@ import set_of_functions as vf
 
 def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, **kwargs):   
     
-    print("                 SOLVING GEVP \n")
+    print("                     SOLVING GEVP \n")
     ### The list of total irreps
     the_m_irreps =  list(the_matrix_correlator_data.keys())
     
@@ -87,7 +87,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, *
         vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp)
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
-
+    
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
@@ -105,25 +105,37 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, *
 
 if __name__=="__main__":
     
+    ### Ensemble you want to analyse
     myEns = str(sys.argv[1]).upper()
+    
+    ### Type of resampling 'bt' or 'jk'
     myTypeRs = str(sys.argv[2]).lower()
+    
+    ### Rebinning
     myRebinOn = str(sys.argv[3]).lower()
     myRb = sys.argv[4]
     
+    ### How the eigenstates are sorted
     mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
+    
+    ### Name of this version of analysis
     myVersion = 'test'
     
+    ### Min and Max t0 to do the GEVP
     myT0Min = int(input('T0 min: '))
     myT0Max = int(input('T0 max: ')) 
     
+    ### Root Location of your hdf5 file that contains the correlators already resampled and averaged.
     myLocation = os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT)$/%s/'%myEns
     
+    ### Rebin naming
     if myRebinOn=='rb': 
         rb = int(myRb)
         reBin = '_bin'+str(rb)
     else:
         reBin = ''  
     
+    ### This is the file that cotains the averaged correlators and stuff
     myArchivo = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
     
     myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
