@@ -19,12 +19,23 @@ runFits = False
 
 ### ------ MAIN VARIABLES ---------
 
+### Ensemble to study
 myEns = str(sys.argv[1]).upper()
+
+### Single hadron 's' or multihadron 'm' correlators 
 myWhichCorrelator = str(sys.argv[2]).lower()
+
+### Type of resampling scheme
 myTypeRs = str(sys.argv[3]).lower()
+
+### Rebinning
 myRebinOn = str(sys.argv[4]).lower()
 myRb = 1
+
+### Version of this analysis
 myVersion = '_test' 
+
+### Bootstrap nr. of samples by default
 myKbt = 500
 
 ### This is the amount of irreps to compute or when to start and when to finish the analysis
@@ -32,13 +43,13 @@ myNrIrreps = None # 2 # 1
 myFirstIrrep = None # 1 # 2
 myLastIrrep = None
 
-### Fitting parameters
+### Fitting parameters (1-exp, 2-exp or geometric)
 myTypeFit = '1' #'2' #'g'
 myTypeCorrelation =  'Correlated' # 'Uncorrelated'
-
-### GEVP parameters
 myOneTMin = False # True
 myOneT0 =  True # False
+
+### GEVP parameters
 myT0 = 2
 mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
 
@@ -76,6 +87,8 @@ vf.INFO_PRINTING(myWhichCorrelator, myEns)
 
 ##  Single Hadron correlators
 if myWhichCorrelator =='s':
+    
+    ### Getting the file and its info
     myArchivo, myIrreps = f1, name1 
 
      ### Correlators analysis
