@@ -119,7 +119,7 @@ if __name__=="__main__":
     mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
     
     ### Name of this version of analysis
-    myVersion = 'test'
+    myVersion = '_test'
     
     ### Min and Max t0 to do the GEVP
     myT0Min = int(input('T0 min: '))
