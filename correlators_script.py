@@ -396,7 +396,7 @@ if __name__== "__main__":
     myRb = 1
     
     ### Name of the output file
-    myVersion = 'test'
+    myVersion = '_test'
     
     ### Default bootstrap sampling
     myKbt = 500
