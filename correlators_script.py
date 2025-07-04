@@ -9,7 +9,7 @@ import set_of_functions as vf
 
 def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
-    print("                 CORRELATORS ANALYSIS \n")
+    print("                     CORRELATORS ANALYSIS \n")
     
     ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
@@ -173,10 +173,10 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     return the_location + '/Single_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version
     
 
-
 def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
-    print("                 CORRELATORS ANALYSIS \n")
+    print("                     CORRELATORS ANALYSIS \n")
+    
     ### It chooses the rebin
     if kwargs.get('rebin_on')=='rb': 
         if kwargs.get('rb')==None:
@@ -368,7 +368,6 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')    
     return the_location + '/Matrix_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version
 
-
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
 
@@ -382,20 +381,37 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
 
 
 if __name__== "__main__":
+    
+    ### The ensemble
     myEns = str(sys.argv[1]).upper()
+    
+    ### Single hadrons or multihadrons
     myWhichCorrelator = str(sys.argv[2]).lower()
+    
+    ### Type of resampling 'bt' or 'jk'
     myTypeRs = str(sys.argv[3]).lower()
+    
+    ### Rebinning or not
     myRebinOn = str(sys.argv[4]).lower()
     myRb = 1
+    
+    ### Name of the output file
     myVersion = 'test'
+    
+    ### Default bootstrap sampling
     myKbt = 500
-    myNrIrreps= None #2 #1
+    
+    ### If you don't want to start with the very first irrep
+    myNrIrreps = None # 2 # 1
+    myFirstIrrep = None # 1 # 2
+    myLastIrrep = None
     
     if myEns == 'N451': from files_n451 import *
     elif myEns == 'N201': from files_n201 import * 
     elif myEns == 'D200': from files_d200 import *
     elif myEns == 'X451': from files_x451 import *
     
+    ### This information comes from the files_ens.py, so be careful how you define your directories.
     myWeight = weight
     myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
     myCnfgs = ncfgs
@@ -413,7 +429,7 @@ if __name__== "__main__":
         print('NOT AN OPTION.\nQUITTING.')
         sys.exit()
     
-    savedLocation = correlatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps)
+    savedLocation = correlatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     
     myArchivo.close()
     print('-'*(len(savedLocation)+1))
