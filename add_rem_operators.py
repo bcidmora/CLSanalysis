@@ -9,7 +9,7 @@ import set_of_functions as vf
 
 def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_analysis_method, the_irreps, **kwargs):
     
-    print("                 OPERATORS ANALYSIS PROCESS \n")
+    print("                     OPERATORS ANALYSIS PROCESS \n")
     ### The list of total irreps
     the_m_irreps =  list(the_matrix_correlator_data.keys())
     
@@ -154,7 +154,7 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
                 print('Size of the Correlation matrix: ' + str(the_mean_corr.shape[-1])+ 'x' + str(the_mean_corr.shape[-1]) +  '\nTime slices: '+str(the_nt[0])+' - '+str(the_nt[-1]) + '\nResampling data (%s): '%the_resampling_scheme + str(the_rs_real.shape[1]) + '\n----------------------------------------------')
         
                 vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i)
-    end_time = time.time()   
+    end_time = time.time()
 
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
@@ -171,14 +171,29 @@ def OperatorsAnalysis(the_matrix_correlator_data, the_type_rs, the_operator_anal
 
 if __name__=="__main__":
     
+    ### Ensemble to do the operators analysis
     myEns = str(sys.argv[1]).upper()
+    
+    ### This doesn't change
     myWhichCorrelator = "m"
+    
+    ### Type of resampling 'bt' or 'jk'
     myTypeRs = str(sys.argv[2]).lower()
+    
+    ### Rebinning
     myRebinOn = str(sys.argv[3]).lower()
     myRb = 1
-    myVersion = 'test'
-    myKbt = 500
-    myNrIrreps=1
+    
+    ### Version of the analysis
+    myVersion = '_test'
+    
+    myOperatorMethod = 'from_list' # 'adding' # 'removing' # 'from_list'
+    
+    ### Min and Max t0 to do the GEVP
+    myT0Min = int(input('T0 min: '))
+    myT0Max = int(input('T0 max: ')) 
+    
+    myNrIrreps=None #1 #2
     
     if myRebinOn=='rb': 
         rb = int(myRb)
@@ -186,25 +201,32 @@ if __name__=="__main__":
     else:
         reBin = '' 
     
+    ### Info from that specific ensemble 
     if myEns == 'N451': from files_n451 import *
     elif myEns == 'N201': from files_n201 import * 
     elif myEns == 'D200': from files_d200 import *
     elif myEns == 'X451': from files_x451 import *
     
-    myWeight = weight
+    ### Root directory
     myLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(TOTAL_SAME_THAN_CORRS_SCRIPT)$/%s/'%myEns)
     
-    myCnfgs = ncfgs
+    ### The total original irreps
+    myIrreps = name
     
+    ### The list of operators selected for the analysis
+    myListOperators = chosen_operators_list
+    
+    ### Just printing some info
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
     
+    ### This is the file that contains the averaged correlators, etc.
     myArchivo = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
     
     myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
     
-    OperatorsAnalysis(myMatrixCorrelatorData, myTypeRs, myOperatorMethod, ops_analysis_list = myListOperators)#, nr_irreps=myNrIrreps)
+    ### Performing the selection
+    OperatorsAnalysis(myMatrixCorrelatorData, myTypeRs, myOperatorMethod, myIrreps, t0_min = myT0Min, t0_max = myT0Max, ops_analysis_list = myListOperators)
 
-    
     myArchivo.close()
     # print('-'*(len(savedLocation)+1))
     # print('Saved as: \n' + savedLocation)
