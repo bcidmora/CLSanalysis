@@ -11,10 +11,6 @@ location = os.path.expanduser('~') + '$YOUR_PATH_TO_THE_DATA$'
 hdf5NameMulti = 'cls21_D200_r000_isosinglet_Sm1_fwd.hdf5'
 hdf5NameSingle = 'cls21_D200_r000_single_fwd.hdf5'
 
-### These are the subsets of the original full dataset.
-# hdf5NameMulti = 'cls21_D200_r000_isosinglet_Sm1_fwd_20-2000-20.hdf5'
-# hdf5NameSingle = 'cls21_D200_r000_single_fwd_20-2000-20.hdf5'
-
 ### Reweighting factors
 weight_sarah = np.loadtxt(location + '/data/D200/sarah_reweighting.dat')
 
