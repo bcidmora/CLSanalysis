@@ -51,8 +51,10 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
         print('----------------------------------------------------------------------------------------')
         
         ### Check if this part already exists
-        if the_irrep not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(the_irrep)
-        else: dis_irrep = the_fit_data[the_irrep]
+        if the_irrep not in the_fit_data.keys(): 
+            dis_irrep = the_fit_data.create_group(the_irrep)
+        else: 
+            dis_irrep = the_fit_data[the_irrep]
         
         if 'Operators' not in dis_irrep.keys(): 
             dis_irrep.create_dataset('Operators', data=the_op_list)
@@ -83,11 +85,11 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
         
         if type_correlated_fit=='Correlated':
             if 'Correlated' in the_tmin_data.keys(): del the_tmin_data['Correlated']
-            the_fit_data = the_tmin_data.create_group('Correlated')
+            the_fit_data_group = the_tmin_data.create_group('Correlated')
             the_cov_matrix_fit = the_cov_matrix
         elif type_correlated_fit=='Uncorrelated':
             if 'Uncorrelated' in the_tmin_data.keys(): del the_tmin_data['Uncorrelated']
-            the_fit_data = the_tmin_data.create_group('Uncorrelated') 
+            the_fit_data_group = the_tmin_data.create_group('Uncorrelated') 
             the_cov_matrix_fit = np.zeros((len(the_cov_matrix), len(the_cov_matrix)))
             np.fill_diagonal(the_cov_matrix_fit, np.diag(the_cov_matrix))
 
@@ -144,8 +146,8 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
             
             the_sigmas_list.append(the_sigma_fit_rs); the_sigmas_chi_list.append(the_sigma_chi_rs); another_list.append(np.array(another_useful_list))
           
-        the_fit_data.create_dataset('Resampled', data = np.array(another_list))
-        the_fit_data.create_dataset('Mean', data = np.array([the_ll + the_nt[0], [the_ul + the_nt[0]]*(len(the_ll)), the_energies_list, the_sigmas_list, the_chi_vals_list, the_sigmas_chi_list]))
+        the_fit_data_group.create_dataset('Resampled', data = np.array(another_list))
+        the_fit_data_group.create_dataset('Mean', data = np.array([the_ll + the_nt[0], [the_ul + the_nt[0]]*(len(the_ll)), the_energies_list, the_sigmas_list, the_chi_vals_list, the_sigmas_chi_list]))
         
         print('Minimization %s exp: DONE!'%the_type_fit)
         end_time = time.time()        
@@ -208,8 +210,10 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, the
         print('----------------------------------------------------------------------------------------')
         
         ### This is creating a path for the irrep
-        if the_irrep not in the_fit_data.keys(): dis_irrep = the_fit_data.create_group(the_irrep)
-        else: dis_irrep = the_fit_data[the_irrep]
+        if the_irrep not in the_fit_data.keys(): 
+            dis_irrep = the_fit_data.create_group(the_irrep)
+        else: 
+            dis_irrep = the_fit_data[the_irrep]
         
         ### It creates a path to store the operators
         if 'Operators' not in dis_irrep.keys():
@@ -293,7 +297,7 @@ def FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, the
                     vf.DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin_data, the_type_correlated_fit, the_type_fit, the_only_one_tmin, the_t0, the_list_tmaxs, da_minimization, the_fit_params)
                 end_time_tmin=time.time()
                 print('Time taken: ' + str(round((end_time_tmin-begin_time_tmin)/60,2))+' min')
-                print('Minimization %s exp: E vs Tmin DONE!'%the_type_fit)  
+                print('Minimization %s exp: E vs Tmin DONE!'%the_type_fit)      
     
         
 
