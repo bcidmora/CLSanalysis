@@ -35,12 +35,13 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         print('Correlator plot in progress...')
         the_corr_fig = plt.figure()
         vf.PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot)
-
+        # plt.show()
         the_corr_fig.savefig(the_location + 'Correlator_' + irrep[:4] +'_%s'%irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
         print('Correlator Log-plot in process...')
         the_log_corr_fig = plt.figure()
         vf.PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot, yscale='log')
+        # plt.show()
         the_log_corr_fig.savefig(the_location + 'Correlator_' + irrep[:4] + '_%s'%irrep[-1] + '_log' + the_rebin + '_v%s.pdf'%the_version)
         
         print('Correlator histogram in process...')
@@ -55,6 +56,7 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         the_stat_error = the_sigmas_corr[tt]
         
         vf.PLOT_HISTOGRAMS(the_rs, r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) +'\n'+ r'$\sigma = %s$'%'{:.10e}'.format(the_stat_error), the_mean_rs, r'$ \bar{C}_{%s}(t) =$'%the_type_rs + r' $%s$'%the_mean_rs, the_nt_mean, r'$ \bar{C}(t) = $ %s'%the_nt_mean, OperatorNamePlot+ ' (%s): '%MomentumIrrep + ' t = %s'%(tt+the_nt[0]), the_nr_bins,  'Correlator')
+        # plt.show()
         the_gauss_fig.savefig(the_location + 'Histogram_correlators_' + irrep[:4] + '_' + irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
         

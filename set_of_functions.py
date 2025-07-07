@@ -1064,6 +1064,27 @@ def SQUARED_MOM(the_mom_str):
     the_mod_str = list(the_mom_str.split(','))
     the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
     return the_sqrd_mom
+
+### Comments: This function searches the min value to plot the y-axis and not be too shifted.
+def CHOOSING_YMIN_PLOT(the_mean_efm):
+    the_ymin=0. 
+    if not np.isinf(min(the_mean_efm)) and not np.isnan(min(the_mean_efm)):
+        if min(the_mean_efm)<0.:
+            the_ymin=the_mean_efm[0]/3
+        elif the_mean_efm[int(2* (len(the_mean_efm)/3))]>(the_mean_efm[0]*1.5) or the_mean_efm[int(2* (len(the_mean_efm)/3))]<(the_mean_efm[0]*.5):
+            the_ymin=(the_mean_efm[0]/2)*.65 
+    else: 
+        # the_ymin=0.
+        the_ymin= the_mean_efm[int(len(the_mean_efm)/2)]*.68
+    return the_ymin
+
+
+### Comments: This function searches the max value to plot the y-axis and not be too shifted.
+def CHOOSING_YMAX_PLOT(the_mean_corr):
+    da_t =0
+    while np.isinf(the_mean_corr[da_t]) or np.isnan(the_mean_corr[da_t]): 
+        da_t+=1
+    return the_mean_corr[da_t]*1.07
     
 
 ### Comments:
@@ -1209,8 +1230,8 @@ def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_
     plt.xticks(the_nt_ticks)
     if kwargs.get('yscale')!=None: plt.yscale(str(kwargs.get('yscale')))
     else:
-        if kwargs.get('ymin')!=None: plt.ylim(ymin=kwargs.get('ymin'), ymax=the_mean_corr[0]*1.05)
-        # else: plt.ylim(ymin=(the_mean_corr[0]/2.)*.9, ymax=the_mean_corr[0]*1.05)
+        if kwargs.get('ymin')!=None:
+            plt.ylim(ymin=kwargs.get('ymin'), ymax=CHOOSING_YMAX_PLOT(the_mean_corr)*1.05)
     plt.legend()
     plt.tight_layout()
     # plt.show()
