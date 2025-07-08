@@ -48,6 +48,9 @@ myTypeFit = '1' #'2' #'g'
 myTypeCorrelation =  'Correlated' # 'Uncorrelated'
 myOneTMin = False # True
 myOneT0 =  True # False
+myDiagonalCorrs = True
+myGevpFlag = False
+myOperatorsFlag = True
 
 ### GEVP parameters
 myT0 = 2
@@ -138,7 +141,7 @@ elif myWhichCorrelator=='m':
     
     ### Effective Masses analysis
     if runEffMass: 
-        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass = myEffMassDistance)
+        efs.MultiCorrelatorEffectiveMass(myCorrelator, myTypeRs, dist_eff_mass = myEffMassDistance, diag_corrs= myDiagonalCorrs, gevp=myGevpFlag, ops_analysis=myOperatorsFlag)
 
     ### Fits analysis
     if runFits:        

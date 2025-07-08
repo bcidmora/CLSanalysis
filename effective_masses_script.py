@@ -79,7 +79,11 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
         the_dist_eff_mass = int(kwargs.get('dist_eff_mass'))
     else:
         the_dist_eff_mass = 1
-        
+    
+    the_diagonal_corrs_flag = kwargs.get('diag_corrs')
+    the_gevp_flag = kwargs.get('gevp')
+    the_operators_analysis_flag = kwargs.get('ops_analysis')    
+    
     ### The irreps
     the_list_name_irreps = list(the_matrix_correlator_data.keys())    
     
@@ -107,35 +111,36 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
         the_reshaped_rs_corr = vf.RESHAPING_CORRELATORS_RS(the_rs_real)
         
         ### Loop over the nr. of operators = size of the correlator matrix
-        ii, the_efm_mass, the_sigma_efm = 0, [], []
-        for ii in range(the_size_matrix):
-            
-            ### Effective Masses of the entral values of the correlators
-            the_mean_eff = vf.EFF_MASS(the_reshaped_mean_corr[ii][ii],the_dist_eff_mass)
-            
-            the_efm_mass.append(the_mean_eff)
-            
-            ### Loop over the resamples
-            the_rs_eff = []
-            for xyz in range(len(the_rs_real[0])):
-                the_rs_eff.append(vf.EFF_MASS(the_reshaped_rs_corr[ii][ii][xyz], the_dist_eff_mass))
-            
-            ### Reshaping data
-            the_rs_eff = np.array(vf.NCFGS_TO_NT(the_rs_eff))
-            
-            ### MEan value of the resampled data to compute the sigma vals.
-            the_rs_mean_eff = vf.MEAN(the_rs_eff)
-            the_sigma_efm.append(vf.STD_DEV_MEAN(the_rs_eff, the_rs_mean_eff, the_type_rs))
+        if the_diagonal_corrs_flag:
+            ii, the_efm_mass, the_sigma_efm = 0, [], []
+            for ii in range(the_size_matrix):
                 
-            ### If the branch Effective Masses exists in the file, then it gets deleted and created a new one with the new values.
-            if 'Effective_masses' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses']
-            this_data.get('Correlators/Real').create_dataset('Effective_masses', data=np.array(the_efm_mass))
-            
-            if 'Effective_masses_sigmas' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses_sigmas']
-            this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(the_sigma_efm))
+                ### Effective Masses of the entral values of the correlators
+                the_mean_eff = vf.EFF_MASS(the_reshaped_mean_corr[ii][ii],the_dist_eff_mass)
+                
+                the_efm_mass.append(the_mean_eff)
+                
+                ### Loop over the resamples
+                the_rs_eff = []
+                for xyz in range(len(the_rs_real[0])):
+                    the_rs_eff.append(vf.EFF_MASS(the_reshaped_rs_corr[ii][ii][xyz], the_dist_eff_mass))
+                
+                ### Reshaping data
+                the_rs_eff = np.array(vf.NCFGS_TO_NT(the_rs_eff))
+                
+                ### MEan value of the resampled data to compute the sigma vals.
+                the_rs_mean_eff = vf.MEAN(the_rs_eff)
+                the_sigma_efm.append(vf.STD_DEV_MEAN(the_rs_eff, the_rs_mean_eff, the_type_rs))
+                    
+                ### If the branch Effective Masses exists in the file, then it gets deleted and created a new one with the new values.
+                if 'Effective_masses' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses']
+                this_data.get('Correlators/Real').create_dataset('Effective_masses', data=np.array(the_efm_mass))
+                
+                if 'Effective_masses_sigmas' in this_data['Correlators/Real'].keys(): del the_matrix_correlator_data[the_list_name_irreps[j]+'/Correlators/Real/Effective_masses_sigmas']
+                this_data.get('Correlators/Real').create_dataset('Effective_masses_sigmas', data=np.array(the_sigma_efm))
             
         ### If the GEVP was performed, then it will identify this section.
-        if 'GEVP' in this_data.keys(): 
+        if 'GEVP' in this_data.keys() and the_gevp_flag: 
             
             gevp_group = this_data.get('GEVP')
                 
@@ -144,7 +149,7 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
             vf.DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs)
                 
         ### If the Operator Analysis was performed, this section will also be identified. 
-        if 'Operators_Analysis' in this_data.keys():
+        if 'Operators_Analysis' in this_data.keys() and the_operators_analysis_flag:
             
             ### Checks if the keys of ops_chosen is in the list of the operator analysis
             if any('Ops_chosen_' in the_keys for the_keys in this_data['Operators_Analysis'].keys()):
