@@ -9,8 +9,30 @@ import warnings
 warnings.filterwarnings('ignore')
   
 
-def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_version, the_location, the_rebin):
+def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_version, the_location, the_rebin, **kwargs):
+    
     s_irreps = list(the_single_correlator_data.keys())
+    
+    ### If not all the irreps are wanted t be plotted
+    if kwargs.get('nr_irreps')!=None:
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('nr_irreps'))
+    else:
+        the_first_irrep = 0
+        the_last_irrep = len(s_irreps)
+    ### This one checks for an irrep in particular
+    if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
+        the_first_irrep = int(kwargs.get('first_irrep'))
+        the_last_irrep = int(kwargs.get('last_irrep'))
+    elif kwargs.get('last_irrep')!=None and kwargs.get('first_irrep')==None:
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('last_irrep'))
+    elif kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')==None:
+        the_first_irrep = int(kwargs.get('first_irrep'))
+        the_last_irrep = len(s_irreps)
+    
+    s_irreps = s_irreps[the_first_irrep:the_last_irrep]
+    
     
     if the_type_rs=='jk':
         the_rs_scheme='Jackknife'
@@ -66,7 +88,6 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         # plt.show()
         the_gauss_fig.savefig(the_location + 'Histogram_correlators_' + irrep[:4] + '_' + irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
-        
 
 def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_version, the_t0, the_location, the_rebin, **kwargs):
     
@@ -83,6 +104,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
     if kwargs.get('nr_irreps')!=None:
         the_first_irrep = 0
         the_last_irrep = int(kwargs.get('nr_irreps'))
+    else:
+        the_first_irrep = 0
+        the_last_irrep = len(m_irreps)
     ### This one checks for an irrep in particular
     if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
         the_first_irrep = int(kwargs.get('first_irrep'))
@@ -505,7 +529,6 @@ def PlotRatioHadronCorrelators(the_ratio_correlator_data, the_type_rs, the_versi
 
 
 ### ------------------------------- START EXECUTING --------------------------------------------------
-
 
 
 
