@@ -80,7 +80,18 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME = n451, fo
         - myOperatorAnalysisMethod: 'from_list'/'adding'/'removing'. These are the options if you choose from a list (included in "file_$name.py") or adding and removing operators from the original basis.
         - myLocation: directory of the analysed data.
         - myWeight: reweighting factors
-        - myCnfgs: This can be modified if you don't want to do all the configs
+        - myCnfgs: This can be modified if you don't want to do all the configs.
+        - myChosenOpsList: the list of operators chosen to do the operators analysis.
+        - myDiagonalCorrs: True/False This will plot the diagonal correlators of the correlation matrices.
+        - myGevpFlag: True/False. This will plot the eigenvalues from the GEVP of the original basis.
+        - myOperatorsFlag: True/False. This will plot the eigenvalues from the modified basis coming from the operators analysis.
+        - myOperatorsMethod: 'from_list'/'adding'/'removing'. The method must be specified to plot the results of the eigenvalues.
+        - myZoomFit: True/False. Zoom in the time interval of the plots.
+        - myChiPlots: True/False. Plots the Chi^{2} per degree of freedom values versus tmin.
+        - myTotalChiPlots: True/False. Plots the Total Chi^{2} versus tmin.
+        - myDeltaChiPlots: True/False. Plots the change in Chi^{2} when changing the tmin. So as to see if there is a big jump in the results. It is to study stability of the fits.
+        - myDataLocation: This is the directory where the data to plot is stored.
+        - myPlotLocation: This is the directory where the plots are saved.
        
     4.4. Finally it prints the location of the output file so you do not lose it.
 
@@ -106,17 +117,6 @@ This script is the main code to do the following:
 NOTE: This file contains two functions: One for the single hadrons (SingleCorrelatorAnalysis) and one for the Multiple hadrons (MultiCorrelatorAnalysis). This was made in order to reduce errors, so the correlators can be treated separately. Although, the functions are the same, as they do the same and use the same routines, but one implemented in a difference size array. They both received the same input parameters.
 
 NOTE: You can run this script by itself, or it can be run along with other parts of the data analysis in the script called "main_analysis_script.py".
-
-To Run this script alone:
-    1. Check that all the information in the part "__main__" of the code is correct. Meaning, that your file with your ensemble is imported if needed. (myEns)
-    2. Change the directory where the file output will be saved, this is changed in the scripts "file_ens.py". (myLocation)    
-    3. Modify the version of the analysis, so you can make diferent version with different choices. By default is '0' (myVersion)    
-    4. Modify which number of rebin you want. By default is 1==no-binning. (myRb)    
-    5. Modify the variable "myKbt", which is the k-number of Bootstrap samples you want. By default is myKbt=500.    
-    6. Go to the Terminal, and to the folder where this script is and type:
-    blah@blah~ python3 (or python, whatever name you have for it) correlators_script.py $Ensemble of interest$ $s/m$(single or multihadron) $jk/bt$(Jackknife or Bootstrap) $rb/nr$(rebin or no-rebin) 
-    7. It will be shown in the terminal where the file was saved.    
-    8. If you do not run this file by itself, all these parameters must be included in the "main_analysis_script.py".
 
 DESCRIPTION OF THE FUNCTIONS: 
     1.1. the_archivo: hdf5 File, contains the correlation functions data. (MANDATORY)
@@ -151,18 +151,6 @@ This script contains two functions: one for the single hadrons and one for the m
         2.3. It saves the info in the same file than the averaged correlators and eigenvalues are.
 
 NOTE: This script can be run alone or within the "main_analysis_script.py". If you run it alone, then you must consider changing the variables.
-1. The input in the terminal are:
-    - myEns: name of the ensemble ( e.g.: n451)
-    - myWhichCorrelator: s=single hads or m=multihads
-    - myTypeRs: Jackknife=jk or Bootstrap=bt
-    - myRebinOn: rebin=rb if you want to rebin the data, or nr=no bining.
-    
-2. The info you gotta modify in the script itself
-    - myRb: number of bins.
-    - myVersion: String of the version you want to use. (e.g.: '0')
-    - myLocation: You have to modify '$YOUR_PATH_TO_THE_AVERAGED_CORRELATORS$', this is where your output will go.
-
-3. It prints in the screen the location of the output file.
 
 DESCRIPTION OF THE FUNCTIONS:
     1.1. the_single_correlator_data: hdf5 File. Contains the info of the averaged correlators. 
@@ -178,26 +166,13 @@ THIS IS A BRIEF EXPLANATION OF HOW THE EIGENVALUES SCRIPT WORKS
 FUNCTIONALITY:
 
 This script is the main code to do the following:
-    1. It obtains the eigenvalues for a certain reference value of T0, for each tslice. 
+    1. It obtains the eigenvalues for a certain reference value of T0, for each tslice. This by solving the GEVP in the following way: C^{-1/2}(t_0)C(t)C^{-1/2}(t_0) \vec{u} = \lambda \vec{u} 
     2. It saves the eigenvalues and the eigenvectors.
     3. It does this for the central value and for the bootstrap samples.
     4. It calculates the covariance matrices to later use them in the fittings.
 
 NOTE: You can run this script by itself, or it can be run along with other parts of the data analysis in the script called "main_analysis_script.py".
 
-To Run this script alone:
-    
-1. The input in the terminal are:
-    - myEns: name of the ensemble ( e.g.: n451)
-    - myTypeRs: Jackknife=jk or Bootstrap=bt
-    - myRebinOn: rebin=rb if you want to rebin the data, or nr=no bining.
-    
-2. The info you gotta modify in the script itself
-    - myRb: number of bins.
-    - myVersion: String of the version you want to use. (e.g.: '0')
-    - myLocation: You have to modify '$YOUR_PATH_TO_THE_AVERAGED_CORRELATORS$', this is where your output will go.
-
-3. Additional Inputs:
     - myT0Min: Min t0 to use as a reference time slice for the GEVP.
     - myT0Max: Max t0 to use as a reference time slice for the GEVP.
 
@@ -208,9 +183,6 @@ DESCRIPTION OF THE FUNCTIONS:
     1.3. kwargs:
         1.3.1. t0_min: min T0 to do the GEVP. (MANDATORY) 
         1.3.2. t0_max: max T0 to do the GEVP (MANDATORY)    
-    
-NOTE: DO NOT FORGET TO BE CONSISTENT CHOOSING THE PATH OF YOUR OUTPUTS, BECAUSE THEY ARE REFERENCED LATER WHEN YOU WANT TO DO OTHER STEPS OR WHEN YOU DO THE PREVIOUS STEPS. THEY MUST BE CHANGED ONLY ONCE, WHEN YOU START USING THIS CODE, THEN NEVER AGAIN UNLESS YOU WANT TO STORE THEM IN A DIFFERENT PLACE.
-
 
 
 ---------------------------***** FILES SCRIPT *****--------------------------
@@ -225,8 +197,8 @@ DESCRIPTION:
     2. f: hdf5 File. Contains the multihadron correlation functions. 
     3. f1: hdf5 File. Contains the single hadron correlation functions data.
     4. weight_raw: 'dat' file or 'txt' file that contains the reweighting factors. Notice they must be organized such that each column has a reweighting factor and each row corresponds to a gauge config. 
-    5. name: list. List of irreps contained in f.
-    6. name1: list. List of irreps contained in f1.
+    5. name: list. List of irreps contained in f (Multihadrons).
+    6. name1: list. List of irreps contained in f1 (single hadrons).
     7. listTMaxSingleHads: array. This is the array that has the tmax for which the fitting will be done. You can look at the effective masses to change this. The order goes as the irreps go. 
     8. listTMaxMultiHads: array of arrays. This array is similar to the above one, but the tmax for each irrep includes the tmax of each of the eigenvalues.
     9. singleTMinsFitPlots: this is a list of tmins to do plot later. This should be modified once you choose which tmins are better for each hadron/irrep.
@@ -235,6 +207,9 @@ DESCRIPTION:
     12. betaLat: beta value for this lattice/ensemble.
     13. fmToMev: conversion from fm to MeV. It is used later for the reconstruction or to plot stuff in Energy units.
     14. LatSize: This is the Lattice size (L^{3}xT, this is L)
+    15. ncfgs: Total Number of gauge configs of this ensemble to normalize the reweighting factors. This must be changed to the real amount one has to normalize again.
+    16. chosen_operators_list: This is the list to do the Operators analysis. If empty, then nothing happens, but it must be declared here.
+    
 
 
 
@@ -247,7 +222,7 @@ FUNCTIONALITY:
 
 This script contains two functions: one for the single hadrons and one for the multiple hadrons. 
     1. SINGLE HADRONS: 
-        1.1. It takes the correlators and searches for a good fit, using 1 or 2 exponentials. And based on Correlated fits or Uncorrelated fits. 
+        1.1. It takes the correlators and searches for a good fit, using 1 or 2 exponentials or a geometric fit. And based on Correlated fits or Uncorrelated fits. 
         1.2. Tmin can be changed, you can calculate the fit of only one-tmin or you can go through a range, this must be modified in the variable "one_tmin = True/False".
         1.3. It takes an ansatz of solution, it can be the results from BEST_GUESS or, if nothing comes out from this, it can be the effective mass at that time slice. 
         1.4. It takes the covariance matrix for that specific time interval and minimizes the ChiSqr. 
@@ -256,26 +231,6 @@ This script contains two functions: one for the single hadrons and one for the m
             - [ tmins, tmaxs, energies, sigmas of these energies, chi^2 values, sigmas of these chi^2 vals]
     2. MULTIHADRONS: 
         2.1. It does pretty much the same than for the single hadrons, but it goes through each of the eigenvalues, for each t0 found in the file.
-
-NOTE: This script can be run alone or within the "main_analysis_script.py". If you run it alone, then you must consider changing the variables.
-1. The input in the terminal are:
-    - myEns: name of the ensemble ( e.g.: n451)
-    - myWhichCorrelator: s=single hads or m=multihads, mr=multihadrons ratio
-    - myTypeRs: jk=Jackknife or bt=Bootstrap
-    - myRebinOn: rb=rebin if you want to rebin the data, or nr=no bining.
-    
-2. The info you gotta modify it in the script itself
-    - myRb: number of bins.
-    - myVersion: String of the version you want to use. (e.g.: '0')
-    
-    - myTypeFit: This must be 1 or 2 (amount of exponentials).
-    - myTypeCorrelation: Options are 'Correlated' or 'Uncorrelated'
-    - myOneTMin: True=If you only want to fit one tmin, False=all Tmins to see stability plot.
-    - myOneT0: True=If you want to fit only one T0, and you must change the value of myT0. False=All T0s for stability plot.
-    - myT0: Value of T0 you want to do the fit.
-    - myLocation: You have to modify '$YOUR_PATH_TO_THE_AVERAGED_CORRELATORS$', this is where your input data is retrieved.
-    
-3. What about the functions:
     3.1. FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **kwargs)
         - the_data: hdf5 File that contains the Correlators averaged, effective masses and eigenvalues.
         - the_fit_data: hdf5 File that will contain all the fit information. This is created if it doesnt exist, and modified if it does. 
@@ -283,9 +238,8 @@ NOTE: This script can be run alone or within the "main_analysis_script.py". If y
         - the_list_tmaxs: array that contains all the tmaxs for which the fits will be done. This should be included in the files_ens.py file.
         - kwargs: 
             + one_tmin: True/False. (MANDATORY)
-            + type_fit: '1' or '2' (MANDATORY)
+            + type_fit: '1' or '2'  or 'g' (MANDATORY)
             + type_correlation: 'Correlated' or 'Uncorrelated' (MANDATORY)
-    
     3.2. FitMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, **kwargs)
         - the_data: hdf5 File, contains all the info of the correlation matrices.
         - the_fit_data: hdf5 FIle, will save the info of the fits. It will create a file if it does not exists, or modify it if it does.
@@ -298,60 +252,6 @@ NOTE: This script can be run alone or within the "main_analysis_script.py". If y
             + type_fit: '1' or '2' exponentials. (MANDATORY)
             + type_correlation: 'Correlated' or 'Uncorrelated'. (MANDATORY)
             + ratio_on: 'yes' or None, 'yes'=for ratios of correlators, None=normal correlator matrices. (OPTIONAL)
-
-
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-------------------------***** PLOT MAIN SCRIPT *****------------------------
-
-THIS IS HOW THE MAIN PLOT SCRIPT WORKS. THERE ARE OTHER "README" FILES THAT EXPLAIN EACH OF THEM.
-
-Notice that the names written as: $NAME$ must be fully replaced $NAME$ = n451, for example.
-
-
------------------ SOME REQUIREMENTS ----------------------------
-
-1. You must have all the following scripts in the same folder: 
-    - plot_correlators_script.py
-    - plot_effective_masses_script.py
-    - plot_fits_script.py
-    - set_of_functions.py
-    - files_$name$.py
-
-2. You must have installed the following packages of python3 to make it run smoothly:
-    - PdfMerger
-    - h5py
-    - sys
-    - os
-
-3. You gotta go to each script mentioned in (1.) and modify the PATH where your data will be stored, the input data, meaning the correlators that are going to be averaged and so on. (DO NOT FORGET THIS STEP! OTHERWISE NOTHING WILL WORK.)
-
-4. How to run it: (It is pretty simple and intuitive)
-    4.1. Very First variables: 
-        - plotCorrs = True/False: This plots only the correlation functions.
-        - plotEffMass = True/False: This plots the effective masses. 
-        - plotFits = True/False: This plots the fits over tmins. Notice you gotta run it only if you have more than 1 tmin in the fits. 
-        - joinPlots = True/False: This puts all the plots together in one PDF file by irrep name, and by irrep and eigenvalue. 
-        
-    4.2. Then you have the variables that are input in the Terminal:
-        - myEns: The ensemble to be analysed (n451, n201, etc.)
-        - myWhichCorrelator: Which correlator (single=s ; multihadron=m ; multihadron ratios=mr )
-        - myTypeRs: Type of resampling (Jackknife=jk or Bootstrap=bt)
-        - myRebinOn: if you want to do rebin of the data=rb, otherwise=nr
-        
-    4.3 You have variables that are just other numbers chosen by default: (YOU CAN CHANGE THEM)
-        - myRb: Size of the rebin, this is taken equals to 1 if you choose nr, otherwise you can change it here. (This must be an integer number)
-        - myVersion: By default is '0', but it serves to compare different versions when you make changes and stuff. (it is a string)
-        - myNrExponentials: string ('1' or '2'). Number of exponential in the fits.
-        - myTypeCorrelation: string ('Correlated' or 'Uncorrelated'). Type of correlated fit.
-        - myOneTmin: If only onetmin was fitted, then DeltaChiQS will not exist. 
-        - myT0: Which T0 will be mainly plotted.         
-        - myDataLocation: string. The location where the data is saved.
-        - myPlotLocation: The location of the output plots.
-        
-    4.4. Finally it prints the location of the output files so you do not lose them.
-    
 
 
 ------------------------***** PLOT CORRELATORS SCRIPT *****------------------------
