@@ -62,6 +62,11 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
     ### Getting all the irreps in this ensemble
     m_irreps = list(the_matrix_correlator_data.keys())
     
+    ### These variables are to plot the GEVP or the operators analysis eigenvalues
+    the_diagonal_corrs_flag = kwargs.get('diag_corrs')
+    the_gevp_flag = kwargs.get('gevp')
+    the_operators_analysis_flag = kwargs.get('ops_analysis')    
+    
     ### If not all the irreps are wanted t be plotted
     if kwargs.get('nr_irreps')!=None:
         the_first_irrep = 0
@@ -110,61 +115,61 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
         da_irrep = vf.IrrepInfo(the_irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
         NameIrrepPlot = da_irrep.NamePlot
-        NameIrrep = da_irrep.Name
         
-        ### Loop over the size of the correlation matrix
-        for bb in range(len(the_op_list)):
-            ### The effective masses of the mean values of the diagonal of the correlators
-            the_mean_efm = the_data_corr[bb]
+        if the_diagonal_corrs_flag:
+            ### Loop over the size of the correlation matrix
+            for bb in range(len(the_op_list)):
+                ### The effective masses of the mean values of the diagonal of the correlators
+                the_mean_efm = the_data_corr[bb]
+                
+                ### Their sigmas
+                the_sigmas_efm = the_data_sigmas_corr[bb]
+                
+                ### The operator of this dataset
+                the_op = the_op_list[bb]
+                
+                ### Convenient name for the plots
+                OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+                
+                print('Effective mass diagonal correlators plots in process...')
+                
+                ### Checking for the data
+                the_ymin = vf.CHOOSING_YMIN_PLOT(the_mean_efm)
+                
+                ### Plotting
+                efm_corr_fig = plt.figure()
+                vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_efm, the_sigmas_efm, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) + ' = '+OperatorNamePlot, ymin=the_ymin)
+                # plt.show()
+                efm_corr_fig.savefig(the_location + 'EffectiveMass_DiagonalCorrelators_' + the_irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
             
-            ### Their sigmas
-            the_sigmas_efm = the_data_sigmas_corr[bb]
+            ### Here all the diagonal of the correlators are put together
+            efm_corr_all_fig = plt.figure()
+            print('Effective mass ALL diagonal correlators together plot in process...')
+            the_ymin = vf.CHOOSING_YMIN_PLOT(the_data_corr[0])
+            the_ymax = vf.CHOOSING_YMAX_PLOT(the_data_corr[0])
             
-            ### The operator of this dataset
-            the_op = the_op_list[bb]
-            
-            ### Convenient name for the plots
-            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
-            
-            print('Effective mass diagonal correlators plots in process...')
-            
-            ### Checking for the data
-            the_ymin = vf.CHOOSING_YMIN_PLOT(the_mean_efm)
-            
-            ### Plotting
-            efm_corr_fig = plt.figure()
-            vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_efm, the_sigmas_efm, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) + ' = '+OperatorNamePlot, ymin=the_ymin)
-            # plt.show()
-            efm_corr_fig.savefig(the_location + 'EffectiveMass_DiagonalCorrelators_' + the_irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
-        
-        ### Here all the diagonal of the correlators are put together
-        efm_corr_all_fig = plt.figure()
-        print('Effective mass ALL diagonal correlators together plot in process...')
-        the_ymin = vf.CHOOSING_YMIN_PLOT(the_data_corr[0])
-        the_ymax = vf.CHOOSING_YMAX_PLOT(the_data_corr[0])
-        
-        ### Loop over the operators of the correlation matrix
-        for bb in range(len(the_op_list)):  
-            ### The diagonal of the correlator
-            the_mean_efm = the_data_corr[bb]
-            the_sigmas_efm = the_data_sigmas_corr[bb]
+            ### Loop over the operators of the correlation matrix
+            for bb in range(len(the_op_list)):  
+                ### The diagonal of the correlator
+                the_mean_efm = the_data_corr[bb]
+                the_sigmas_efm = the_data_sigmas_corr[bb]
 
-            the_op = the_op_list[bb]
-            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
-            
-            plt.errorbar(the_nt_corr_efm, the_mean_efm, yerr = the_sigmas_efm, marker=the_markers_list[bb], ls='None', ms=4.5, markeredgewidth=2, lw=1.5, elinewidth=1.5, zorder=3, capsize=2.75, label = OperatorNamePlot)
-        plt.xlabel('t', fontsize=14)
-        plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', fontsize=14)
-        plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to\;C_{ii}(t)$'+ ' [' + the_rs_scheme + ']')
-        plt.xticks(the_nt_ticks)
-        plt.ylim(ymin=the_ymin, ymax=the_ymax)
-        plt.legend()
-        plt.tight_layout()
-        # plt.show()
-        efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLDiagonalCorrelators_' + the_irrep + the_rebin + '_v%s.pdf'%the_version)
+                the_op = the_op_list[bb]
+                OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+                
+                plt.errorbar(the_nt_corr_efm, the_mean_efm, yerr = the_sigmas_efm, marker=the_markers_list[bb], ls='None', ms=4.5, markeredgewidth=2, lw=1.5, elinewidth=1.5, zorder=3, capsize=2.75, label = OperatorNamePlot)
+            plt.xlabel('t', fontsize=14)
+            plt.ylabel(r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', fontsize=14)
+            plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to\;C_{ii}(t)$'+ ' [' + the_rs_scheme + ']')
+            plt.xticks(the_nt_ticks)
+            plt.ylim(ymin=the_ymin, ymax=the_ymax)
+            plt.legend()
+            plt.tight_layout()
+            # plt.show()
+            efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLDiagonalCorrelators_' + the_irrep + the_rebin + '_v%s.pdf'%the_version)
 
         ### If GEVP was performed, the eigenvalues are also going to be plotted.
-        if 'GEVP' in list(the_matrix_correlator_data[the_irrep].keys()):
+        if 'GEVP' in list(the_matrix_correlator_data[the_irrep].keys()) and the_gevp_flag:
             
             the_data = np.array(the_matrix_correlator_data[the_irrep + '/GEVP/t0_%s/Effective_masses/Mean'%the_t0])
             the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
@@ -210,7 +215,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
             efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_' + the_irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
         
         ### If the operator analysis was performed, the eigenvalues are also going to be plotted.
-        if 'Operators_Analysis' in list(the_matrix_correlator_data[the_irrep].keys()):
+        if 'Operators_Analysis' in list(the_matrix_correlator_data[the_irrep].keys()) and the_operators_analysis_flag:
             
             ### If the Operators were chosen by hand, then the plots are also generated.
             if any('Ops_chosen' in the_keys for the_keys in the_matrix_correlator_data[the_irrep +'/Operators_Analysis'].keys()):
@@ -405,7 +410,6 @@ def PlotRatioHadronsEffectiveMasses(the_ratio_correlator_data, the_rs_scheme, th
             plt.tight_layout()
             #plt.show()
             efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_ratios_' + irrep + '_%s'%bb + the_rebin + '_v%s.pdf'%the_version)
-
 
 
 
