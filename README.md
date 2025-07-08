@@ -36,7 +36,7 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME = n451, fo
 4. You gotta go to each script mentioned in (1.) and modify the PATH where your data will be stored, the input data, meaning the correlators that are going to be averaged and so on. (DO NOT FORGET THIS STEP! OTHERWISE NOTHING WILL WORK.)
 
 5. How to run it: (It is pretty simple and intuitive)
-    4.1. * Very First variables: ("main_analysis_script.py")
+    4.1. Very First variables: ("main_analysis_script.py")
         - runCorrs = True/False:
             + This runs the analysis of the correlators, they must be already averaged over the irrep rows and over equivalent momentum. The name of the keys in the original file must have something like "PSQ0_A1um".
         - runEffMass = True/False:
@@ -47,7 +47,7 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME = n451, fo
             + This will do the operators analysis. One can choose the operators from a list defined in the files file_$name.py or adding/removing operators from the original basis.
         - runFits = True/False:
             + This does the fits of the correlators for whatever form you pick 1/2 exponentials.
-        * Very First variables: ("main_plot_script.py")
+        Very First variables: ("main_plot_script.py")
         - plotCorrs: True/False
            + This variable defines the plotting of the correlators.
         - plotEffMass: True/False
