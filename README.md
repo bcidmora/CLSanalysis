@@ -36,64 +36,143 @@ Notice that the names written as: $NAME$ must be fully replaced $NAME = n451, fo
 4. You gotta go to each script mentioned in (1.) and modify the PATH where your data will be stored, the input data, meaning the correlators that are going to be averaged and so on. (DO NOT FORGET THIS STEP! OTHERWISE NOTHING WILL WORK.)
 
 5. How to run it: (It is pretty simple and intuitive)
-    4.1. Very First variables: ("main_analysis_script.py")
-        - runCorrs = True/False:
-            + This runs the analysis of the correlators, they must be already averaged over the irrep rows and over equivalent momentum. The name of the keys in the original file must have something like "PSQ0_A1um".
-        - runEffMass = True/False:
-            + This calculates the effective masses after averaging over the correlators. For the correlator matrices, it obtains the effective masses of the diagonals if there is no eigenvalues yet. The correlators part must have been ran once at least before. 
-        - runEigenvals = True/False:
-            + This computes the eigenvalues of the correlation matrices using GEVP. It asks for a tmin and tmax for which the GEVP will be done, this is t0min/t0max.
-        - runRowsCols: True/False
-            + This will do the operators analysis. One can choose the operators from a list defined in the files file_$name.py or adding/removing operators from the original basis.
-        - runFits = True/False:
-            + This does the fits of the correlators for whatever form you pick 1/2 exponentials.
-        Very First variables: ("main_plot_script.py")
-        - plotCorrs: True/False
-           + This variable defines the plotting of the correlators.
-        - plotEffMass: True/False
-           + It plots and saves the effective masses
-        - plotFits: True/False
-           + It plots the fits for a chosen time interval that must be defined in "file_$name.py"
    
-    4.2. Then you have the variables that are input in the Terminal:
-        - myEns: The ensemble to be analysed (n451, n201, etc.)
-        - myWhichCorrelator: Which correlator (single=s ; multihadron=m ; multihadron ratios=mr )
-        - myTypeRs: Type of resampling (Jackknife=jk or Bootstrap=bt)
-        - myRebinOn: if you want to do rebin of the data=rb, otherwise=nr
-        - myLocation: string. The location where the output will be saved. Try to chose a common folder with the raw data.
+    5.1.
+      Very First variables: ("main_analysis_script.py")
+
+   - runCorrs = True/False:
+   This runs the analysis of the correlators, they must be already averaged over the irrep rows and over equivalent momentum. The name of the keys in the original file must have something like "PSQ0_A1um".
+
+   - runEffMass = True/False:
+   This calculates the effective masses after averaging over the correlators. For the correlator matrices, it obtains the effective masses of the diagonals if there is no eigenvalues yet. The correlators part must have been ran once at least before. 
         
-    4.3 You have variables that are just other numbers chosen by default: (YOU CAN CHANGE THEM)
-        - myRb: Size of the rebin, this is taken equals to 1 if you choose nr, otherwise you can change it here. (This must be an integer number)
-        - myVersion: By default is '_test', but it serves to compare different versions when you make changes and stuff. (It is a string)
-        - myKbt: Amount of Bootstrap samples by default in case you choose bt, otherwise it has no use. (It must be an integer number)
-        - myNrIrreps: None/1/2... This is the number of irreps one wants to analysis, it starts from the zero-th until this number.
-        - myFirstIrrep: None/1/2... This is the first irrep to analyse in case you don't want to start from the very first one in the file.
-        - myLastIrrep: None/1/2... This is the last irrep to analyse in case you don't want to finish at the very end of the file list.
-        - myTypeFit: '1' for one-exponential fit; '2' for a two-exponential fit and 'g' for geometric fit. (It must be a number but coded as string)
-        - myTypeCorrelation: 'Correlated' if you want a correlated fit; 'Uncorrelated' if you want a uncorrelated fit. (string)
-        - myOneTMin: True/False. If you want to do only one Tmin for the fit, then True.
-        - myOneT0: True/False. If you want to run only one T0 in the fit, then True.
-        - myT0: integer. If the above equals True, then you gotta enter which T0 you want to fit.
-        - mySorting: 'eigenvals'/'eigenvals'/'vecs_fix'/'vecs_fix_norm'/'vecs_var'/'vecs_var_norm' this is how the eigenstates are sorted. Once can use the eigenvectors or the eigenvalues.
-        - myKbtSamples: If you have a list of random numbers to do the Bootstrap, the file goes here. Else, keep it as None.
-        - myEffMassDistance: This is the distance between data to get the effective masses.
-        - myOperatorAnalysisMethod: 'from_list'/'adding'/'removing'. These are the options if you choose from a list (included in "file_$name.py") or adding and removing operators from the original basis.
-        - myLocation: directory of the analysed data.
-        - myWeight: reweighting factors
-        - myCnfgs: This can be modified if you don't want to do all the configs.
-        - myChosenOpsList: the list of operators chosen to do the operators analysis.
-        - myDiagonalCorrs: True/False This will plot the diagonal correlators of the correlation matrices.
-        - myGevpFlag: True/False. This will plot the eigenvalues from the GEVP of the original basis.
-        - myOperatorsFlag: True/False. This will plot the eigenvalues from the modified basis coming from the operators analysis.
-        - myOperatorsMethod: 'from_list'/'adding'/'removing'. The method must be specified to plot the results of the eigenvalues.
-        - myZoomFit: True/False. Zoom in the time interval of the plots.
-        - myChiPlots: True/False. Plots the Chi^{2} per degree of freedom values versus tmin.
-        - myTotalChiPlots: True/False. Plots the Total Chi^{2} versus tmin.
-        - myDeltaChiPlots: True/False. Plots the change in Chi^{2} when changing the tmin. So as to see if there is a big jump in the results. It is to study stability of the fits.
-        - myDataLocation: This is the directory where the data to plot is stored.
-        - myPlotLocation: This is the directory where the plots are saved.
+   - runEigenvals = True/False:
+   This computes the eigenvalues of the correlation matrices using GEVP. It asks for a tmin and tmax for which the GEVP will be done, this is t0min/t0max.
+        
+   - runRowsCols = True/False:
+   This will do the operators analysis. One can choose the operators from a list defined in the files file_$name.py or adding/removing operators from the original basis.
+        
+   - runFits = True/False:
+   This does the fits of the correlators for whatever form you pick 1/2 exponentials.
+
+
+     Very First variables: ("main_plot_script.py")
+  
+   - plotCorrs = True/False:
+   This variable defines the plotting of the correlators.
+   
+   - plotEffMass = True/False:
+   It plots and saves the effective masses
+        
+   - plotFits = True/False:
+   It plots the fits for a chosen time interval that must be defined in "file_$name.py"
+
+   
+    5.2. Then you have the variables that are input in the Terminal:
+      - myEns:
+   The ensemble to be analysed (n451, n201, etc.)
+
+      - myWhichCorrelator:
+   Which correlator (single=s ; multihadron=m ; multihadron ratios=mr )
+
+   - myTypeRs:
+   Type of resampling (Jackknife=jk or Bootstrap=bt)
+        
+   - myRebinOn:
+   if you want to do rebin of the data=rb, otherwise=nr
+        
+   - myLocation: string.
+   The location where the output will be saved. Try to chose a common folder with the raw data.
+        
+    5.3 You have variables that are just other numbers chosen by default: (YOU CAN CHANGE THEM)
+   - myRb:
+   Size of the rebin, this is taken equals to 1 if you choose nr, otherwise you can change it here. (This must be an integer number)
+   
+   - myVersion:
+   By default is '_test', but it serves to compare different versions when you make changes and stuff. (It is a string)
+        
+   - myKbt:
+   Amount of Bootstrap samples by default in case you choose bt, otherwise it has no use. (It must be an integer number)
+        
+   - myNrIrreps: None/1/2...
+   This is the number of irreps one wants to analysis, it starts from the zero-th until this number.
+        
+   - myFirstIrrep: None/1/2...
+   This is the first irrep to analyse in case you don't want to start from the very first one in the file
+
+   - myLastIrrep: None/1/2...
+   This is the last irrep to analyse in case you don't want to finish at the very end of the file list.
+        
+   - myTypeFit:
+   '1' for one-exponential fit; '2' for a two-exponential fit and 'g' for geometric fit. (It must be a number but coded as string)
+        
+   - myTypeCorrelation:
+   'Correlated' if you want a correlated fit; 'Uncorrelated' if you want a uncorrelated fit. (string)
+        
+   - myOneTMin: True/False.
+   If you want to do only one Tmin for the fit, then True.
+        
+   - myOneT0: True/False.
+   If you want to run only one T0 in the fit, then True.
+        
+   - myT0: integer.
+   If the above equals True, then you gotta enter which T0 you want to fit.
+        
+   - mySorting:
+   'eigenvals'/'eigenvals'/'vecs_fix'/'vecs_fix_norm'/'vecs_var'/'vecs_var_norm' this is how the eigenstates are sorted. Once can use the eigenvectors or the eigenvalues.
+        
+   - myKbtSamples:
+   If you have a list of random numbers to do the Bootstrap, the file goes here. Else, keep it as None.
+        
+   - myEffMassDistance:
+   This is the distance between data to get the effective masses.
+   
+   - myOperatorAnalysisMethod:
+   'from_list'/'adding'/'removing'. These are the options if you choose from a list (included in "file_$name.py") or adding and removing operators from the original basis.
+   
+   - myLocation:
+   directory of the analysed data.
+   
+   - myWeight:
+   reweighting factors
+   
+   - myCnfgs: This can be modified if you don't want to do all the configs.
+   
+   - myChosenOpsList:
+   the list of operators chosen to do the operators analysis.
+        
+   - myDiagonalCorrs: True/False
+   This will plot the diagonal correlators of the correlation matrices.
+        
+   - myGevpFlag: True/False.
+   This will plot the eigenvalues from the GEVP of the original basis.
+        
+        
+   - myOperatorsFlag: True/False.
+   This will plot the eigenvalues from the modified basis coming from the operators analysis.
+        
+   - myOperatorsMethod:
+   'from_list'/'adding'/'removing'. The method must be specified to plot the results of the eigenvalues.
+        
+   - myZoomFit: True/False.
+   Zoom in the time interval of the plots.
+        
+   - myChiPlots: True/False.
+   Plots the Chi^{2} per degree of freedom values versus tmin.
+        
+   - myTotalChiPlots: True/False.
+   Plots the Total Chi^{2} versus tmin.
+        
+   - myDeltaChiPlots: True/False.
+   Plots the change in Chi^{2} when changing the tmin. So as to see if there is a big jump in the results. It is to study stability of the fits.
+        
+   - myDataLocation:
+   This is the directory where the data to plot is stored.
+        
+   - myPlotLocation: 
+   This is the directory where the plots are saved.
        
-    4.4. Finally it prints the location of the output file so you do not lose it.
+    5.4. Finally it prints the location of the output file so you do not lose it.
 
 
 
@@ -119,6 +198,7 @@ NOTE: This file contains two functions: One for the single hadrons (SingleCorrel
 NOTE: You can run this script by itself, or it can be run along with other parts of the data analysis in the script called "main_analysis_script.py".
 
 DESCRIPTION OF THE FUNCTIONS: 
+
     1.1. the_archivo: hdf5 File, contains the correlation functions data. (MANDATORY)
     1.2. the_location: String. Is the location where the output file will be saved.  Remember this location will be used later for effective masses, fits, plots. (MANDATORY)
     1.3. the_version: string. Anything you want, it is only to differentiate the versions when you want to do changes. (MANDATORY)
@@ -145,7 +225,8 @@ This script contains two functions: one for the single hadrons and one for the m
         1.1. It calculates the effective masses of the central value and of the resamples. 
         1.2. It also calculates the variance to plot the errors later (the variance depending on the type of resampling). This part is pretty easy and straightforward. 
         1.3. It saves the info in the same file than that averaged correlators are.
-    2. MULTIHADRONS: 
+    
+   2. MULTIHADRONS:
         2.1. This calculates the effective masses of the diagonal of the correlators and their variance.
         2.2. It also calculates the effective masses of the eigenvalues of the correlators and their corresponding variances. If there is no eigenvalues, then it skips this part. 
         2.3. It saves the info in the same file than the averaged correlators and eigenvalues are.
@@ -193,6 +274,7 @@ This files contains all the information to do to all the steps later. You must c
 NOTE: There must be a separate file for the single hadrons and for the correlation matrices. They must be averaged over irrep row and over momentum. 
 
 DESCRIPTION:
+
     1. location: This must be changed to the location where you are storing the files. Keep it somewhat general, because it will also be used later to store the averaged correlators.
     2. f: hdf5 File. Contains the multihadron correlation functions. 
     3. f1: hdf5 File. Contains the single hadron correlation functions data.
