@@ -9,10 +9,10 @@ from PyPDF2 import PdfMerger
 
 ### ------- WHAT IT IS DONE --------
 
-plotCorrs = False
-plotEffMass = False
-plotFits = False
-joinPlots = False
+plotCorrs = False  ### Plot correlators
+plotEffMass = True  ### Plot effective masses
+plotFits = False ### Plot Fits
+joinPlots = False ### Puts all the plots found in one pdf file
 
 
 ### ------ MAIN VARIABLES ---------
@@ -33,21 +33,33 @@ myNrIrreps = None # None # 2 # 1
 myFirstIrrep = None # 1 # 2
 myLastIrrep = None
 
+### This is for the multihadorn operatos:
+myDiagonalCorrs = True ### Plots the diagonal of the correlators
+myGevpFlag = False ### Plots the eigenvalues
+myOperatorsFlag = False ### Plots the eigenvalues from the operators analysis
+myOperatorsMethod = 'from_list' # 'adding' # 'removing'
+
+### This is for all the fit plots
+myZoomFit = True ### It does Zoom to the fitting range
+myChiPlots = True ### Plotting the Chi^{2/dof}
+myTotalChiPlots = True ### Plotting Total Chi^{2}
+myDeltaChiPlots = True ### Plotting delta Chi^{2} form time slice to time slice
 
 myDataLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
 
-if plotFits or joinPlots: # SEE if this can be moved down
-    if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
-    elif myEns == 'N201': from files_n201 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1 
-    elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
-    elif myEns == 'X451': from files_x451 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
-    
+### Make sure you have all these variables defined in files_ens.py
+if myEns == 'N451': from files_n451 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
+elif myEns == 'N201': from files_n201 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1 
+elif myEns == 'D200': from files_d200 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
+elif myEns == 'X451': from files_x451 import singleTMinsFitPlots, multiTMinsFitPlots, name, name1
+
+### This is the info about the file, if it was rebinned
 if myRebinOn=='rb': 
     reBin = '_bin'+str(myRb)
 else: 
     reBin = ''
 
-
+### This is the information about the resampling
 if myTypeRs=='jk':
     myResamplingScheme='Jackknife'
 elif myTypeRs=='bt':
@@ -61,24 +73,35 @@ vf.INFO_PRINTING(myWhichCorrelator, myEns)
 ### ------------ START ----------------
 
 if myWhichCorrelator =='s':
+    ### Original list of irreps
+    myIrreps = name1
+    
+    ### Correlators data
     mySingleCorrelatorData = h5py.File(myDataLocation + 'Single_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion,'r')
+    
+    ### Directory where the plots will be saved
     myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOU_PLOTS_DIRECTORY$/Plots/%s/SingleHadrons/'%myEns +  '%s/'%myResamplingScheme)
     
+    ### Plots all the correlators. Look at the booleans here
     if plotCorrs:        
-        pcorr.PlotSingleHadronCorrelators(mySingleCorrelatorData, myTypeRs, myVersion, myPlotLocation, reBin)
+        pcorr.PlotSingleHadronCorrelators(mySingleCorrelatorData, myTypeRs, myVersion, myPlotLocation, reBin, nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep)
     
+    ### Plots effective masses of single hadrons
     if plotEffMass: 
-        peff.PlotSingleHadronsEffectiveMasses(mySingleCorrelatorData, myResamplingScheme, myVersion, myPlotLocation, reBin)
+        peff.PlotSingleHadronsEffectiveMasses(mySingleCorrelatorData, myResamplingScheme, myVersion, myPlotLocation, reBin, nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep)
     
+    ### Plots fits of single hadrons
     if plotFits: 
         myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(myFitsLocation + 'Single_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        pfit.PlotSingleHadronsFits(myFitCorrelator, myTypeCorrelation, myNrExponentials,  singleTMinsFitPlots, myVersion, myPlotLocation, reBin)
+        pfit.PlotSingleHadronsFits(myFitCorrelator, myTypeCorrelation, myNrExponentials,  singleTMinsFitPlots, myVersion, myPlotLocation, reBin, myIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep, zoom_fit=myZoomFit, chi_plots=myChiPlots, total_chi=myTotalChiPlots, delta_chi=myDeltaChiPlots)
         
         myFitCorrelator.close()
-     if joinPlots:
-          ### Loop over all the irreps in this ensemble
+        
+    ### Puts all the plots in one PDF file. It checks if the file exists first
+    if joinPlots:
+        ### Loop over all the irreps in this ensemble
         irreps = list(mySingleCorrelatorData.keys())
         for aa in irreps:
             ##3 Loop over all the operators in this ensemble
@@ -120,7 +143,7 @@ if myWhichCorrelator =='s':
             ### Delta Chi^{2} Fits Corrs
             if os.path.isfile(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
                 x.append(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
-            
+                
             merger = PdfMerger()
             for pdf in x:
                 merger.append(open(pdf, 'rb'))
@@ -128,29 +151,40 @@ if myWhichCorrelator =='s':
             with open(myPlotLocation + myEns + "_%s"%aa +  reBin + "_%s"%myTypeRs + "_v%s.pdf"%myVersion, "wb") as fout:
                 merger.write(fout)
                 
+        print('Now all the plots are in one file for each irrep')
+    
     mySingleCorrelatorData.close()
     
-elif myWhichCorrelator=='m':        
+elif myWhichCorrelator=='m':     
+    ### The original list of irreps
+    myIrreps = name
+    
+    ### The correlators data
     myMatrixCorrelatorData = h5py.File(myDataLocation + 'Matrix_correlators_' + myTypeRs + reBin +'_v%s.h5'%myVersion,'r')
+    
+    ### Directory where the plots will be saved
     myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOU_PLOTS_DIRECTORY$/Plots/%s/Matrices/'%myEns +  '%s/'%myResamplingScheme)
     
+    ### Plots the correlators. Look at the booleans
     if plotCorrs: 
-        pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myTypeRs, myVersion, myT0, myPlotLocation, reBin, nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep)
+        pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myTypeRs, myVersion, myT0, myPlotLocation, reBin, nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep, diag_corrs= myDiagonalCorrs, gevp=myGevpFlag, ops_analysis=myOperatorsFlag)
     
+    ### Plots the effective masses of the eigenvalues from the GEVP and/or the operators analysis
     if plotEffMass: 
-        peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myResamplingScheme, myVersion, myT0, myPlotLocation, reBin,nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep)
+        peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myResamplingScheme, myVersion, myT0, myPlotLocation, reBin,nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep, diag_corrs= myDiagonalCorrs, gevp=myGevpFlag, ops_analysis=myOperatorsFlag)
         
     if plotFits:        
         myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        pfit.PlotMultiHadronsFits(myFitCorrelator, myTypeCorrelation, myNrExponentials, multiTMinsFitPlots, myT0, myVersion, myPlotLocation, reBin)
+        pfit.PlotMultiHadronsFits(myFitCorrelator, myTypeCorrelation, myNrExponentials, myTypeRs, multiTMinsFitPlots, myT0, myVersion, myPlotLocation, reBin, myIrreps, gevp=myGevpFlag, zoom_fit=myZoomFit, chi_plots=myChiPlots, total_chi=myTotalChiPlots, delta_chi=myDeltaChiPlots, ops_analysis=myOperatorsFlag, ops_analysis_method=myOperatorsMethod)
+        
         
         myFitCorrelator.close()
 
     ### This part puts all the plots together in one pdf file. 
     if joinPlots:
-        ### Loop over all the irreps in this ensemble
+         ### Loop over all the irreps in this ensemble
         irreps = list(myMatrixCorrelatorData.keys())
         for aa in irreps:
             ##3 Loop over all the operators in this ensemble
@@ -189,6 +223,26 @@ elif myWhichCorrelator=='m':
                 ### Effective Mass Eigenvlaues
                 if os.path.isfile(myPlotLocation + 'EffectiveMass_Eigenvalues_'+ aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion):
                     x.append(myPlotLocation + 'EffectiveMass_Eigenvalues_'+ aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion)
+                
+                ### Fits Eigenvalues
+                if os.path.isfile(myPlotLocation + 'Tmin_Fits_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                    x.append(myPlotLocation + 'Tmin_Fits_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                
+                ### Chi^{2} Fits Eigenvalues 
+                if os.path.isfile(myPlotLocation + 'Tmin_Chisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                    x.append(myPlotLocation + 'Tmin_Chisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                
+                ### Zoom Chi^{2} Fits Eigenvalues 
+                if os.path.isfile(myPlotLocation + 'Tmin_Chisqr_Zoom_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                    x.append(myPlotLocation + 'Tmin_Chisqr_Zoom_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                    
+                 ### Total Chi^{2} Fits Eigenvalues 
+                if os.path.isfile(myPlotLocation + 'Tmin_TotalChisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                    x.append(myPlotLocation + 'Tmin_TotalChisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                    
+                ### Delta Chi^{2} Fits
+                if os.path.isfile(myPlotLocation + 'Tmin_DeltaChisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                    x.append(myPlotLocation + 'Tmin_DeltaChisqr_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myT0)  + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
                 
             ### All Correlators together log-plot
             if os.path.isfile(myPlotLocation + 'ALLDiagonalCorrelators_'+ aa + '_log'+ reBin + '_v%s.pdf'%myVersion):
@@ -267,7 +321,7 @@ elif myWhichCorrelator=='m':
             with open(myPlotLocation + myEns + "_%s"%aa + "_t0%s"%str(myT0) + reBin + "_%s"%myTypeRs + "_v%s.pdf"%myVersion, "wb") as fout:
                 merger.write(fout)
 
-        print('Now all the plots are in one file')
+        print('Now all the plots are in one file for each irrep')
         
     myMatrixCorrelatorData.close()
     
@@ -298,6 +352,6 @@ elif myWhichCorrelator=='mr':
 ### --------- PRINTS WHERE IT IS SAVED ---------
         
 print('-'*(len(myPlotLocation)+1))
-print('Correlator analysis saved : \n' + myPlotLocation)
+print('Correlator Plots saved : \n' + myPlotLocation)
 print('_'*(len(myPlotLocation)+1))
 
