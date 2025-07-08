@@ -9,25 +9,32 @@ import set_of_functions as vf
 
 def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, the_version, the_location, the_rebin):
     s_irreps = list(the_single_correlator_data.keys())
-    for irrep in s_irreps:
-        the_mean_corr = np.array(the_single_correlator_data[irrep + '/Effective_masses/Mean'])
-        the_sigmas_corr = np.array(the_single_correlator_data[irrep + '/Effective_masses/Sigmas'])
-        the_nt_corr = np.array(the_single_correlator_data[irrep + '/Time_slices'])
+    
+    ### Loop over the SH irreps
+    for the_irrep in s_irreps:
+        ### Central values of the correlators
+        the_mean_corr = np.array(the_single_correlator_data[the_irrep + '/Effective_masses/Mean'])
+        
+        ### Statistical errors of the correlators
+        the_sigmas_corr = np.array(the_single_correlator_data[the_irrep + '/Effective_masses/Sigmas'])
+        
+        ##3 Time extent
+        the_nt_corr = np.array(the_single_correlator_data[the_irrep + '/Time_slices'])
         the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
         the_nt_ticks = np.arange(int(the_nt_corr[-1]/5), the_nt_corr[-1], int(the_nt_corr[-1]/5))
-
-        the_op = list(the_single_correlator_data[irrep+'/Operators'])[0]
+        
+        ### The SH operator that appears in the plot
+        the_op = list(the_single_correlator_data[the_irrep+'/Operators'])[0]
         OperatorNamePlot = vf.OPERATORS_SH(the_op.decode('utf-8'))
         
-        da_irrep = vf.IrrepInfo(irrep)
+        da_irrep = vf.IrrepInfo(the_irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
         NameIrrepPlot = da_irrep.NamePlot
-        NameIrrep = da_irrep.Name
         
         print('Effective Mass plot in progress...')
         the_efm_fig = plt.figure()
         vf.PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o',  OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot)
-        the_efm_fig.savefig(the_location + 'EffectiveMass_' + irrep[:4] +'_%s'%irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
+        the_efm_fig.savefig(the_location + 'EffectiveMass_' + the_irrep[:4] +'_%s'%the_irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
         
         
@@ -56,19 +63,19 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
     the_markers_list = ['o','v','s','p','^','*','x','d','>','D', '<','8','P','h','1']
     
     ### Loop over the irreps
-    for irrep in m_irreps:
+    for the_irrep in m_irreps:
         
         ### Operator list of that specific irrep
-        the_op_list = list(the_matrix_correlator_data[irrep+'/Operators'])
+        the_op_list = list(the_matrix_correlator_data[the_irrep+'/Operators'])
         
         ### Time slices 
-        the_nt = np.array(the_matrix_correlator_data[irrep + '/Time_slices'])
+        the_nt = np.array(the_matrix_correlator_data[the_irrep + '/Time_slices'])
             
         ### Effective masses of correlators
-        the_data_corr = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Effective_masses'])
+        the_data_corr = np.array(the_matrix_correlator_data[the_irrep + '/Correlators/Real/Effective_masses'])
         
         ### Statistical error of the effective masses of the central values of the correlators
-        the_data_sigmas_corr = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Effective_masses_sigmas'])
+        the_data_sigmas_corr = np.array(the_matrix_correlator_data[the_irrep + '/Correlators/Real/Effective_masses_sigmas'])
 
         ### The new time slices range for the effective masses
         the_nt_corr_efm = np.arange(the_nt[0]+0.5, the_nt[-1]+0.5, 1)
@@ -77,7 +84,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
         the_nt_ticks = np.arange(the_nt[0]+1, the_nt[-1], int(len(the_nt)/5))
         
         ### Information about the irrep written for the plots
-        da_irrep = vf.IrrepInfo(irrep)
+        da_irrep = vf.IrrepInfo(the_irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
         NameIrrepPlot = da_irrep.NamePlot
         NameIrrep = da_irrep.Name
@@ -105,7 +112,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
             efm_corr_fig = plt.figure()
             vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_efm, the_sigmas_efm, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;Corr_{%s}$'%(str(bb)+str(bb)) + ' = '+OperatorNamePlot, ymin=the_ymin)
             # plt.show()
-            efm_corr_fig.savefig(the_location + 'EffectiveMass_DiagonalCorrelators_' + irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
+            efm_corr_fig.savefig(the_location + 'EffectiveMass_DiagonalCorrelators_' + the_irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
         
         ### Here all the diagonal of the correlators are put together
         efm_corr_all_fig = plt.figure()
@@ -131,13 +138,13 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
         plt.legend()
         plt.tight_layout()
         # plt.show()
-        efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLDiagonalCorrelators_' + irrep + the_rebin + '_v%s.pdf'%the_version)
+        efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLDiagonalCorrelators_' + the_irrep + the_rebin + '_v%s.pdf'%the_version)
 
         ### If GEVP was performed, the eigenvalues are also going to be plotted.
-        if 'GEVP' in list(the_matrix_correlator_data[irrep].keys()):
+        if 'GEVP' in list(the_matrix_correlator_data[the_irrep].keys()):
             
-            the_data = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Mean'%the_t0])
-            the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
+            the_data = np.array(the_matrix_correlator_data[the_irrep + '/GEVP/t0_%s/Effective_masses/Mean'%the_t0])
+            the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
 
             ### Loop over the eigenvalues
             for bb in range(len(the_data)):
@@ -152,7 +159,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                 efm_fig = plt.figure()
                 vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o',  NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0), ymin=the_ymin)
                 # plt.show()
-                efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
         
             ### All Eigenvalues in only one plot
             efm_corr_all_fig = plt.figure()
@@ -177,22 +184,22 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
             plt.legend()
             plt.tight_layout()
             # plt.show()
-            efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_' + irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+            efm_corr_all_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_' + the_irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
         
         ### If the operator analysis was performed, the eigenvalues are also going to be plotted.
-        if 'Operators_Analysis' in list(the_matrix_correlator_data[irrep].keys()):
+        if 'Operators_Analysis' in list(the_matrix_correlator_data[the_irrep].keys()):
             
             ### If the Operators were chosen by hand, then the plots are also generated.
-            if any('Ops_chosen' in the_keys for the_keys in the_matrix_correlator_data[irrep +'/Operators_Analysis'].keys()):
+            if any('Ops_chosen' in the_keys for the_keys in the_matrix_correlator_data[the_irrep +'/Operators_Analysis'].keys()):
                 
                 ### These are all the operators that the analysis was made on
-                the_list_of_chosen_ops = list(filter(lambda x: 'Ops_chosen' in x, the_matrix_correlator_data[irrep +'/Operators_Analysis'].keys()))
+                the_list_of_chosen_ops = list(filter(lambda x: 'Ops_chosen' in x, the_matrix_correlator_data[the_irrep +'/Operators_Analysis'].keys()))
                 
                 ### For each of these analysis, it will plot the eigenvalues.
                 for the_op_item in the_list_of_chosen_ops:
                     
-                    the_data = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
-                    the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
+                    the_data = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
+                    the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
                     
                     ### This is the information of the selected operators (caption of the plot)
                     the_chosen_ops_string = 'Ops:'
@@ -213,7 +220,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                         vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_corr,  the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{%s}$'%str(bb) +r' $(t_{0} = %s$)'%str(the_t0), ymin=the_ymin)
                         
                         efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
-                        efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                        efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + the_irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                         
                     efm_fig = plt.figure()
                     the_ymin = vf.CHOOSING_YMIN_PLOT(the_data[0])
@@ -232,19 +239,19 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                     plt.ylim(ymin=the_ymin, ymax=the_ymax)
                     efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
                     # plt.show()
-                    efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + irrep  +  '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                    efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + the_irrep  +  '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                     
                     
             ### If the Operators were chosen by hand, then the plots are also generated.
-            if any('Add_Op' in the_keys for the_keys in the_matrix_correlator_data[irrep+'/Operators_Analysis'].keys()):
+            if any('Add_Op' in the_keys for the_keys in the_matrix_correlator_data[the_irrep+'/Operators_Analysis'].keys()):
                 ### These are all the operators that the analysis was made on
-                the_list_of_chosen_ops = list(filter(lambda x: 'Add_Op' in x, the_matrix_correlator_data[irrep +'/Operators_Analysis'].keys()))
+                the_list_of_chosen_ops = list(filter(lambda x: 'Add_Op' in x, the_matrix_correlator_data[the_irrep +'/Operators_Analysis'].keys()))
                 
                 ### For each of these analysis, it will plot the eigenvalues.
                 for the_op_item in the_list_of_chosen_ops:
                     
-                    the_data = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
-                    the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
+                    the_data = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
+                    the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
                     
                     the_chosen_ops_string = 'Ops: ' + vf.OPERATORS_MH(the_op_list[0].decode('utf-8'))
                     for ss in range(1,int(the_op_item[7:])+1):
@@ -264,7 +271,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                         vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_corr,  the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{%s}$'%str(bb)+r' $(t_{0} = %s$)'%str(the_t0), ymin=the_ymin)
                         
                         efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
-                        efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                        efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + the_irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                         
                     efm_fig = plt.figure()
                     the_ymin = vf.CHOOSING_YMIN_PLOT(the_data[0])
@@ -283,19 +290,19 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                     plt.ylim(ymin=the_ymin, ymax=the_ymax)
                     efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
                     # plt.show()
-                    efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + irrep  + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                    efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + the_irrep  + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                     
         ### If the Operators were chosen by hand, then the plots are also generated.
-        if any('Remove_Op' in the_keys for the_keys in the_matrix_correlator_data[irrep+'/Operators_Analysis'].keys()):
+        if any('Remove_Op' in the_keys for the_keys in the_matrix_correlator_data[the_irrep+'/Operators_Analysis'].keys()):
             
             ### These are all the operators that the analysis was made on
-            the_list_of_chosen_ops = list(filter(lambda x: 'Remove_Op' in x, the_matrix_correlator_data[irrep +'/Operators_Analysis'].keys()))
+            the_list_of_chosen_ops = list(filter(lambda x: 'Remove_Op' in x, the_matrix_correlator_data[the_irrep +'/Operators_Analysis'].keys()))
             
             ### For each of these analysis, it will plot the eigenvalues.
             for the_op_item in the_list_of_chosen_ops:
                 
-                the_data = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
-                the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
+                the_data = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item + '/t0_%s/Effective_masses/Mean'%the_t0])
+                the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/Operators_Analysis/' + the_op_item +'/t0_%s/Effective_masses/Sigmas'%the_t0])
                 
                 ### This is the information of the selected operators (caption of the plot)
                 the_chosen_ops_string = 'Ops: '
@@ -318,7 +325,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                     vf.PLOT_CORRELATORS(the_nt_corr_efm, the_mean_corr,  the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$a_{t} \;m_{eff}(t+\frac{1}{2})$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{%s}$'%str(bb)+r' $(t_{0} = %s$)'%str(the_t0), ymin=the_ymin)
                     
                     efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
-                    efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                    efm_fig.savefig(the_location + 'EffectiveMass_Eigenvalues_' + the_op_item +'_' + the_irrep  + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                     
                 efm_fig = plt.figure()
                 the_ymin = vf.CHOOSING_YMIN_PLOT(the_data[0])
@@ -339,9 +346,8 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                 plt.xticks(the_nt_ticks)
                 efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
                 # plt.show()
-                efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + the_irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                 
-
         
             
             

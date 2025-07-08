@@ -19,31 +19,38 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
     
     the_nr_bins = 25
     for irrep in s_irreps:
+        ### This is the central values of the correlator
         the_mean_corr = np.array(the_single_correlator_data[irrep + '/Correlators/Real/Mean'])
+        
+        ### These are the statistical errors of the correlators
         the_sigmas_corr = np.array(the_single_correlator_data[irrep + '/Correlators/Real/Sigmas'])
+        
+        ### This is the time extent
         the_nt = np.array(the_single_correlator_data[irrep + '/Time_slices'])
         the_nt_ticks = np.arange(the_nt[0]+1, the_nt[-1], int(len(the_nt)/5))
 
+        ### Information about the operators
         the_op_list = list(the_single_correlator_data[irrep+'/Operators'])[0]
         OperatorNamePlot = vf.OPERATORS_SH(the_op_list.decode('utf-8'))
         
+        ### Information about the irrep
         da_irrep = vf.IrrepInfo(irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
         NameIrrepPlot = da_irrep.NamePlot
-        NameIrrep = da_irrep.Name
         
         print('Correlator plot in progress...')
         the_corr_fig = plt.figure()
         vf.PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot)
         # plt.show()
         the_corr_fig.savefig(the_location + 'Correlator_' + irrep[:4] +'_%s'%irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
-        
+    
         print('Correlator Log-plot in process...')
         the_log_corr_fig = plt.figure()
         vf.PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot, yscale='log')
         # plt.show()
         the_log_corr_fig.savefig(the_location + 'Correlator_' + irrep[:4] + '_%s'%irrep[-1] + '_log' + the_rebin + '_v%s.pdf'%the_version)
         
+
         print('Correlator histogram in process...')
         tt = int(len(the_nt)/2)+1
         the_gauss_fig = plt.figure()
@@ -65,6 +72,12 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
     
     ### Getting all the irreps in this ensemble
     m_irreps = list(the_matrix_correlator_data.keys())
+    
+    ### These variables are to plot the GEVP or the operators analysis eigenvalues
+    the_diagonal_corrs_flag = kwargs.get('diag_corrs')
+    the_gevp_flag = kwargs.get('gevp')
+    the_operators_analysis_flag = kwargs.get('ops_analysis')
+    
     
     ### If not all the irreps are wanted t be plotted
     if kwargs.get('nr_irreps')!=None:
@@ -122,67 +135,68 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
         NameIrrepPlot = da_irrep.NamePlot 
         NameIrrep = da_irrep.Name
         
-        ### Loop over the number of operators of this matrix
-        for bb in range(len(the_op_list)):      
-            
-            ### The specific operator
-            the_op = the_op_list[bb]
-            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
-            
-            print('Correlator plots in process...')
+        if the_diagonal_corrs_flag:
+            ### Loop over the number of operators of this matrix
+            for bb in range(len(the_op_list)):      
                 
-            ### Plotting the diagonal correlators
+                ### The specific operator
+                the_op = the_op_list[bb]
+                OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
+                
+                print('Correlator plots in process...')
+                    
+                ### Plotting the diagonal correlators
+                corr_fig = plt.figure()
+                vf.PLOT_CORRELATORS(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', NameIrrepPlot + ' (%s) '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot)
+                corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
+                
+                ### Plotting the log of the diagonal correlators.
+                print('Correlator Log-plots in progress...')
+                corr_fig = plt.figure()
+                vf.PLOT_CORRELATORS(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, 't', r'$\log\mathbb{Re}\;C(t)$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot, yscale='log')
+                corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep  + '_%s_log'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
+                
+                ### Plotting the histogram at a certain time slice t
+                print('Correlator histogram in progress...')
+                tt = int(len(the_nt)/2)+1
+                the_gauss_fig = plt.figure()
+                the_nt_mean = the_data_corr[bb][bb][tt]
+                the_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']))[bb][bb][tt]
+                the_nr_samples = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']).shape[1]
+                
+                ### Here the mean value of the sampling data and the mean value are compared to check the quality of the resampled data
+                the_mean_rs = np.mean(the_rs)
+                the_means_dif = np.abs(the_nt_mean - the_mean_rs)
+                the_stat_error = the_data_sigmas_corr[bb][tt]
+                
+                ### Plotting the histogram now
+                vf.PLOT_HISTOGRAMS(the_rs, r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) +'\n'+ r'$\sigma = %s$'%'{:.10e}'.format(the_stat_error), the_mean_rs, r'$ \bar{C}_{%s}(t) =$'%the_type_rs + r' $%s$'%the_mean_rs, the_nt_mean, r'$ \bar{C}(t) = $ %s'%the_nt_mean, NameIrrepPlot + ' (%s) '%MomentumIrrep +  r'$\to \;C_{%s}$'%(str(bb) + str(bb)) + ' (t = %s)'%(tt+the_nt[0]) + ' ' + OperatorNamePlot, the_nr_bins, r'$Diag(C(t))_{%s}$'%(str(bb)+str(bb)))
+                # plt.show()
+                the_gauss_fig.savefig(the_location + 'Histogram_DiagCorrelator_' + irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
+            
+            ### The Diagonal of the correlators are plotted all together with their errors to compare them directly. 
             corr_fig = plt.figure()
-            vf.PLOT_CORRELATORS(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, 't', r'$\mathbb{Re}\;C(t)$', 'o', NameIrrepPlot + ' (%s) '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot)
-            corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
-            
-            ### Plotting the log of the diagonal correlators.
-            print('Correlator Log-plots in progress...')
-            corr_fig = plt.figure()
-            vf.PLOT_CORRELATORS(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, 't', r'$\log\mathbb{Re}\;C(t)$', 'o', NameIrrepPlot+ ' (%s) '%MomentumIrrep + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + '= ' + OperatorNamePlot, yscale='log')
-            corr_fig.savefig(the_location + 'DiagonalCorrelator_' + irrep  + '_%s_log'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
-            
-            ### Plotting the histogram at a certain time slice t
-            print('Correlator histogram in progress...')
-            tt = int(len(the_nt)/2)+1
-            the_gauss_fig = plt.figure()
-            the_nt_mean = the_data_corr[bb][bb][tt]
-            the_rs = vf.RESHAPING_CORRELATORS_RS_NT(np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']))[bb][bb][tt]
-            the_nr_samples = np.array(the_matrix_correlator_data[irrep + '/Correlators/Real/Resampled']).shape[1]
-            
-            ### Here the mean value of the sampling data and the mean value are compared to check the quality of the resampled data
-            the_mean_rs = np.mean(the_rs)
-            the_means_dif = np.abs(the_nt_mean - the_mean_rs)
-            the_stat_error = the_data_sigmas_corr[bb][tt]
-            
-            ### Plotting the histogram now
-            vf.PLOT_HISTOGRAMS(the_rs, r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) +'\n'+ r'$\sigma = %s$'%'{:.10e}'.format(the_stat_error), the_mean_rs, r'$ \bar{C}_{%s}(t) =$'%the_type_rs + r' $%s$'%the_mean_rs, the_nt_mean, r'$ \bar{C}(t) = $ %s'%the_nt_mean, NameIrrepPlot + ' (%s) '%MomentumIrrep +  r'$\to \;C_{%s}$'%(str(bb) + str(bb)) + ' (t = %s)'%(tt+the_nt[0]) + ' ' + OperatorNamePlot, the_nr_bins, r'$Diag(C(t))_{%s}$'%(str(bb)+str(bb)))
+            print('ALL Correlators Log-plot in progress...')
+            ### Loop over each of the entries of the diagonal of the correlation matrix
+            for bb in range(len(the_op_list)):
+                
+                ### Name of this operator
+                the_op = the_op_list[bb]
+                OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))           
+                
+                plt.errorbar(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb],  marker=the_markers_list[bb], ls='None', ms=4.5, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=3.5, label = r'$C_{%s}$ = '%(str(bb)+str(bb)) + OperatorNamePlot)
+            plt.xlabel('t')
+            plt.ylabel(r'$\log\mathbb{Re}\;C(t)$')
+            plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;C_{ii}$(t)')
+            plt.yscale('log')
+            plt.tight_layout()
+            plt.legend()
+            plt.xticks(the_nt_ticks)
             # plt.show()
-            the_gauss_fig.savefig(the_location + 'Histogram_DiagCorrelator_' + irrep + '_%s'%str(bb) + the_rebin + '_v%s.pdf'%the_version)
-        
-        ### The Diagonal of the correlators are plotted all together with their errors to compare them directly. 
-        corr_fig = plt.figure()
-        print('ALL Correlators Log-plot in progress...')
-        ### Loop over each of the entries of the diagonal of the correlation matrix
-        for bb in range(len(the_op_list)):
-            
-            ### Name of this operator
-            the_op = the_op_list[bb]
-            OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))           
-            
-            plt.errorbar(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb],  marker=the_markers_list[bb], ls='None', ms=4.5, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=3.5, label = r'$C_{%s}$ = '%(str(bb)+str(bb)) + OperatorNamePlot)
-        plt.xlabel('t')
-        plt.ylabel(r'$\log\mathbb{Re}\;C(t)$')
-        plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;C_{ii}$(t)')
-        plt.yscale('log')
-        plt.tight_layout()
-        plt.legend()
-        plt.xticks(the_nt_ticks)
-        # plt.show()
-        corr_fig.savefig(the_location + 'ALLDiagonalCorrelators_' + irrep  + '_log' + the_rebin + '_v%s.pdf'%the_version)
+            corr_fig.savefig(the_location + 'ALLDiagonalCorrelators_' + irrep  + '_log' + the_rebin + '_v%s.pdf'%the_version)
             
         ### Here the Eigenvalues are plotted all together too in a log-plot
-        if 'GEVP' in list(the_matrix_correlator_data[irrep].keys()):
+        if 'GEVP' in list(the_matrix_correlator_data[irrep].keys()) and the_gevp_flag:
             
             the_data = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Eigenvalues/Mean'%the_t0])
             the_data_sigmas = np.array(the_matrix_correlator_data[irrep + '/GEVP/t0_%s/Eigenvalues/Covariance_matrix'%the_t0])
@@ -245,7 +259,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             corr_fig.savefig(the_location + 'ALLEigenvalues_' + irrep  + '_log' + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
         
         ### If the Operator Analysis was performed, then the modifiedf eigenvalues are also going to be plotted
-        if 'Operators_Analysis' in list(the_matrix_correlator_data[irrep].keys()):
+        if 'Operators_Analysis' in list(the_matrix_correlator_data[irrep].keys()) and the_operators_analysis_flag:
             
             if any('Ops_chosen_' in the_keys for the_keys in the_matrix_correlator_data[irrep+'/Operators_Analysis'].keys()):
                 
