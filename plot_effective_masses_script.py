@@ -7,8 +7,29 @@ import sys
 import set_of_functions as vf
 
 
-def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, the_version, the_location, the_rebin):
+def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, the_version, the_location, the_rebin, **kwargs):
+    
     s_irreps = list(the_single_correlator_data.keys())
+    
+    ### If not all the irreps are wanted t be plotted
+    if kwargs.get('nr_irreps')!=None:
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('nr_irreps'))
+    else:
+        the_first_irrep = 0
+        the_last_irrep = len(s_irreps)
+    ### This one checks for an irrep in particular
+    if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
+        the_first_irrep = int(kwargs.get('first_irrep'))
+        the_last_irrep = int(kwargs.get('last_irrep'))
+    elif kwargs.get('last_irrep')!=None and kwargs.get('first_irrep')==None:
+        the_first_irrep = 0
+        the_last_irrep = int(kwargs.get('last_irrep'))
+    elif kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')==None:
+        the_first_irrep = int(kwargs.get('first_irrep'))
+        the_last_irrep = len(s_irreps)
+    
+    s_irreps = s_irreps[the_first_irrep:the_last_irrep]
     
     ### Loop over the SH irreps
     for the_irrep in s_irreps:
@@ -37,7 +58,6 @@ def PlotSingleHadronsEffectiveMasses(the_single_correlator_data, the_rs_scheme, 
         the_efm_fig.savefig(the_location + 'EffectiveMass_' + the_irrep[:4] +'_%s'%the_irrep[-1] + the_rebin + '_v%s.pdf'%the_version)
         
         
-        
 def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, the_version, the_t0, the_location, the_rebin, **kwargs):
     ### Getting all the irreps in this ensemble
     m_irreps = list(the_matrix_correlator_data.keys())
@@ -46,6 +66,9 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
     if kwargs.get('nr_irreps')!=None:
         the_first_irrep = 0
         the_last_irrep = int(kwargs.get('nr_irreps'))
+    else:
+        the_first_irrep = 0
+        the_last_irrep = len(m_irreps)
     ### This one checks for an irrep in particular
     if kwargs.get('first_irrep')!=None and kwargs.get('last_irrep')!=None:
         the_first_irrep = int(kwargs.get('first_irrep'))
@@ -347,7 +370,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_rs_scheme, t
                 efm_fig.text(0.5, 0.01, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
                 # plt.show()
                 efm_fig.savefig(the_location + 'EffectiveMass_ALLEigenvalues_'+ the_op_item +'_' + the_irrep + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
-                
+
         
             
             
