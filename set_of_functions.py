@@ -914,10 +914,13 @@ def DELTA_CHI(a):
 
 ### Comments:
 # This function gets the total Chi^{2}, not only per degree of freedom. 
+# a: this is the list with the chi^{2} per degree of freedom
+# b: the list of time slices
+# c: the total number of time slices
 def TOTAL_CHI(a,b,c,nrp):
     total_a = []
     for ii in range(len(a)):
-        total_a.append(a[ii] * (np.double(c[ii] - b[ii]) - np.double(nrp)))
+        total_a.append(a[ii] * (np.double(c[ii] - np.double(b[ii])) - np.double(nrp)))
     return np.array(total_a)
 
 
@@ -1250,6 +1253,21 @@ def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_m
     plt.ylim(0, counts.max() + padding)
     # plt.show()
 
+def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
+    if kwargs.get('zoom'):
+        the_ll = int(kwargs.get('the_ll'))
+        the_ul = int(kwargs.get('the_ul'))
+        plt.errorbar(the_nt[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], the_plot_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], yerr = the_sigmas_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85)
+    else:
+        plt.errorbar(the_nt, the_plot_data, yerr = the_sigmas_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85)
+        plt.xticks(the_nt_ticks)    
+    plt.errorbar([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], yerr = [the_sigmas_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, markerfacecolor = 'white', capsize=2.85, label = the_label)
+    plt.legend()
+    plt.xlabel(the_xlabel)
+    plt.ylabel(the_ylabel)
+    plt.title(the_title)
+    # plt.xticks(the_nt_ticks)
+    plt.tight_layout()
 
 if __name__=="__main__":
    print('Nothing to run here, unless you want to change something.')
