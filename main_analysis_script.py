@@ -148,7 +148,7 @@ elif myWhichCorrelator=='m':
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
-        fs.FitMultiCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxMultiHads, myIrreps,  type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0, gevp=True, operators_analysis = False, the_operator_analysis_method = myOperatorAnalysisMethod)
+        fs.FitMultiCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxMultiHads, myIrreps,  type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0, gevp=myGevpFlag, operators_analysis = myOperatorsFlag, the_operator_analysis_method = myOperatorAnalysisMethod)
         
         myFitCorrelator.close()
         
