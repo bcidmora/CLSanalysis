@@ -6,26 +6,13 @@ import set_of_functions as vf
 ### This is the source directory where the codes, data, etc. 
 location = os.path.expanduser('~')+'$YOUR_PATH_TO_THE_DATA$'
 
-### lambdas_analysis: If True: It does the analysis over the lambda correlator matrices, meaning it will choose the normalization of the reweighting factors according to the gauge configurations that were actually computed. 
-### lambdas_analysis: If False: It does the analysis over the single hadrons only, which were the first 20 gauge configs for the pion and 100 gauge configs 
-### nucleon_analysis: If True, it only analyses the new nucleon (100 cnfgs) averaged over irrep row and over source time.
 
-lambdas_analysis = True
-nucleon_analysis = False
+hdf5NameMulti = 'cls21_X451_r001_isodoublet_Sm2_fwd_110_cnfgs.hdf5' 
+hdf5NameSingle= 'cls21_X451_r001_single_hadrons_110_cnfgs.hdf5'
 
-hdf5NameMulti = 'cls21_X451_r001_isosinglet_Sm1_fwd_t01.hdf5'
-
-
-if nucleon_analysis: 
-    hdf5NameSingle = 'cls21_X451_r001_singles_nucleon.hdf5'
-else:
-    hdf5NameSingle = 'cls21_X451_r001_singles.hdf5'
-
-### ENSEMBLE FILES: N451
-
-# f1 = h5py.File(location+'data/X451/cls21_X451_r001_singles.hdf5','r') #SH
-f = h5py.File(location+'data/X451/'+hdf5NameMulti,'r') #lambdas T01
-f1 = h5py.File(location+'data/X451/'+hdf5NameSingle,'r') #SH
+### ENSEMBLE FILES: X451
+f = h5py.File(location+'data/X451/'+hdf5NameMulti,'r') 
+f1 = h5py.File(location+'data/X451/'+hdf5NameSingle,'r') 
 
 ### Reweighting factors ###NEW
 weight_raw = np.loadtxt(location + 'data/X451/X451r001.ms1.dat_ascii', unpack=True)[1]
@@ -44,20 +31,17 @@ ncfgs = 2026
 ### Reweighting factors
 pre_weight = np.array(vf.RW_NORMALIZATION(weight_raw,ncfgs), dtype=np.float128)
 
+
+
+chosen_operators_list = [[], [], [], []]
+
+
 ### Number of gauge configurations
-if lambdas_analysis:
-    ncfgs = np.array(f[name[0]+'/data']).shape[0] # lambdas
-    # cnfgs_list = np.arange(39,2010,40) # lambdas T00 
-    # cnfgs_list = np.arange(19,2010,40) # lambdas T01 
-    cnfgs_list = np.arange(19,2010,20) # ALL t00 and t01 
-    # chosen_operators_list = [[0,1,2,3,4],  [0,1,2,3,4,5], [0,1], [0,1,2,3,4,5,6,7,8,9]]
-    chosen_operators_list = [[0,1,2,3,4],  [0,1,2,3,4,5], [0,1], [0,5,6,7,8,9]]
-else:
-    ncfgs = np.array(f1[name1[0]+'/data']).shape[0] # SH
-    if nucleon_analysis:
-        cnfgs_list = np.arange(19,2010,20) # Single Hadrons
-    else:
-        cnfgs_list = np.arange(0,20,1) # Single Hadrons
+ncfgs = np.array(f1[name1[0]+'/data']).shape[0] # SH
+cnfgs_list1 = list(np.arange(175,894,16)) 
+cnfgs_list2 = list(np.arange(911,1902,16))
+cnfgs_list3 = list(np.arange(1919,1952,16))
+cnfgs_list = np.array(cnfgs_list1 + cnfgs_list2 + cnfgs_list3)
     
 # Now this is normalizing with respect to the configs that are effectively used. 
 worked_weight = []
@@ -68,10 +52,7 @@ for ii in range(len(cnfgs_list)):
 weight = np.array(vf.RW_NORMALIZATION(worked_weight,ncfgs), dtype=np.float128)
 
 ### List of tmaxs used for the fitting procedure. 
-if nucleon_analysis:
-    listTMaxSingleHads = [25]
-else:
-    listTMaxSingleHads = [36, 21, 33]#[np.array(f1[name1[0]+'/data']).shape[-1]]*len(name1)
+listTMaxSingleHads = [np.array(f1[name1[0]+'/data']).shape[-1]]*len(name1)
 
 ### TMax used for the fits of correlation matrices
 listTMaxMultiHads=[]
@@ -82,10 +63,7 @@ for ix in range(0,len(name)):
     listTMaxMultiHads.append(list_tmax_multihads_ix)
 
 ### Minimum time slices used for the fits of single hadron correlators.
-if nucleon_analysis:
-    singleTMinsFitPlots = [14]
-else:
-    singleTMinsFitPlots = [13,9,15] #[10]*len(name1)
+singleTMinsFitPlots = [10]*len(name1)
 
 ### Minimum time slices for the fits of multihadron correlators
 multiTMinsFitPlots = []

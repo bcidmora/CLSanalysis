@@ -528,7 +528,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
 
             ### Getting the statistical error and the covariance matrix for each eigenvalue.
             the_l, the_sigma_2 = 0, []
-            for l in range(len(the_evals_fits_rs)):
+            for the_l in range(len(the_evals_fits_rs)):
                 dis_eign = NCFGS_TO_NT(the_evals_fits_rs[the_l])
                 the_evals_fits_rs_mean = MEAN(dis_eign)
                 the_sigma_2.append(COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
