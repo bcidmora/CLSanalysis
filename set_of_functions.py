@@ -548,6 +548,84 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             
 
 
+def DOING_THE_GEVP_SINGLE_PIVOT(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i, **kwargs):
+    print("SINGLE PIVOT")
+    if kwargs.get('t_diag')==None:
+        the_td=int(len(the_nt)/3)
+    else:
+        the_td=int(kwargs.get('t_diag'))
+    the_t0_init=0
+    for the_t0_init in range(np.abs(the_t0_min_max[0] - the_nt[0]), (the_t0_min_max[1] - the_nt[0]) + 1): 
+        
+        ### This is the reference correlation matrix for the GEVP
+        the_ct0_mean = np.array(the_mean_corr[the_t0_init])
+    
+        the_evals_mean, the_evecs_mean = [], []
+        the_evalues_rs, the_evectors_rs =[], []
+        
+        ### Diagonalization only at one time slice the_td
+        the_evs_mean_nongevp, the_evec_mean_nongevp = SOLVING_GEVP(the_ct0_mean, the_mean_corr[the_td])
+        
+        ### Diagonalization using the eigenvectors from solving the GEVP at only one time slice
+        for ttt in range(len(the_mean_corr)):
+            the_evs_mean_nongevp_t = np.real(np.diag(np.linalg.multi_dot([the_evec_mean_nongevp.conj().T, the_mean_corr[ttt], the_evec_mean_nongevp] )))
+            
+            the_evals_mean.append(the_evs_mean_nongevp_t)
+
+            the_evecs_mean.append(the_evec_mean_nongevp)
+            
+            ### Loop over the resamples
+            the_evalues_rs_raw, the_evectors_rs_raw = [], []
+            xyz = 0
+            for xyz in range(the_rs_real.shape[1]):
+                the_ew_rs_nongevp = np.real(np.diag(np.linalg.multi_dot([ the_evec_mean_nongevp.conj().T, the_rs_real[ttt][xyz], the_evec_mean_nongevp ])))
+                
+                the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
+                the_evectors_rs_raw.append(np.array(the_evec_mean_nongevp,dtype=np.float128))              
+                
+            the_evalues_rs.append(np.array(the_evalues_rs_raw))
+            the_evectors_rs.append(np.array(the_evectors_rs_raw))
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)        
+        ### Here the final eigenvalues and eigenvectors are saved
+        if len(the_evalues_rs)>0:
+            
+            ### Reshaping eigenvectors and eigenvalues for sorting
+            the_mod_evals_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+            the_mod_evectors_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
+            
+            ### Loop over the resamples (sorting)
+            for xyz in range(len(the_mod_evals_rs)):
+                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+                
+                ### Reshaping again to save them in a file
+            the_evalues_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
+            the_evectors_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
+            
+            group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
+            
+            the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
+            the_evals_fits_rs = np.array(RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs)), dtype=np.float128)
+
+            ### Getting the statistical error and the covariance matrix for each eigenvalue.
+            the_l, the_sigma_2 = 0, []
+            for the_l in range(len(the_evals_fits_rs)):
+                dis_eign = NCFGS_TO_NT(the_evals_fits_rs[the_l])
+                the_evals_fits_rs_mean = MEAN(dis_eign)
+                the_sigma_2.append(COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
+            
+            ### Modified-GEVP eigenvectors (central values)
+            the_evecs_mean = np.array(the_evecs_mean)
+            
+            group_eigvecs = group_t0.create_group('Eigenvectors')
+            group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+            group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+            
+            group_eigns = group_t0.create_group('Eigenvalues')
+            group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
+            group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
+            group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
+            print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
+
 
 ## ------------------- SORTING STATES --------------------------------------
 
@@ -557,9 +635,9 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
 # the_eigenvals: This is an array of the values of the eigenvals: shape [Nt, Neigens]
 # the_eigenvecs: This is an array of the eigenvectors in the following shape: [Nt, N, N]
 def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
-    the_final_eigens = list(the_eigenvals[:the_t0+1])
-    the_final_eigenvecs = list(the_eigenvecs[:the_t0+1])
-    for ii in range(the_t0+1, len(the_eigenvals)):
+    the_final_eigens = list(the_eigenvals[:the_t0])
+    the_final_eigenvecs = list(the_eigenvecs[:the_t0])
+    for ii in range(the_t0, len(the_eigenvals)):
         the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)  
         the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
         the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
