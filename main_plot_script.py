@@ -2,6 +2,7 @@ import plot_correlators_script as pcorr
 import plot_effective_masses_script as peff
 import plot_fits_script as pfit
 import set_of_functions as vf
+import plot_fitted_eff_masses as pfem
 import sys
 import os
 import h5py
@@ -9,9 +10,10 @@ from PyPDF2 import PdfMerger
 
 ### ------- WHAT IT IS DONE --------
 
-plotCorrs = False  ### Plot correlators
-plotEffMass = True  ### Plot effective masses
+plotCorrs = True  ### Plot correlators
+plotEffMass = False  ### Plot effective masses
 plotFits = False ### Plot Fits
+plotFittedEffMass = False ### Plot fitted effective masses
 joinPlots = False ### Puts all the plots found in one pdf file
 
 
@@ -42,8 +44,8 @@ myOperatorsMethod = 'from_list' # 'adding' # 'removing'
 ### This is for all the fit plots
 myZoomFit = True ### It does Zoom to the fitting range
 myChiPlots = True ### Plotting the Chi^{2/dof}
-myTotalChiPlots = True ### Plotting Total Chi^{2}
-myDeltaChiPlots = True ### Plotting delta Chi^{2} form time slice to time slice
+myTotalChiPlots = False ### Plotting Total Chi^{2}
+myDeltaChiPlots = False ### Plotting delta Chi^{2} form time slice to time slice
 
 myDataLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/$YOUR_OUTPUT_PATH(SAME_THAN_CORRS_SCRIPT_OUTPUT)$/%s/'%myEns)
 
@@ -98,19 +100,26 @@ if myWhichCorrelator =='s':
         pfit.PlotSingleHadronsFits(myFitCorrelator, myTypeCorrelation, myNrExponentials,  singleTMinsFitPlots, myVersion, myPlotLocation, reBin, myIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep, zoom_fit=myZoomFit, chi_plots=myChiPlots, total_chi=myTotalChiPlots, delta_chi=myDeltaChiPlots)
         
         myFitCorrelator.close()
+    
+    if plotFittedEffMass:
+        myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_SingleHadrons/')
+        myFitCorrelator =  h5py.File(myFitsLocation + 'Single_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        
+        pfem.PlotSingleHadronsEffectiveMassesFits(myFitCorrelator, mySingleCorrelatorData, myResamplingScheme, myTypeCorrelation, myNrExponentials, singleTMinsFitPlots, myVersion, myPlotLocation, reBin, myIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep)
         
     ### Puts all the plots in one PDF file. It checks if the file exists first
     if joinPlots:
         ### Loop over all the irreps in this ensemble
         irreps = list(mySingleCorrelatorData.keys())
+        all_ef_mass_x = []
         for aa in irreps:
             ##3 Loop over all the operators in this ensemble
             ops = list(mySingleCorrelatorData[aa+'/Operators'])
             x=[]
                 
             ### Corrs
-            if os.path.isfile(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion)
+            # if os.path.isfile(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion):
+                # x.append(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion)
             
             ### Corrs log-plots
             if os.path.isfile(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + '_log' +  reBin + '_v%s.pdf'%myVersion):
@@ -144,12 +153,23 @@ if myWhichCorrelator =='s':
             if os.path.isfile(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
                 x.append(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
                 
+            ### Fits Corrs
+            if os.path.isfile(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion):
+                x.append(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                all_ef_mass_x.append(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myNrExponentials + reBin + '_v%s.pdf'%myVersion)
+                
             merger = PdfMerger()
             for pdf in x:
                 merger.append(open(pdf, 'rb'))
             
             with open(myPlotLocation + myEns + "_%s"%aa +  reBin + "_%s"%myTypeRs + "_v%s.pdf"%myVersion, "wb") as fout:
                 merger.write(fout)
+        
+        merger_eff = PdfMerger()
+        for pdf_eff in all_ef_mass_x:
+            merger_eff.append(open(pdf_eff, 'rb'))
+        with open(myPlotLocation + myEns + "_All_Fitted_Masses" +  reBin + "_%s"%myTypeRs + "_v%s.pdf"%myVersion, "wb") as fout:
+            merger_eff.write(fout)
                 
         print('Now all the plots are in one file for each irrep')
     

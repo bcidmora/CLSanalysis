@@ -53,9 +53,8 @@ myGevpFlag = False
 myOperatorsFlag = True
 
 ### GEVP parameters
-myT0 = 2
+myT0 = 4
 mySorting = 'eigenvals' #'eigenvals' # 'vecs_fix' # 'vecs_fix_norm' # 'vecs_var' # 'vecs_var_norm'
-myTD = None #10
 
 
 ### Oher parameters
@@ -134,7 +133,7 @@ elif myWhichCorrelator=='m':
         myT0Max = int(input('T0 max: ')) 
     
     if runEigenvals:
-        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, myIrreps, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting,the_td=myTD)
+        evs.EigenvaluesExtraction(myCorrelator, myTypeRs, myIrreps, t0_min = myT0Min, t0_max = myT0Max, sorting=mySorting)
     
     ### Operators Analysis
     if runRowsCols:

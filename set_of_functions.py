@@ -6,6 +6,10 @@ from scipy.linalg import eigh
 from scipy.linalg import fractional_matrix_power
 from iminuit import Minuit
 
+import matplotlib
+matplotlib.rcParams['mathtext.fontset'] = 'stix'
+matplotlib.rcParams['font.family'] = 'STIXGeneral'
+
 ## ------------------- SOME USEFUL FUNCTIONS -----------------------------------
 # Comments
 # k_size: is the size of the bootstrap sample
@@ -37,7 +41,6 @@ def MAKES_HERMITIAN(a_matrix):
 
 def LINEAR_COMBINATION(the_list_of_operators, the_list_of_coeff, the_prefactor):
     the_new_correlator = np.float128(0.)
-    ## OpLambda=(sqrt(3)/2)*(-Op27 +Op28 -Op33 -2*Op36 + Op37)
     for ii in range(len(the_list_of_operators)):
         the_new_correlator+=np.float128(the_prefactor*the_list_of_operators[ii]*the_list_of_coeff[ii])
     return the_new_correlator
@@ -446,6 +449,87 @@ def SOLVING_GEVP(the_ct0_mean, the_mean_corr):
     return eigh(the_mean_corr_mod, eigvals_only=False) 
 
 
+
+def DOING_THE_GEVP_SINGLE_PIVOT(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i, **kwargs):
+    print("SINGLE PIVOT")
+    if kwargs.get('t_diag')==None:
+        the_td=int(len(the_nt)/3)
+    else:
+        the_td=int(kwargs.get('t_diag'))
+    the_t0_init=0
+    for the_t0_init in range(np.abs(the_t0_min_max[0] - the_nt[0]), (the_t0_min_max[1] - the_nt[0]) + 1): 
+        
+        ### This is the reference correlation matrix for the GEVP
+        the_ct0_mean = np.array(the_mean_corr[the_t0_init])
+    
+        the_evals_mean, the_evecs_mean = [], []
+        the_evalues_rs, the_evectors_rs =[], []
+        
+        ### Diagonalization only at one time slice the_td
+        the_evs_mean_nongevp, the_evec_mean_nongevp = SOLVING_GEVP(the_ct0_mean, the_mean_corr[the_td])
+        
+        ### Diagonalization using the eigenvectors from solving the GEVP at only one time slice
+        for ttt in range(len(the_mean_corr)):
+            # if ttt!=the_td:
+            the_evs_mean_nongevp_t = np.real(np.diag(np.linalg.multi_dot([the_evec_mean_nongevp.conj().T, the_mean_corr[ttt], the_evec_mean_nongevp] )))
+            
+            the_evals_mean.append(the_evs_mean_nongevp_t)
+
+            the_evecs_mean.append(the_evec_mean_nongevp)
+            
+            ### Loop over the resamples
+            the_evalues_rs_raw, the_evectors_rs_raw = [], []
+            xyz = 0
+            for xyz in range(the_rs_real.shape[1]):
+                the_ew_rs_nongevp = np.real(np.diag(np.linalg.multi_dot([ the_evec_mean_nongevp.conj().T, the_rs_real[ttt][xyz], the_evec_mean_nongevp ])))
+                
+                the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
+                the_evectors_rs_raw.append(np.array(the_evec_mean_nongevp,dtype=np.float128))              
+                
+            the_evalues_rs.append(np.array(the_evalues_rs_raw))
+            the_evectors_rs.append(np.array(the_evectors_rs_raw))
+                
+
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)       
+        
+        ### Here the final eigenvalues and eigenvectors are saved
+        if len(the_evalues_rs)>0:
+            
+            ### Reshaping eigenvectors and eigenvalues for sorting
+            the_mod_evals_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
+            the_mod_evectors_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
+                
+                ### Reshaping again to save them in a file
+            the_evalues_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
+            the_evectors_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
+            
+            group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
+            
+            the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
+            the_evals_fits_rs = np.array(RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs)), dtype=np.float128)
+
+            ### Getting the statistical error and the covariance matrix for each eigenvalue.
+            the_l, the_sigma_2 = 0, []
+            for the_l in range(len(the_evals_fits_rs)):
+                dis_eign = NCFGS_TO_NT(the_evals_fits_rs[the_l])
+                the_evals_fits_rs_mean = MEAN(dis_eign)
+                the_sigma_2.append(COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
+            
+            ### Modified-GEVP eigenvectors (central values)
+            the_evecs_mean = np.array(the_evecs_mean)
+            
+            group_eigvecs = group_t0.create_group('Eigenvectors')
+            group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
+            group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
+            
+            group_eigns = group_t0.create_group('Eigenvalues')
+            group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
+            group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
+            group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
+            print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
+            
+            
+
 ### Comments:
 # This function does the GEVP for each time slice for each chosen t0 and for each resample. Sorting everything by eigenvalue by default. If a different sorting is required, then it is done separately.
 # the_t0_min_max: is a list with (t0 min, t0 max) to do the GEVP
@@ -457,6 +541,7 @@ def SOLVING_GEVP(the_ct0_mean, the_mean_corr):
 # the_sorting: This is the method chosen for sorting
 # the_sorting_process: This is the function that will be called with the sorting.
 def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i):    
+    print("ROLLING PIVOT")
     ### Loop over the t0's chosen
     the_t0_init=0
     for the_t0_init in range(np.abs(the_t0_min_max[0] - the_nt[0]), (the_t0_min_max[1] - the_nt[0]) + 1): 
@@ -481,12 +566,11 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
                 print("WARNING: Matrix isn't positive definite anymore. Skipping T0 = %s"%str(the_t0_init + the_nt[0]))
                 break
         
-            ### The eigenvalues are sorted once by order of magnitude and then with whatever method chosen
-        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
-        
         ### Now if wanted, sorting by whatever else
         if the_sorting!=None or the_sorting!='eigenvals':
             the_evals_mean, the_evecs_mean = the_sorting_process(the_t0_init, the_evals_mean, the_evecs_mean)
+        else:
+            the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
             
         ### Loop over the time slices for the resamples
         ttt=0
@@ -505,7 +589,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
                 the_evectors_rs.append(np.array(the_evectors_rs_raw))
                 
             except np.linalg.LinAlgError: break
-        
+
         ### Here the final eigenvalues and eigenvectors are saved
         if len(the_evalues_rs)>0:
             
@@ -525,7 +609,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             
             the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
             the_evals_fits_rs = np.array(RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs)), dtype=np.float128)
-
+            
             ### Getting the statistical error and the covariance matrix for each eigenvalue.
             the_l, the_sigma_2 = 0, []
             for the_l in range(len(the_evals_fits_rs)):
@@ -547,84 +631,6 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
             
 
-
-def DOING_THE_GEVP_SINGLE_PIVOT(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i, **kwargs):
-    print("SINGLE PIVOT")
-    if kwargs.get('t_diag')==None:
-        the_td=int(len(the_nt)/3)
-    else:
-        the_td=int(kwargs.get('t_diag'))
-    the_t0_init=0
-    for the_t0_init in range(np.abs(the_t0_min_max[0] - the_nt[0]), (the_t0_min_max[1] - the_nt[0]) + 1): 
-        
-        ### This is the reference correlation matrix for the GEVP
-        the_ct0_mean = np.array(the_mean_corr[the_t0_init])
-    
-        the_evals_mean, the_evecs_mean = [], []
-        the_evalues_rs, the_evectors_rs =[], []
-        
-        ### Diagonalization only at one time slice the_td
-        the_evs_mean_nongevp, the_evec_mean_nongevp = SOLVING_GEVP(the_ct0_mean, the_mean_corr[the_td])
-        
-        ### Diagonalization using the eigenvectors from solving the GEVP at only one time slice
-        for ttt in range(len(the_mean_corr)):
-            the_evs_mean_nongevp_t = np.real(np.diag(np.linalg.multi_dot([the_evec_mean_nongevp.conj().T, the_mean_corr[ttt], the_evec_mean_nongevp] )))
-            
-            the_evals_mean.append(the_evs_mean_nongevp_t)
-
-            the_evecs_mean.append(the_evec_mean_nongevp)
-            
-            ### Loop over the resamples
-            the_evalues_rs_raw, the_evectors_rs_raw = [], []
-            xyz = 0
-            for xyz in range(the_rs_real.shape[1]):
-                the_ew_rs_nongevp = np.real(np.diag(np.linalg.multi_dot([ the_evec_mean_nongevp.conj().T, the_rs_real[ttt][xyz], the_evec_mean_nongevp ])))
-                
-                the_evalues_rs_raw.append(np.array(the_ew_rs_nongevp))
-                the_evectors_rs_raw.append(np.array(the_evec_mean_nongevp,dtype=np.float128))              
-                
-            the_evalues_rs.append(np.array(the_evalues_rs_raw))
-            the_evectors_rs.append(np.array(the_evectors_rs_raw))
-        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)        
-        ### Here the final eigenvalues and eigenvectors are saved
-        if len(the_evalues_rs)>0:
-            
-            ### Reshaping eigenvectors and eigenvalues for sorting
-            the_mod_evals_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
-            the_mod_evectors_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
-            
-            ### Loop over the resamples (sorting)
-            for xyz in range(len(the_mod_evals_rs)):
-                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
-                
-                ### Reshaping again to save them in a file
-            the_evalues_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
-            the_evectors_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evectors_rs)                
-            
-            group_t0 = group_i.create_group('t0_%s'%(the_t0_init+the_nt[0]))
-            
-            the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
-            the_evals_fits_rs = np.array(RESHAPING_EIGENVALS_FOR_FITS(np.array(the_evalues_rs)), dtype=np.float128)
-
-            ### Getting the statistical error and the covariance matrix for each eigenvalue.
-            the_l, the_sigma_2 = 0, []
-            for the_l in range(len(the_evals_fits_rs)):
-                dis_eign = NCFGS_TO_NT(the_evals_fits_rs[the_l])
-                the_evals_fits_rs_mean = MEAN(dis_eign)
-                the_sigma_2.append(COV_MATRIX(dis_eign, the_evals_fits_rs_mean, the_type_rs))
-            
-            ### Modified-GEVP eigenvectors (central values)
-            the_evecs_mean = np.array(the_evecs_mean)
-            
-            group_eigvecs = group_t0.create_group('Eigenvectors')
-            group_eigvecs.create_dataset('Mean', data=the_evecs_mean)
-            group_eigvecs.create_dataset('Resampled', data=the_evectors_rs)
-            
-            group_eigns = group_t0.create_group('Eigenvalues')
-            group_eigns.create_dataset('Mean', data = the_eigevals_final_mean)
-            group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
-            group_eigns.create_dataset('Covariance_matrix', data = np.array(the_sigma_2))
-            print('T0 = %s'%str(the_t0_init + the_nt[0]) + '... DONE')
 
 
 ## ------------------- SORTING STATES --------------------------------------
@@ -638,9 +644,24 @@ def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
     the_final_eigens = list(the_eigenvals[:the_t0])
     the_final_eigenvecs = list(the_eigenvecs[:the_t0])
     for ii in range(the_t0, len(the_eigenvals)):
-        the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)  
+        the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i],reverse=True) 
         the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
         the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+    return [the_final_eigens, the_final_eigenvecs]
+
+
+def SORTING_EIGENVALUES_ALTERNATIVE(the_t0, the_eigenvals, the_eigenvecs):
+    the_final_eigens,the_final_eigenvecs, the_final_eigens_nt = list(the_eigenvals[:the_t0]),list(the_eigenvecs[:the_t0]), []
+    for the_nt in range(the_t0, len(the_eigenvals)):
+        the_eigenvals_nt, the_indices = list(the_eigenvals[the_nt]), []
+        while len(the_eigenvals_nt)>0:
+            the_max_eigen=max(the_eigenvals_nt)
+            the_final_eigens_nt.append(the_max_eigen)
+            the_indices.append(list(the_eigenvals[the_nt]).index(the_max_eigen))
+            the_eigenvals_nt.remove(the_max_eigen)
+        the_final_eigens.append(the_final_eigens_nt)
+        the_final_eigenvecs.append(np.array([the_eigenvecs[the_nt][nev] for nev in the_indices]))
+        the_final_eigens_nt, the_indices=[], []
     return [the_final_eigens, the_final_eigenvecs]
 
 
@@ -673,7 +694,6 @@ def SORTING_EIGENVECTORS(the_t0, the_eigenvals, the_eigenvecs):
         the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
         the_final_eigenvecs.append(the_sorted_eigenvecs)
     return [the_final_eigens, the_final_eigenvecs]
-
 
 
 # Comments: This function checks for orthogonality of eigenvectors and returns the new order with the eigenvectors ordered such that they are associated to the corresponding state time slice by time slice. Each vector is normalized first.
@@ -796,7 +816,7 @@ def BINNING(a_list, bin_size):
 # rw: list of reweighting factors [Ncfgs]
 # it returns a list with the normalized reweighting factors
 def RW_NORMALIZATION(rw, nfs):
-    len_rw = np.double(nfs)#len(rw))
+    len_rw = np.double(nfs)
     nrm_fktr_rw = 0. ; new_rw = []
     for ll in range(int(len_rw)):
         nrm_fktr_rw += np.double(rw[ll])
@@ -1140,6 +1160,26 @@ def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin
 
 ### ------------------  PLOTTING STUFF --------------------------------------------------
 
+    
+def PLOT_SINGLE_HADRON_NAMES(the_hadron_name):
+    the_plot_hadron_name = ''
+    if the_hadron_name[0]=='P':
+        the_plot_hadron_name=r'$\pi$'
+    elif the_hadron_name[0]=='k':
+        the_plot_hadron_name=r'$K$'
+    elif the_hadron_name[0]=='N':
+        the_plot_hadron_name=r'$N$'
+    elif the_hadron_name[0]=='L':
+        the_plot_hadron_name=r'$\Lambda$'
+    elif the_hadron_name[0]=='S':
+        the_plot_hadron_name=r'$\Sigma$'
+    elif the_hadron_name[0]=='X':
+        the_plot_hadron_name=r'$\Xi$'
+    elif the_hadron_name[0]=='D':
+        the_plot_hadron_name=r'$D$'
+    return the_plot_hadron_name
+
+
 
 def SQUARED_MOM(the_mom_str):
     the_mod_str = list(the_mom_str.split(','))
@@ -1186,6 +1226,8 @@ def OPERATORS_SH(operator_name):
             OperatorPlot = 'S[%s]'%new_op[-1].replace('_','')
         elif new_op[0].lower()=='xi':
             OperatorPlot = 'X[%s]'%new_op[-1].replace('_','')
+        elif new_op[0].lower()=='dmeson':
+            OperatorPlot = 'D[%s]'%new_op[-1].replace('_','')
     elif 'GI{' in operator_name:
         OperatorPlot = str(new_op[-2])
     return str(OperatorPlot)
@@ -1195,6 +1237,7 @@ def OPERATORS_SH(operator_name):
 # This function receives an operator name and returns a string in a nice way to put in the plots. 
 def OPERATORS_MH(the_operator_name):
     new_op = list(the_operator_name.split(' '))
+    # print(new_op)
     if "CG" in the_operator_name: the_shift = 1
     else: the_shift=0
     OperatorPlot = ''
@@ -1207,8 +1250,8 @@ def OPERATORS_MH(the_operator_name):
                 the_site = str(new_op[4+the_shift+((ii-1)*3)][:-1]).replace('_','')
                 if the_hads[ii].lower()=='pion':
                     OperatorPlot += 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-                elif the_hads[ii].lower()=='kaon':
-                    OperatorPlot += 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='kaon' or the_hads[ii].lower()=='kbar':
+                    OperatorPlot += 'K['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
                 elif the_hads[ii].lower()=='nucleon':
                     OperatorPlot += 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
                 elif the_hads[ii].lower()=='lambda':
@@ -1217,14 +1260,19 @@ def OPERATORS_MH(the_operator_name):
                     OperatorPlot += 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
                 elif the_hads[ii].lower()=='xi':
                     OperatorPlot += 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                elif the_hads[ii].lower()=='dmeson':
+                    OperatorPlot += 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
             
         elif '_' not in new_op[0]:
             the_mom = str(SQUARED_MOM(new_op[1]))
-            the_irrep = str(new_op[2][:new_op[2].index('_')]) 
+            if '_' not in new_op[2]:           
+                    the_irrep = str(new_op[2]) 
+            else:
+                the_irrep = str(new_op[2][:new_op[2].index('_')]) 
             the_site = str(new_op[-1]).replace('_','')
             if new_op[0].lower()=='pion':
                 OperatorPlot = 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-            elif new_op[0].lower()=='kaon':
+            elif new_op[0].lower()=='kaon' or new_op[0].lower()=='kbar':
                 OperatorPlot = 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
             elif new_op[0].lower()=='nucleon':
                 OperatorPlot = 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
@@ -1234,6 +1282,8 @@ def OPERATORS_MH(the_operator_name):
                 OperatorPlot = 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
             elif new_op[0].lower()=='xi':
                 OperatorPlot = 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+            elif new_op[0].lower()=='dmeson':
+                OperatorPlot = 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
     elif 'GI{' in the_operator_name:
         if '_' in new_op[4]:
             OperatorPlot = new_op[4]
@@ -1304,48 +1354,98 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
 
 
 def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, the_x_axis_label, the_y_axis_label, the_marker, the_title_info, **kwargs):
-    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker=the_marker, ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85, label = the_rs_scheme)
-    plt.xlabel(the_x_axis_label)
-    plt.ylabel(the_y_axis_label)
-    plt.title(the_title_info)
+    the_min_position = np.where(the_mean_corr == min(the_mean_corr[:-3]))
+    the_max_position = np.where(the_mean_corr == max(the_mean_corr[:-3]))
+    
+    the_min_y = (the_mean_corr[the_min_position]-the_sigmas_corr[the_min_position])*.95
+    the_max_y= (the_mean_corr[the_max_position]+the_sigmas_corr[the_max_position])*1.05 
+    
+    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker=the_marker, ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85, label = the_rs_scheme, color='#5d83d5')
+    plt.xlabel(the_x_axis_label,fontsize=18)
+    plt.ylabel(the_y_axis_label,fontsize=18)
+    plt.title(the_title_info,fontsize=18)
     plt.xticks(the_nt_ticks)
     if kwargs.get('yscale')!=None: plt.yscale(str(kwargs.get('yscale')))
     else:
-        if kwargs.get('ymin')!=None:
-            plt.ylim(ymin=kwargs.get('ymin'), ymax=CHOOSING_YMAX_PLOT(the_mean_corr)*1.05)
-    plt.legend()
+        plt.ylim([the_min_y, the_max_y])
+    plt.legend(fontsize=14, handletextpad=0.01)
     plt.tight_layout()
     # plt.show()
     
     
 def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_mean, the_label_mean_nt, the_title_info, the_bins,  the_x_axis_label):
-    counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label)
+    counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label, color='#5d83d5')
     padding = counts.max() * 0.1  # 10% padding on top
-    plt.vlines(the_mean_rs, 0, 200, colors= 'red', label = the_label_mean_rs)
+    plt.vlines(the_mean_rs, 0, 200, colors= '#b90f22', label = the_label_mean_rs)
     plt.vlines(the_nt_mean, 0, 200, colors='black', label = the_label_mean_nt)
-    plt.title( the_title_info)
-    plt.ylabel('Frequency')
-    plt.xlabel(the_x_axis_label)
-    plt.legend()
+    plt.title( the_title_info,fontsize=18)
+    plt.ylabel('Frequency',fontsize=18)
+    plt.xlabel(the_x_axis_label, fontsize=18)
+    plt.legend(fontsize=14, handletextpad=0.01)
     plt.tight_layout()
     plt.ylim(0, counts.max() + padding)
     # plt.show()
+
+
 
 def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
     if kwargs.get('zoom'):
         the_ll = int(kwargs.get('the_ll'))
         the_ul = int(kwargs.get('the_ul'))
-        plt.errorbar(the_nt[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], the_plot_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], yerr = the_sigmas_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85)
+        plt.errorbar(the_nt[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], the_plot_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], yerr = the_sigmas_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], marker='o', ls='None', ms=6, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85,color='#5d83d5')
     else:
-        plt.errorbar(the_nt, the_plot_data, yerr = the_sigmas_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85)
+        plt.errorbar(the_nt, the_plot_data, yerr = the_sigmas_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85,color='#5d83d5')
         plt.xticks(the_nt_ticks)    
-    plt.errorbar([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], yerr = [the_sigmas_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, markerfacecolor = 'white', capsize=2.85, label = the_label)
-    plt.legend()
-    plt.xlabel(the_xlabel)
-    plt.ylabel(the_ylabel)
-    plt.title(the_title)
-    # plt.xticks(the_nt_ticks)
+    plt.errorbar([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], yerr = [the_sigmas_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, color = '#b90f22', elinewidth=1.75, zorder=3, markerfacecolor = 'white', capsize=2.85, label = the_label)
+    plt.legend(fontsize=14, handletextpad=0.01)
+    plt.xlabel(the_xlabel,fontsize=18)
+    plt.ylabel(the_ylabel,fontsize=18)
+    plt.title(the_title,fontsize=18)
     plt.tight_layout()
+
+
+
+
+def PLOT_CHI_FITS(the_nt, the_plot_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
+    plt.plot(the_nt, the_plot_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, color='#5d83d5')
+    plt.plot([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, color = '#b90f22', zorder=3, markerfacecolor = 'white', label = the_label)
+    plt.xticks(the_nt_ticks)
+    plt.legend(fontsize=14, handletextpad=0.01)
+    plt.xlabel(the_xlabel,fontsize=16)
+    plt.ylabel(the_ylabel,fontsize=16)
+    plt.title(the_title,fontsize=16)
+    plt.tight_layout()
+
+
+def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_rs_scheme, the_label, the_title, the_nt_ticks, the_color_eff_mass, the_color_fit):
+    
+    the_min_position = np.where(the_mean_corr == min(the_mean_corr[:-3]))
+    the_max_position = np.where(the_mean_corr == max(the_mean_corr[:-3]))
+    
+    the_min_y = (the_mean_corr[the_min_position]-the_sigmas_corr[the_min_position])*.95
+    the_max_y= (the_mean_corr[the_max_position]+the_sigmas_corr[the_max_position])*1.05       
+    
+    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=2.85, label = the_rs_scheme, color=the_color_eff_mass)
+    
+    plt.axhline(y=the_fit_data[the_chosen_tmin], color = the_color_fit, ls = '-', lw = 1.75, label = the_label)
+    
+    plt.fill_between(x=[the_nt[0]-1,the_nt[-1]+1], 
+                     y1 = the_fit_data[the_chosen_tmin] - the_fit_sigmas[the_chosen_tmin], 
+                     y2 = the_fit_data[the_chosen_tmin] + the_fit_sigmas[the_chosen_tmin], 
+                     color = the_color_fit,
+                     alpha=0.2)
+    plt.xlabel(r'$t$',fontsize=27)
+    plt.ylabel(r'$a_{t}\,m_{\mathrm{eff}}$',fontsize=27)
+    plt.title(the_title,fontsize=16)
+    plt.xticks(the_nt_ticks)
+    plt.ylim([the_min_y, the_max_y])
+    plt.xlim([the_nt[0]*.75,len(the_nt)+the_nt[0]])
+    plt.legend(fontsize=14, handletextpad=0.3)
+    plt.tight_layout()
+    # plt.show()
+    
+
+
 
 if __name__=="__main__":
    print('Nothing to run here, unless you want to change something.')

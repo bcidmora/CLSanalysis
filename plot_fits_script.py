@@ -85,62 +85,53 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         NameIrrepPlot = da_irrep.NamePlot
         
         print('Fits vs tmin plot in progress...')
+        # print(the_op)
         fit_fig = plt.figure()        
-        the_label = r'$t_{min} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' +  r'$t_{max} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{fit} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+        the_label = r'${t_{\mathrm{min}}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' +  r'${t_{\mathrm{max}}} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
-        vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E_{lab}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
+        vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$a_{t} \; E_{\mathrm{lab}}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
         # plt.show()
-        fit_fig.savefig(the_location + 'Tmin_Fits_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+        fit_fig.savefig(the_location + 'Tmin_Fits_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
         
         if the_zoom_flag: 
             print('Zoom Fits vs tmin plot in progress...')
             zoom_fit_fig = plt.figure()
-            vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E_{lab}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks, zoom=True, the_ll =3, the_ul=4)
+            vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$a_{t} \; E_{\mathrm{lab}}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks, zoom=True, the_ll =3, the_ul=4)
             # plt.show()
-            zoom_fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin +'_v%s.pdf'%the_version)
+            zoom_fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin +'_v%s.pdf'%the_version,bbox_inches='tight')
         
         if the_chi_plots_flag:
             print('Chi2 vs tmin plot in progress...')
             chi_fig = plt.figure()
-            vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
+            vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$\chi^{2}/\mathrm{d.o.f} $', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
             # plt.show()
-            chi_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin+ '_v%s.pdf'%the_version)
+            chi_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin+ '_v%s.pdf'%the_version,bbox_inches='tight')
         
         if the_chi_plots_flag and the_zoom_flag:
             print('Zoom Chi2 vs tmin plot in progress...')
             chi_fig = plt.figure()
-            vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks, zoom=True, the_ll=3, the_ul=4)
+            vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$\chi^{2}/\mathrm{d.o.f} $', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks, zoom=True, the_ll=3, the_ul=4)
             # plt.show()
-            chi_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin+ '_v%s.pdf'%the_version)
+            chi_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin+ '_v%s.pdf'%the_version, bbox_inches='tight')
             
         if the_total_chi_flag:
             print('Total Chi2 vs tmin plot in progress...')
             total_chi = vf.TOTAL_CHI(the_chi_corr, the_nt, dis_set[1], 2)
-            total_chi_fig = plt.figure()       
-            plt.plot(the_nt, total_chi, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3)
-            plt.plot([the_nt[the_chosen_tmin]], total_chi[the_chosen_tmin],  marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, markerfacecolor = 'white', label = the_label)
-            plt.legend()
-            plt.xlabel(r'$t_{min}$')
-            plt.ylabel(r'$\chi^{2}$')
-            plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
-            plt.xticks(the_nt_ticks)
-            plt.tight_layout()
-            # plt.show()
-            total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+            total_chi_fig = plt.figure() 
+            
+            print(the_irrep)
+            print(the_chosen_tmin)
+            vf.PLOT_CHI_FITS(the_nt, total_chi, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$\chi^{2}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
+            
+            total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version,bbox_inches='tight')
         
         if the_delta_chi_flag:
             delta_chis = vf.DELTA_CHI(total_chi)
             delta_chi_fig = plt.figure()
-            plt.plot(the_nt[:-1], delta_chis, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, label=r'$\Delta\chi^{2} = \chi^{2}(t) - \chi^{2}(t+1)$')
-            plt.plot([the_nt[the_chosen_tmin]], [delta_chis[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label = the_label) 
-            plt.legend()
-            plt.xlabel(r'$t_{min}$')
-            plt.ylabel(r'$\Delta\chi^{2}$')
-            plt.title( OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps)
-            plt.xticks(the_nt_ticks)
-            plt.tight_layout()
-            # plt.show()
-            delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+            
+            vf.PLOT_CHI_FITS(the_nt[:-1], delta_chis, the_chosen_tmin, r'$\Delta\chi^{2} = \chi^{2}({t}) - \chi^{2}({t}+1)$', r'${t_{\mathrm{min}}}$', r'$\Delta\chi^{2}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
+            
+            delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
         
         
         
@@ -226,34 +217,34 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                 if the_error_string[1]==False:
                     the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
             
-                the_label = r'$t_{min} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{max}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{fit} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+                the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
                 print('Fit vs Tmin plot in progress...')
                 fit_fig = plt.figure()                
-                vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
                 # plt.show()
-                fit_fig.savefig(the_location + 'Tmin_Fits_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0)  + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                fit_fig.savefig(the_location + 'Tmin_Fits_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0)  + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                 
                 if the_zoom_flag:
                     print('Zoom Fit vs Tmin plot in progress...')
                     fit_fig = plt.figure()
-                    vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
+                    vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
                     # plt.show()
-                    fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                 
                 if the_chi_plots_flag:
                     print('Chi2 vs tmin plot in progress...')
                     chi_fit_fig = plt.figure()                
-                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$\chi^{2}/\mathrm{d.o.f} $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
                     # plt.show()
-                    chi_fit_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    chi_fit_fig.savefig(the_location + 'Tmin_Chisqr_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                 
                 if the_chi_plots_flag and the_zoom_flag:
                     print('Zoom Chi2 vs tmin plot in progress...')
                     zoom_fit_fig = plt.figure()
-                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
+                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$\chi^{2}/\mathrm{d.o.f} $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
                     # plt.show()
-                    zoom_fit_fig.savefig(the_location + 'Tmin_Chisqr_Zoom_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    zoom_fit_fig.savefig(the_location + 'Tmin_Chisqr_Zoom_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
     
                 
                 if the_total_chi_flag:
@@ -262,14 +253,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     total_chi_fig = plt.figure()
                     plt.plot(the_nt, total_chi, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3)
                     plt.plot([the_nt[the_chosen_tmin]], [total_chi[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label= the_label)
-                    plt.xlabel(r'$t_{min}$')
+                    plt.xlabel(r'$t_{\mathrm{min}}$')
                     plt.ylabel(r'$\chi^{2}$')
                     plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
                     plt.xticks(the_nt_ticks)
                     plt.legend()
                     plt.tight_layout()
                     # plt.show()
-                    total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_irrep +'_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)                
+                    total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_irrep +'_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')                
                 
                 if the_delta_chi_flag:
                     print('Delta Chi2 vs tmin plot in progress...')
@@ -279,14 +270,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     delta_chi_fig = plt.figure()
                     plt.plot(the_nt[:-1], delta_chis, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, label=r'$\Delta\chi^{2} = \chi^{2}(t) - \chi^{2}(t+1)$')
                     plt.plot([the_nt[the_chosen_tmin]], [delta_chis[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label=the_label)
-                    plt.xlabel(r'$t_{min}$')
+                    plt.xlabel(r'$t_{\mathrm{min}}$')
                     plt.ylabel(r'$\Delta \chi^{2} $')
                     plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
                     plt.legend()
                     plt.xticks(the_nt_ticks)
                     plt.tight_layout()
                     # plt.show()
-                    delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                 
                 
                 the_t0_data = list(the_multi_hadrons_fit_data[the_irrep + '/%sexp/'%the_nr_exps].keys())
@@ -311,7 +302,7 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb))
                     plt.tight_layout()
                     #plt.show()
-                    t0s_fig.savefig(the_location + 'T0s_' + the_irrep + '_%s'%str(bb) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    t0s_fig.savefig(the_location + 'T0s_' + the_irrep + '_%s'%str(bb) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                     
         if 'Operators_Analysis' in list(the_multi_hadrons_fit_data[the_irrep].keys()) and the_ops_analysis_flag:
             if kwargs.get('ops_analysis_method')=='from_list':
@@ -370,34 +361,34 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     if the_error_string[1]==False:
                         the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
                 
-                    the_label = r'$t_{min} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{max}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{fit} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+                    the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                     
                     print('Fit vs Tmin plot in progress...')
                     fit_fig = plt.figure()                
-                    vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                    vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
                     # plt.show()
-                    fit_fig.savefig(the_location + 'Tmin_Fits_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0)  + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                    fit_fig.savefig(the_location + 'Tmin_Fits_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0)  + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                     
                     if the_zoom_flag:
                         print('Zoom Fit vs Tmin plot in progress...')
                         fit_fig = plt.figure()
-                        vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
+                        vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
                         # plt.show()
-                        fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                        fit_fig.savefig(the_location + 'Tmin_Fits_Zoom_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                     
                     if the_chi_plots_flag:
                         print('Chi2 vs tmin plot in progress...')
                         chi_fit_fig = plt.figure()                
-                        vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                        vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$\chi^{2}/\mathrm{d.o.f} $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
                         # plt.show()
-                        chi_fit_fig.savefig(the_location + 'Tmin_Chisqr_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                        chi_fit_fig.savefig(the_location + 'Tmin_Chisqr_' + the_op_item + '_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                     
                     if the_chi_plots_flag and the_zoom_flag:
                         print('Zoom Chi2 vs tmin plot in progress...')
                         zoom_fit_fig = plt.figure()
-                        vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{min}$', r'$\chi^{2}/d.o.f $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
+                        vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$\chi^{2}/\mathrm{d.o.f} $',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
                         # plt.show()
-                        zoom_fit_fig.savefig(the_location + 'Tmin_Chisqr_Zoom_' + the_op_item + '_' +  the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                        zoom_fit_fig.savefig(the_location + 'Tmin_Chisqr_Zoom_' + the_op_item + '_' +  the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
         
                     
                     if the_total_chi_flag:
@@ -406,14 +397,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                         total_chi_fig = plt.figure()
                         plt.plot(the_nt, total_chi, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3)
                         plt.plot([the_nt[the_chosen_tmin]], [total_chi[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label= the_label)
-                        plt.xlabel(r'$t_{min}$')
+                        plt.xlabel(r'$t_{\mathrm{min}}$')
                         plt.ylabel(r'$\chi^{2}$')
                         plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
                         plt.xticks(the_nt_ticks)
                         plt.legend()
                         plt.tight_layout()
                         # plt.show()
-                        total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_op_item + '_' +  the_irrep +'_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)                
+                        total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_op_item + '_' +  the_irrep +'_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')                
                     
                     if the_delta_chi_flag:
                         print('Delta Chi2 vs tmin plot in progress...')
@@ -423,14 +414,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                         delta_chi_fig = plt.figure()
                         plt.plot(the_nt[:-1], delta_chis, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, label=r'$\Delta\chi^{2} = \chi^{2}(t) - \chi^{2}(t+1)$')
                         plt.plot([the_nt[the_chosen_tmin]], [delta_chis[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label=the_label)
-                        plt.xlabel(r'$t_{min}$')
+                        plt.xlabel(r'$t_{\mathrm{min}}$')
                         plt.ylabel(r'$\Delta \chi^{2} $')
                         plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
                         plt.legend()
                         plt.xticks(the_nt_ticks)
                         plt.tight_layout()
                         # plt.show()
-                        delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_op_item + '_' +  the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+                        delta_chi_fig.savefig(the_location + 'Tmin_DeltaChisqr_' + the_op_item + '_' +  the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version, bbox_inches='tight')
                     
                     
                     the_t0_data = list(the_multi_hadrons_fit_data[the_irrep + '/%sexp/'%the_nr_exps].keys())

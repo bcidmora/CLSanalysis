@@ -83,13 +83,8 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, *
         if 'GEVP' in this_data.keys(): del the_matrix_correlator_data[the_irrep+'/GEVP']
         group_gevp = this_data.create_group('GEVP')
         
-        ### Rolling or Single pivot
-        if kwargs.get('the_td')==None:
-            ### This is a loop over the t0s
-            vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp)
-        elif kwargs.get('the_td')!=None:
-            vf.DOING_THE_GEVP_SINGLE_PIVOT([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp,t_diag=int(kwargs.get('the_td')))
-        
+        ### This is a loop over the t0s
+        vf.DOING_THE_GEVP([the_t0_min, the_t0_max], the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_gevp)
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')
     
