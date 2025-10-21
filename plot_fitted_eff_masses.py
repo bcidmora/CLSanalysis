@@ -87,16 +87,15 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         the_title = OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps
        
         ### This is just to write the errors properly in the plot
-        the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
+        the_mean_fit_string = str('{:.5f}'.format(np.round(the_fit_data[the_chosen_tmin], 5)))
         the_error_string = vf.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
         the_sigmas_fit_string = the_error_string[0]
-            
-        if the_error_string[1]==False:
-            the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 4))    
 
+        if the_error_string[1]==False:
+            the_mean_fit_string = str('{:.4f}'.format(np.round(the_fit_data[the_chosen_tmin], 4)))
 
         print("Plotting Fitted Effective Masses...")
-        fit_fig = plt.figure()           
+        fit_fig = plt.figure()             
         ### THIS IS THE LABEL WITH TMIN AND TMAX
         # the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt_fit[the_chosen_tmin])) + '\n' +  r'$t_{\mathrm{max}} = %s$'%str(int(the_nt_max))  + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
@@ -184,11 +183,10 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                 da_irrep = vf.IrrepInfo(the_irrep)
                 MomentumIrrep = da_irrep.TotalMomPlot
                 NameIrrepPlot = da_irrep.NamePlot
-                # NameIrrep = da_irrep.Name
                 
                 the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
-                
-                the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 5))
+#                 
+                the_mean_fit_string = str('{:.5f}'.format(np.round(the_mean_corr[the_chosen_tmin], 5)))
                 the_error_string = vf.WRITTING_ERRORS_PLOTS(the_sigmas_corr[the_chosen_tmin],5)
                 the_sigmas_fit_string = the_error_string[0]
                 
@@ -196,19 +194,15 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                 the_title = NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0)
                     
                 if the_error_string[1]==False:
-                    the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
+                    the_mean_fit_string = str('{:.4f}'.format(np.round(the_mean_corr[the_chosen_tmin], 4))) 
             
                 the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
-                # print('Fit vs Tmin plot in progress...')
                 fit_fig = plt.figure()                
                 
                 vf.PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_rs_scheme + ' data', the_label, the_title, the_nt_ticks, the_eff_mass_color, the_fit_color)
                 
-                
-                # vf.PLOT_FITS(the_nt, the_mean_corr, the_sigmas_corr, the_chosen_tmin, the_label, r'$t_{min}$', r'$a_{t} \;\Delta E$',  NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
-                # plt.show()
-                # fit_fig.savefig(the_location + 'Tmin_Fits_' + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0)  + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version)
+            
                 
                 
                     
@@ -262,12 +256,13 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     
                     the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
                     
-                    the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 5))
+                    the_mean_fit_string = str('{:.5f}'.format(np.round(the_mean_corr[the_chosen_tmin], 5)))
                     the_error_string = vf.WRITTING_ERRORS_PLOTS(the_sigmas_corr[the_chosen_tmin],5)
                     the_sigmas_fit_string = the_error_string[0]
                         
                     if the_error_string[1]==False:
-                        the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
+                        the_mean_fit_string = str('{:.4f}'.format(np.round(the_mean_corr[the_chosen_tmin], 4))) 
+        
                 
                     the_label = r'$t_{min} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{max}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/d.o.f = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{fit} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                     

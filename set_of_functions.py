@@ -1335,7 +1335,7 @@ class NonInteractingLevels:
 ### Comments:
 # This function writes the errors in the plot in the way of parenthesis according to the precision given.
 def WRITTING_ERRORS_PLOTS(an_error, the_precision):
-    an_error = str(f'{an_error:.20f}')
+    an_error = str(f'{np.round(an_error, the_precision):.{the_precision}f}')
     the_error_string = "("
     out_precision = True
     if len(an_error)>(the_precision+2): 
@@ -1348,7 +1348,8 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
                 the_error_string+=an_error[ii]
             else: continue
     if len(the_error_string)>3:
-        the_error_string=the_error_string[:-1]
+        the_error_string= 10 * round(int(the_error_string[1:])/10)
+        the_error_string='('+str(the_error_string)[:-1]
         out_precision=False
     return [the_error_string+")", out_precision]
 

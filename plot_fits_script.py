@@ -69,12 +69,12 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)] -the_nt[0]
         
         ### This is just to write the errors properly in the plot
-        the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 5))
+        the_mean_fit_string = str('{:.5f}'.format(np.round(the_fit_data[the_chosen_tmin], 5)))
         the_error_string = vf.WRITTING_ERRORS_PLOTS(the_sigmas_corr[the_chosen_tmin],5)
         the_sigmas_fit_string = the_error_string[0]
             
         if the_error_string[1]==False:
-            the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))    
+            the_mean_fit_string = str('{:.4f}'.format(np.round(the_fit_data[the_chosen_tmin], 4)))    
         
         ### The SH operators name
         the_op = list(the_single_fit_data[the_irrep+'/Operators'])[0]
@@ -118,9 +118,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
             print('Total Chi2 vs tmin plot in progress...')
             total_chi = vf.TOTAL_CHI(the_chi_corr, the_nt, dis_set[1], 2)
             total_chi_fig = plt.figure() 
-            
-            print(the_irrep)
-            print(the_chosen_tmin)
+
             vf.PLOT_CHI_FITS(the_nt, total_chi, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}$', r'$\chi^{2}$', OperatorNamePlot + ' (%s): '%MomentumIrrep + r' $\to$ %s'%NameIrrepPlot + '(%s-exp)'%the_nr_exps, the_nt_ticks)
             
             total_chi_fig.savefig(the_location + 'Tmin_TotalChisqr_' + the_irrep[:4] +'_%s'%the_irrep[-1] + '_%sexp'%the_nr_exps + the_rebin + '_v%s.pdf'%the_version,bbox_inches='tight')
@@ -210,12 +208,12 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                 
                 the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
                 
-                the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 5))
+                the_mean_fit_string = str('{:.5f}'.format(np.round(the_mean_corr[the_chosen_tmin], 5)))
                 the_error_string = vf.WRITTING_ERRORS_PLOTS(the_sigmas_corr[the_chosen_tmin],5)
                 the_sigmas_fit_string = the_error_string[0]
                     
                 if the_error_string[1]==False:
-                    the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
+                    the_mean_fit_string = str('{:.4f}'.format(np.round(the_mean_corr[the_chosen_tmin], 4))) 
             
                 the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
@@ -354,12 +352,12 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_type_fit, the_nr_exps, 
                     
                     the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
                     
-                    the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 5))
+                    the_mean_fit_string = str('{:.5f}'.format(np.round(the_mean_corr[the_chosen_tmin], 5)))
                     the_error_string = vf.WRITTING_ERRORS_PLOTS(the_sigmas_corr[the_chosen_tmin],5)
                     the_sigmas_fit_string = the_error_string[0]
                         
                     if the_error_string[1]==False:
-                        the_mean_fit_string = str(np.round(the_mean_corr[the_chosen_tmin], 4))   
+                        the_mean_fit_string = str('{:.4f}'.format(np.round(the_mean_corr[the_chosen_tmin], 4))) 
                 
                     the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                     
