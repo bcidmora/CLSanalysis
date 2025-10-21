@@ -55,10 +55,6 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         the_op_list = list(the_single_correlator_data[irrep+'/Operators'])[0]
         OperatorNamePlot = vf.OPERATORS_SH(the_op_list.decode('utf-8'))
         
-        # print(len(the_nt))
-        # print(len(the_mean_corr))
-        
-        
         ### Information about the irrep
         da_irrep = vf.IrrepInfo(irrep)
         MomentumIrrep = da_irrep.TotalMomPlot
@@ -168,7 +164,6 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                 
                 ### The specific operator
                 the_op = the_op_list[bb]
-                # print(the_op)
                 OperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
                 
                 print('Correlator plots in process...')
@@ -218,7 +213,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;C_{ii}$(t)',fontsize=18)
             plt.yscale('log')
             plt.tight_layout()
-            plt.legend(fontsize=14, ncol= int(len(the_op_list)/2), handletextpad=0.01)
+            if len(the_op_list)>10: the_n_cols = int(len(the_op_list)/3)
+            else: the_n_cols = int(len(the_op_list)/2)
+            plt.legend(fontsize=14, ncol= the_n_cols, handletextpad=0.01)
             plt.xticks(the_nt_ticks)
             # plt.show()
             corr_fig.savefig(the_location + 'ALLDiagonalCorrelators_' + irrep  + '_log' + the_rebin + '_v%s.pdf'%the_version)
@@ -281,7 +278,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
             plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{i} (t_{0} = %s$)'%str(the_t0))
             plt.yscale('log')
             plt.tight_layout()
-            plt.legend()
+            if len(the_data)>10: the_n_cols = int(len(the_data)/3)
+            else: the_n_cols = int(len(the_data)/2)
+            plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)
             plt.xticks(the_nt_ticks)
             # plt.show()
             corr_fig.savefig(the_location + 'ALLEigenvalues_' + irrep  + '_log' + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
@@ -342,7 +341,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                     plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{i} (t_{0}} = %s$)'%the_t0)
                     plt.yscale('log')
                     plt.tight_layout()
-                    plt.legend()
+                    if len(the_data)>10: the_n_cols = int(len(the_data)/3)
+                    else: the_n_cols = int(len(the_data)/2)
+                    plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)    
                     plt.xticks(the_nt_ticks)
                     # plt.show()
                     corr_fig.text(0.5, 0.005, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
@@ -393,7 +394,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                     plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{i} (t_{0} = %s$)'%str(the_t0))
                     plt.yscale('log')
                     plt.tight_layout()
-                    plt.legend()
+                    if len(the_data)>10: the_n_cols = int(len(the_data)/3)
+                    else: the_n_cols = int(len(the_data)/2)
+                    plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)    
                     plt.xticks(the_nt_ticks)
                     # plt.show()
                     corr_fig.text(0.5, 0.005, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
@@ -447,7 +450,9 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_type_rs, the_vers
                     plt.title( NameIrrepPlot+ ' (%s) '%MomentumIrrep + r'$\to\;\lambda_{i} (t_{0} = %s$)'%str(the_t0))
                     plt.yscale('log')
                     plt.tight_layout()
-                    plt.legend()
+                    if len(the_data)>10: the_n_cols = int(len(the_data)/3)
+                    else: the_n_cols = int(len(the_data)/2)
+                    plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)    
                     plt.xticks(the_nt_ticks)
                     # plt.show()
                     corr_fig.text(0.5, 0.007, the_chosen_ops_string, ha='center', va='bottom', fontsize=10)
