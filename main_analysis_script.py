@@ -1,3 +1,4 @@
+import numpy as np
 import correlators_script as cs
 import effective_masses_script as efs
 import eigenvalues_script as evs
@@ -79,7 +80,8 @@ myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
 myWeight = weight
 myCnfgs = ncfgs # None # 20 # 100
 myChosenOpsList = chosen_operators_list
-
+myChosenIsospin = the_hadron_state
+myNonInteractingLevels = the_non_interacting_levels
 
 ### -------- PRINTING INFO OF ENSEMBLE ---------
 
@@ -121,9 +123,9 @@ elif myWhichCorrelator=='m':
     
      ### Correlators analysis
     if runCorrs: 
-        locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
+        locationWorkedCorrelators = cs.MultiCorrelatorAnalysis(myArchivo, myChosenIsospin, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list=myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
-        locationWorkedCorrelators = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
+        locationWorkedCorrelators = myLocation + 'Matrix_correlators' + myChosenIsospin + myTypeRs + reBin + '_v%s.h5'%myVersion
     
     myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')
     
@@ -146,7 +148,7 @@ elif myWhichCorrelator=='m':
     ### Fits analysis
     if runFits:        
         myFitsLocation = vf.DIRECTORY_EXISTS(myLocation + 'Fits_Matrices/')
-        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators' + myChosenIsospin + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
         
         fs.FitMultiCorrelators(myCorrelator, myFitCorrelator, myTypeRs, listTMaxMultiHads, myIrreps,  type_fit = myTypeFit, type_correlation = myTypeCorrelation, one_tmin = myOneTMin, one_t0 = myOneT0, chosen_t0 = myT0, gevp=myGevpFlag, operators_analysis = myOperatorsFlag, the_operator_analysis_method = myOperatorAnalysisMethod)
         

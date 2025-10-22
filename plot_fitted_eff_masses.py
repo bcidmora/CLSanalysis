@@ -39,6 +39,9 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
     ### Loop over the irreps found in the fits file.
     for the_irrep in s_irreps:
         
+        print("---------------------------------------------------------------------------")
+        print("Irrep: ", the_irrep)
+        
         ### Central values of the correlators
         the_mean_corr = np.array(the_single_correlator_data[the_irrep + '/Effective_masses/Mean'])
         
@@ -70,7 +73,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         the_nt_max = int(dis_set[1][0])
         
         ### This is the tmin chosen for this fit. It can be changed in "file_ens.py"
-        the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)] -the_nt_fit[0]
+        the_chosen_tmin = the_nt_fit.index(the_tmins[the_irreps.index(the_irrep)])
         
         ### Mean values of the fits
         the_fit_data = dis_set[2]
@@ -107,7 +110,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         
         
         
-def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_type_fit, the_nr_exps, the_type_rs, the_tmins, the_t0, the_version, the_location, the_rebin, the_irreps, **kwargs):  
+def PlotMultiHadronsEffectiveMassesFits(the_multi_hadrons_fit_data, the_matrix_correlator_data, the_quantum_number, the_rs_scheme, the_type_fit, the_nr_exps, the_tmins, the_t0, the_version, the_location, the_rebin, the_irreps, **kwargs):  
     
     m_irreps = list(the_multi_hadrons_fit_data.keys())
     
@@ -140,8 +143,11 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
     ### Loop over the irreps of this file
     for the_irrep in m_irreps:
         
+        print("---------------------------------------------------------------------------")
+        print("Irrep: ", the_irrep)
+        
         ### Searching if the fit was done and the gevp plots must be included
-        if '%sexp'%the_nr_exps in list(the_multi_hadrons_fit_data[the_irrep].keys()) and kwargs.get('gevp')==True: 
+        if '%sexp'%the_nr_exps in list(the_multi_hadrons_fit_data[the_irrep].keys()): 
             
             ### Retrieving the data
             the_data_fit = the_multi_hadrons_fit_data[the_irrep + '/%sexp/'%the_nr_exps + 't0_%s/Tmin/'%the_t0 + '%s/Mean'%the_type_fit]
@@ -151,11 +157,19 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
             the_data_sigmas = np.array(the_matrix_correlator_data[the_irrep + '/GEVP/t0_%s/Effective_masses/Sigmas'%the_t0])
             
             ### Loop over the eigenvalues of this irrep
-            for bb in range(len(list(the_data.keys()))):
+            for bb in range(len(list(the_data_fit.keys()))):
                 
+                ### The effective masses of the eigenvalues
                 the_mean_corr = the_data[bb]
                 
+                ### The sigmas of these eff masses
                 the_sigmas_corr = the_data_sigmas[bb]
+                
+                ### The time slices range
+                the_nt_corr = np.array(the_matrix_correlator_data[the_irrep + '/Time_slices'])
+                
+                ### This is the time slices shifted for the plot
+                the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
                 
                 ### bb-th Eigenvalue
                 dis_set = np.array(the_data_fit.get('lambda_%s'%bb))
@@ -173,17 +187,18 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                 the_chi_sigmas = dis_set[5]
                 
                 ## The minimum time slices that the fit was performed
-                the_nt = [int(x) for x in dis_set[0]]
+                the_nt_fit = [int(x) for x in dis_set[0]]
                 
                 ### These are the ticks that appear in the plot
-                the_nt_ticks = np.arange(the_nt[0]+1, the_nt[-1], int(len(the_nt)/5))
+                the_nt_ticks = np.arange(int(the_nt_corr[-1]/5), the_nt_corr[-1], int(the_nt_corr[-1]/5))
 
                 ### Information about the irre
                 da_irrep = vf.IrrepInfo(the_irrep)
                 MomentumIrrep = da_irrep.TotalMomPlot
                 NameIrrepPlot = da_irrep.NamePlot
                 
-                the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
+                ### Getting the position of the chosen tmin for the plots
+                the_chosen_tmin = the_nt_fit.index(the_tmins[the_irreps.index(the_irrep)][bb])
                 
                 the_mean_fit_string = str('{:.5f}'.format(np.round(the_fit_data[the_chosen_tmin], 5)))
                 the_error_string = vf.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
@@ -195,14 +210,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                 the_title = NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0)
 
                 ### THIS IS THE LABEL WITH TMIN AND TMAX
-                # the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+                # the_label = r'$t_{\mathrm{min}} = %s$'%str(int(the_nt_fit[the_chosen_tmin])) + '\n' + r'$t_{\mathrm{max}}$ = %s'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
                 the_label = r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
                 fit_fig = plt.figure()                
                 vf.PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_rs_scheme + ' data', the_label, the_title, the_nt_ticks, the_eff_mass_color, the_fit_color)
                 
-                fit.fig(the_location + 'Fitted_Effective_Masses' + the_quantum_number + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
+                fit_fig.savefig(the_location + 'Fitted_Effective_Masses' + the_quantum_number + the_irrep + '_%s'%str(bb) + '_t0_%s'%str(the_t0) + the_rebin + '_v%s.pdf'%the_version)
                     
         if 'Operators_Analysis' in list(the_multi_hadrons_fit_data[the_irrep].keys()) and the_ops_analysis_flag:
             if kwargs.get('ops_analysis_method')=='from_list':
@@ -252,6 +267,9 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                     ### The chi^{2} of the fit
                     the_chi_corr = dis_set[4]
                     
+                    ### The tmins for the fits
+                    the_nt_fit = [int(x) for x in dis_set[0]]
+                    
                     ### The statistical error of the chi^{2}
                     the_chi_sigmas = dis_set[5]
                     
@@ -263,7 +281,7 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                     MomentumIrrep = da_irrep.TotalMomPlot
                     NameIrrepPlot = da_irrep.NamePlot
                     
-                    the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
+                    the_chosen_tmin = the_nt_fit.index(the_tmins[the_irreps.index(the_irrep)][bb])
                     
                     the_mean_fit_string = str('{:.5f}'.format(np.round(the_fit_data[the_chosen_tmin], 5)))
                     the_error_string = vf.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)

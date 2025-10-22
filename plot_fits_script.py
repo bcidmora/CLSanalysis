@@ -41,6 +41,9 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
     ### Loop over the irreps found in the fits file.
     for the_irrep in s_irreps:
         
+        print("---------------------------------------------------------------------------")
+        print("Irrep: ", the_irrep)
+        
         ### This is the info of the fits for this irrep
         dis_set =  np.array(the_single_fit_data[the_irrep + '/%sexp'%the_nr_exps + '/Tmin/%s/Mean'%the_type_fit])
         
@@ -66,7 +69,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         the_nt_ticks = np.arange(the_nt[0], the_nt[-1], 2)
         
         ### This is the tmin chosen for this fit. It can be changed in "file_ens.py"
-        the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)] -the_nt[0]
+        the_chosen_tmin = the_nt.index(the_tmins[the_irreps.index(the_irrep)])
         
         ### This is just to write the errors properly in the plot
         the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
@@ -167,6 +170,9 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
     ### Loop over the irreps of this file
     for the_irrep in m_irreps:
         
+        print("---------------------------------------------------------------------------")
+        print("Irrep: ", the_irrep)
+        
         ### Searching if the fit was done and the gevp plots must be included
         if '%sexp'%the_nr_exps in list(the_multi_hadrons_fit_data[the_irrep].keys()) and kwargs.get('gevp')==True: 
             
@@ -204,9 +210,9 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                 da_irrep = vf.IrrepInfo(the_irrep)
                 MomentumIrrep = da_irrep.TotalMomPlot
                 NameIrrepPlot = da_irrep.NamePlot
-                # NameIrrep = da_irrep.Name
                 
-                the_chosen_tmin = the_tmins[the_irreps.index(the_irrep)][bb]-the_nt[0]
+                ### Getting the position of the chosen tmin for the fit
+                the_chosen_tmin = the_nt.index(the_tmins[the_irreps.index(the_irrep)][bb])
                 
                 the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
                 the_error_string = vf.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)

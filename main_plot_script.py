@@ -70,7 +70,6 @@ elif myTypeRs=='bt':
 ### This is the name of the state under investigation
 myChosenIsospin = the_hadron_state
 
-
 ### -------- PRINTING INFO OF ENSEMBLE ---------
 
 vf.INFO_PRINTING(myWhichCorrelator, myEns)
@@ -196,12 +195,21 @@ elif myWhichCorrelator=='m':
     if plotEffMass: 
         peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin,  myResamplingScheme, myVersion, myT0, myPlotLocation, reBin,nr_irreps=myNrIrreps, first_irrep=myFirstIrrep, last_irrep = myLastIrrep, diag_corrs= myDiagonalCorrs, gevp=myGevpFlag, ops_analysis=myOperatorsFlag)
         
+    ### Plot fits
     if plotFits:        
         myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators' + myChosenIsospin + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
                              
         pfit.PlotMultiHadronsFits(myFitCorrelator, myChosenIsospin, myTypeCorrelation, myNrExponentials, myTypeRs, multiTMinsFitPlots, myT0, myVersion, myPlotLocation, reBin, myIrreps, gevp=myGevpFlag, zoom_fit=myZoomFit, chi_plots=myChiPlots, total_chi=myTotalChiPlots, delta_chi=myDeltaChiPlots, ops_analysis=myOperatorsFlag, ops_analysis_method=myOperatorsMethod)
         
+        myFitCorrelator.close()
+    
+    ### Plot the fitted effective masses of the eigenvalues
+    if plotFittedEffMass:
+        myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
+        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators' + myChosenIsospin + myTypeRs + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        
+        pfem.PlotMultiHadronsEffectiveMassesFits(myFitCorrelator, myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myTypeCorrelation, myNrExponentials, multiTMinsFitPlots, myT0, myVersion, myPlotLocation, reBin, myIrreps) 
         myFitCorrelator.close()
 
     ### This part puts all the plots together in one pdf file. 

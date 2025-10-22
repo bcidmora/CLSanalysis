@@ -1340,25 +1340,32 @@ class NonInteractingLevels:
 ### Comments:
 # This function writes the errors in the plot in the way of parenthesis according to the precision given.
 def WRITTING_ERRORS_PLOTS(an_error, the_precision):
-    an_error = str(f'{np.round(an_error, the_precision):.{the_precision}f}')
-    the_error_string = "("
     out_precision = True
     the_new_precision = the_precision
-    if len(an_error)>(the_precision+2): 
-        an_error=an_error[:the_precision+2]
-    for ii in range(len(an_error)):
-        if len(the_error_string)>=2:
-            the_error_string+=an_error[ii]
-        else:
-            if an_error[ii]!="0" and an_error[ii]!=".": 
+    the_error_string = "("
+    if an_error>=1:
+        print("The error is of order 1")
+        out_precision=False
+        an_error = str(f'{np.round(an_error, 1):.{1}f}')
+        the_error_string+=an_error
+        the_new_precision = 1
+    else:
+        an_error = str(f'{np.round(an_error, the_precision):.{the_precision}f}')
+        if len(an_error)>(the_precision+2): 
+            an_error=an_error[:the_precision+2]
+        for ii in range(len(an_error)):
+            if len(the_error_string)>=2:
                 the_error_string+=an_error[ii]
-            else: continue
-    if len(the_error_string)>3:
-        while len(the_error_string)>3:
-            the_error_string= 10 * round(int(the_error_string[1:])/10)
-            the_error_string='('+str(the_error_string)[:-1]
-            out_precision=False
-            the_new_precision=the_new_precision-1
+            else:
+                if an_error[ii]!="0" and an_error[ii]!=".": 
+                    the_error_string+=an_error[ii]
+                else: continue
+        if len(the_error_string)>3:
+            while len(the_error_string)>3:
+                the_error_string= 10 * round(int(the_error_string[1:])/10)
+                the_error_string='('+str(the_error_string)[:-1]
+                out_precision=False
+                the_new_precision=the_new_precision-1
     return [the_error_string+")", out_precision, the_new_precision]
 
 
