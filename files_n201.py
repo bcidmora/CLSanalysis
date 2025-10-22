@@ -21,6 +21,18 @@ weight_raw = np.array(np.loadtxt(location + 'data/N201/N201r001.ms1.dat_ascii', 
 name = list(f.keys())
 name1 = list(f1.keys())
 
+### Name of the quantum number to study
+the_hadron_state='_'
+if 'isosinglet' in hdf5NameMulti: 
+    the_hadron_state = '_isosinglet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+elif 'isodoublet' in hdf5NameMulti: 
+    the_hadron_state = '_isodoublet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+else: 
+    the_hadron_state='_' #You can put here anything you want
+    the_non_interacting_levels = []
+
 ### Nr. Gauge Configurations
 ncfgs = np.array(f[name[0]+'/data']).shape[0]
 
@@ -42,7 +54,7 @@ for ix in range(0,len(name)):
     listTMaxMultiHads.append(list_tmax_multihads_ix)
 
 ### Minimum time slices used for the fits of single hadron correlators.    
-singleTMinsFitPlots = [6]*len(name1)
+singleTMinsFitPlots = [8]*len(name1)
 
 ### Minimum time slices for the fits of multihadron correlators
 multiTMinsFitPlots = []

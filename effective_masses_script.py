@@ -220,10 +220,10 @@ if __name__=="__main__":
         reBin = ''  
     
     ### Info of the ensembles. If you have a new ensemble you have to add this type of file here
-    if myEns == 'N451': from files_n451 import location
-    elif myEns == 'N201': from files_n201 import location
-    elif myEns == 'D200': from files_d200 import location
-    elif myEns == 'X451': from files_x451 import location
+    if myEns == 'N451': from files_n451 import location, the_hadron_state
+    elif myEns == 'N201': from files_n201 import location, the_hadron_state
+    elif myEns == 'D200': from files_d200 import location, the_hadron_state
+    elif myEns == 'X451': from files_x451 import location, the_hadron_state
     
     ### Root directory where the averaged correlators are stored.    
     myLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'$YOUR_OUTPUT_PATH(TOTAL_SAME_THAN_CORRS_SCRIPT)$/%s/'%myEns)
@@ -239,12 +239,11 @@ if __name__=="__main__":
         mySingleCorrelatorData.close()
     
     elif myWhichCorrelator=='m':        
-        myNameArchivo = myLocation + 'Matrix_correlators_' + myTypeRs + reBin + '_v%s.h5'%myVersion
+        myNameArchivo = myLocation + 'Matrix_correlators' + the_hadron_state + myTypeRs + reBin + '_v%s.h5'%myVersion
         myMatrixCorrelatorData = h5py.File(myNameArchivo, 'r+')
         MultiCorrelatorEffectiveMass(myMatrixCorrelatorData, myTypeRs, dist_eff_mass = myEffMassDistance)
         myMatrixCorrelatorData.close()
     
-    ### The ratio of correlators has not been implemented yet.
     elif myWhichCorrelator=='mr':
         myNameArchivo = myLocation + 'Matrix_correlators_ratios_' + myTypeRs + reBin + '_v%s.h5'%myVersion
         myRatioMatrixCorrelatorData = h5py.File(myNameArchivo, 'r+')

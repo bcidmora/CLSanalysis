@@ -29,7 +29,6 @@ def RANDOM_GENERATOR(k_size, cfgs_nr):
 # It receives a list [Ncfgs]
 # It returns the normalization factor
 def NORM_FACTOR(a_list):
-    # return np.double(np.mean(a_list)) #OLD
     return np.double(np.mean(a_list, dtype=np.float128))
 
 
@@ -498,6 +497,10 @@ def DOING_THE_GEVP_SINGLE_PIVOT(the_t0_min_max, the_nt, the_mean_corr, the_rs_re
             ### Reshaping eigenvectors and eigenvalues for sorting
             the_mod_evals_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evalues_rs))
             the_mod_evectors_rs = RESHAPING_EIGEN_FOR_SORTING(np.array(the_evectors_rs))
+            
+            ### Loop over the resamples (sorting)
+            # for xyz in range(len(the_mod_evals_rs)):
+                # the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
                 
                 ### Reshaping again to save them in a file
             the_evalues_rs = RESHAPING_EIGEN_FOR_SORTING_REVERSE(the_mod_evals_rs)
@@ -1195,7 +1198,6 @@ def CHOOSING_YMIN_PLOT(the_mean_efm):
         elif the_mean_efm[int(2* (len(the_mean_efm)/3))]>(the_mean_efm[0]*1.5) or the_mean_efm[int(2* (len(the_mean_efm)/3))]<(the_mean_efm[0]*.5):
             the_ymin=(the_mean_efm[0]/2)*.65 
     else: 
-        # the_ymin=0.
         the_ymin= the_mean_efm[int(len(the_mean_efm)/2)]*.68
     return the_ymin
 
@@ -1288,7 +1290,10 @@ def OPERATORS_MH(the_operator_name):
         if '_' in new_op[4]:
             OperatorPlot = new_op[4]
         else:
-            the_mom = str(SQUARED_MOM(new_op[2]))
+            if 'P=(' in new_op[2]:
+                the_mom = str(SQUARED_MOM(new_op[2]))
+            else: 
+                the_mom = str(new_op[2][new_op[2].index('='):])
             the_irrep = new_op[3]
             if '}' in new_op[4]: new_op[4] = new_op[4][:-1]
             OperatorPlot = new_op[4][:new_op[4].index('[')+1] + the_mom + '_' + the_irrep + '_' + new_op[4][new_op[4].index('[')+1:-1] + ']'
@@ -1338,6 +1343,7 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
     an_error = str(f'{np.round(an_error, the_precision):.{the_precision}f}')
     the_error_string = "("
     out_precision = True
+    the_new_precision = the_precision
     if len(an_error)>(the_precision+2): 
         an_error=an_error[:the_precision+2]
     for ii in range(len(an_error)):
@@ -1348,12 +1354,17 @@ def WRITTING_ERRORS_PLOTS(an_error, the_precision):
                 the_error_string+=an_error[ii]
             else: continue
     if len(the_error_string)>3:
-        the_error_string= 10 * round(int(the_error_string[1:])/10)
-        the_error_string='('+str(the_error_string)[:-1]
-        out_precision=False
-    return [the_error_string+")", out_precision]
+        while len(the_error_string)>3:
+            the_error_string= 10 * round(int(the_error_string[1:])/10)
+            the_error_string='('+str(the_error_string)[:-1]
+            out_precision=False
+            the_new_precision=the_new_precision-1
+    return [the_error_string+")", out_precision, the_new_precision]
 
 
+
+### Comments:
+# This function plots the correlators, the eigenvalues, the effective masses. It only depends on the labels and the scale. 
 def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_nt_ticks, the_x_axis_label, the_y_axis_label, the_marker, the_title_info, **kwargs):
     the_min_position = np.where(the_mean_corr == min(the_mean_corr[:-3]))
     the_max_position = np.where(the_mean_corr == max(the_mean_corr[:-3]))
@@ -1373,7 +1384,9 @@ def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_
     plt.tight_layout()
     # plt.show()
     
-    
+
+### Comments:
+# This functions creates a histogram with the distribution of the data for a given time slice. (Eigenvalues and diagonal correlators)
 def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_mean, the_label_mean_nt, the_title_info, the_bins,  the_x_axis_label):
     counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label, color='#5d83d5')
     padding = counts.max() * 0.1  # 10% padding on top
@@ -1387,8 +1400,8 @@ def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_m
     plt.ylim(0, counts.max() + padding)
     # plt.show()
 
-
-
+### Comments:
+# This function plots the fits, where the selected data point is highlighted in a different color. 
 def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
     if kwargs.get('zoom'):
         the_ll = int(kwargs.get('the_ll'))
@@ -1405,8 +1418,8 @@ def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label
     plt.tight_layout()
 
 
-
-
+### Comments:
+# This function plots the Chi^{2} of the fits, where the selected data point is highlighted in a different color. This is different because there are no errors involved, just a normal plot of the data.
 def PLOT_CHI_FITS(the_nt, the_plot_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
     plt.plot(the_nt, the_plot_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, color='#5d83d5')
     plt.plot([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, color = '#b90f22', zorder=3, markerfacecolor = 'white', label = the_label)
@@ -1415,9 +1428,12 @@ def PLOT_CHI_FITS(the_nt, the_plot_data, the_chosen_tmin, the_label, the_xlabel,
     plt.xlabel(the_xlabel,fontsize=16)
     plt.ylabel(the_ylabel,fontsize=16)
     plt.title(the_title,fontsize=16)
+    # plt.xticks(the_nt_ticks)
     plt.tight_layout()
 
 
+### Comments:
+# This function plots the effective masses with the corresponding fit line and the associated error. 
 def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_rs_scheme, the_label, the_title, the_nt_ticks, the_color_eff_mass, the_color_fit):
     
     the_min_position = np.where(the_mean_corr == min(the_mean_corr[:-3]))

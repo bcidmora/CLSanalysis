@@ -20,6 +20,18 @@ weight_raw = np.array(np.loadtxt(location + 'data/N451/N451r000.ms1.dat_ascii', 
 name = list(f.keys())
 name1 = list(f1.keys())
 
+### Name of the quantum number to study
+the_hadron_state='_'
+if 'isosinglet' in hdf5NameMulti: 
+    the_hadron_state = '_isosinglet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+elif 'isodoublet' in hdf5NameMulti: 
+    the_hadron_state = '_isodoublet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+else: 
+    the_hadron_state='_' #You can put here anything you want
+    the_non_interacting_levels = []
+
 ### Number of gauge configurations available
 ncfgs = np.array(f[name[0]+'/data']).shape[0]
 # ncfgs = 1011

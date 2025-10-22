@@ -173,7 +173,7 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
     return the_location + '/Single_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version
     
 
-def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
+def MultiCorrelatorAnalysis(the_archivo, the_quantum_number, the_location, the_version, the_type_rs, the_irreps, the_weight, **kwargs):
     
     print("                     CORRELATORS ANALYSIS \n")
     
@@ -241,7 +241,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs,
     norm_reweight = vf.RW_NORMALIZATION(binned_rw, len(binned_rw))
     
     ### This is the single correlators data
-    the_matrix_correlator_data = h5py.File(the_location + '/Matrix_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version,'w')    
+    the_matrix_correlator_data = h5py.File(the_location + '/Matrix_correlators' + the_quantum_number + the_type_rs + the_re_bin + '_v%s.h5'%the_version,'w')      
     
     begin_time = time.time()
     ### Start of the analysis for the nr. of irreps.
@@ -415,21 +415,22 @@ if __name__== "__main__":
     myWeight = weight
     myLocation = vf.DIRECTORY_EXISTS(location + '$YOUR_OUTPUT_PATH$/%s/'%myEns)
     myCnfgs = ncfgs
+    myChosenIsospin = the_hadron_state
     
     vf.INFO_PRINTING(myWhichCorrelator, myEns)
     
     if myWhichCorrelator =='s':        
         myArchivo, myIrreps = f1, name1 
-        correlatorAnalysis = SingleCorrelatorAnalysis 
+        
+        savedLocation = SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     
     elif myWhichCorrelator=='m':
         myArchivo, myIrreps = f, name
-        correlatorAnalysis = MultiCorrelatorAnalysis
+        
+        savedLocation = MultiCorrelatorAnalysis(myArchivo, myChosenIsospin, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     else:
         print('NOT AN OPTION.\nQUITTING.')
         sys.exit()
-    
-    savedLocation = correlatorAnalysis(myArchivo, myLocation, myVersion, myTypeRs, myIrreps, myWeight, rebin_on = myRebinOn, rb = myRb, kbt = myKbt, number_cfgs = myCnfgs, nr_irreps=myNrIrreps, own_kbt_list = myKbtSamples, first_irrep = myFirstIrrep , last_irrep = myLastIrrep)
     
     myArchivo.close()
     print('-'*(len(savedLocation)+1))

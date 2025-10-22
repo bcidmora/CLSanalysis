@@ -22,6 +22,19 @@ f1 = h5py.File(location + 'data/D200/' + hdf5NameSingle, 'r')
 name = list(f.keys())
 name1 = list(f1.keys())
 
+### Name of the quantum number to study
+the_hadron_state='_'
+
+if 'isosinglet' in hdf5NameMulti: 
+    the_hadron_state = '_isosinglet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+elif 'isodoublet' in hdf5NameMulti: 
+    the_hadron_state = '_isodoublet_strange_fermionic_'
+    the_non_interacting_levels = [] # Here goes a list of the possible nearby non-interacting levels (Look at the X451 for an example)
+else: 
+    the_hadron_state='_' #You can put here anything you want
+    the_non_interacting_levels = []
+
 ### Number of gauge configurations
 # ncfgs = np.array(f[name[0]+'/data']).shape[0]
 ncfgs = 2000 
@@ -44,16 +57,7 @@ if '-' in hdf5NameMulti:
     weight = np.array(vf.RW_NORMALIZATION(worked_weight,ncfgs), dtype=np.float64)
 
 ### List of tmaxs used for the fitting procedure. 
-#listTMaxSingleHads = [np.array(f1[name1[0]+'/data']).shape[-1]+1]*len(name1)
 listTMaxSingleHads = [25,25,25,25,25,25,25,25,25,25, 25,25,25,25,25,25,25,25,25,25, 25,25,25,25,25,25,25,25,25]
-
-### For the multihadron operators, I modified each of the entries. 
-#list_tmax_multihads=[]
-#for ix in range(0,len(name)):
-    #list_tmax_multihads_ix=[]
-    #for jx in range(0,np.array(f[name[ix]+'/data']).shape[1]):
-        #list_tmax_multihads_ix.append(np.array(f[name[ix]+'/data']).shape[-1]+1)
-    #list_tmax_multihads.append(list_tmax_multihads_ix)
 
 ### TMax used for the fits of correlation matrices    
 listTMaxMultiHads = [[25,22,23,19,17],
@@ -67,7 +71,11 @@ listTMaxMultiHads = [[25,22,23,19,17],
                        [23,22,24,24,24,23,24,23,23,23,23,19,19]]
 
 ### Minimum time slices used for the fits of single hadron correlators.
-singleTMinsFitPlots = [8,10,10,10,10,10,8,10,10,10,10,10,10,10,10,8,8,8,6,8,8,8,8,8,6,8,8,8,10]
+singleTMinsFitPlots = [8,10,10,10,10,10, #P^{2} = 0
+                       8,10,10,10,10,10, # P^{2} = 1
+                       8,10,8,8,10,8, # P^{2} = 2
+                       8,10,10,8,10,8, # P^{2} = 3
+                       8,8,8,8,10] # P^{2} = 4
 
 
 ### Minimum time slices for the fits of multihadron correlators
