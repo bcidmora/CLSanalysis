@@ -366,7 +366,7 @@ def MultiCorrelatorAnalysis(the_archivo, the_quantum_number, the_location, the_v
     the_matrix_correlator_data.close()
     end_time = time.time()
     print('TIME TAKEN: ' + str((end_time-begin_time)/60) +' mins')    
-    return the_location + '/Matrix_correlators_' + the_type_rs + the_re_bin + '_v%s.h5'%the_version
+    return the_location + '/Matrix_correlators' + the_quantum_number + the_type_rs + the_re_bin + '_v%s.h5'%the_version
 
 ### ------------------------------- END FUNCTIONS ----------------------------------------------------
 
