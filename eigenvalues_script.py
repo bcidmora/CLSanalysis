@@ -26,8 +26,8 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
     ### What type of sorting of the eigenstates
     the_sorting = kwargs.get('sorting')
     the_sorting_map = {
-        None : (vfa.SORTING_EIGENVALUES_NEW, "Sorting states based on Eigenvalues."),
-        'eigenvals' : (vfa. SORTING_EIGENVALUES_NEW, "Sorting states based on Eigenvalues."),
+        None : (vfa.SORTING_EIGENVALUES, "Sorting states based on Eigenvalues."),
+        'eigenvals' : (vfa. SORTING_EIGENVALUES, "Sorting states based on Eigenvalues."),
         'vecs_fix' : (vfa.SORTING_EIGENVECTORS, "Sorting states by Eigenvectors with a fixed reference time slice."),
         'vecs_fix_norm' : (vfa.SORTING_EIGENVECTORS_NORMALIZED, "Sorting states by normalized Eigenvectors with a fixed reference time slice."),
         'vecs_var' : (vfa.SORTING_EIGENVECTORS_CHANGING_TSLICE, "Sorting states by Eigenvectors with a varying reference time slice."),
@@ -39,7 +39,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
     
     the_rs_sorting = kwargs.get('rs_sorting')
     if the_rs_sorting is None:
-        the_rs_sorting_process = vfa.SORTING_EIGENVALUES_NEW
+        the_rs_sorting_process = vfa.SORTING_EIGENVALUES
     else:
         the_rs_sorting_process = the_sorting_process
 
@@ -59,8 +59,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
         the_rs_real = np.asarray(this_data['Correlators/Real/Resampled'])
         
         ### The central values of the original correlators
-        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean'])    
-        the_mean_corr = np.asarray(the_mean_corr_real, dtype = np.float64)
+        the_mean_corr = np.asarray(this_data['Correlators/Real/Mean'], dtype = np.float64)    
         
         print('\n----------------------------------------------')
         print(f'     IRREP ({the_irreps.index(the_irrep)+1}/{len(the_irreps)}): {the_irrep}')
@@ -95,42 +94,5 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
 ### ------------------------------- START EXECUTING --------------------------------------------------
 
 
-if __name__=="__main__":
-    import ensembles as ed
-    
-    myArgs = vfp.parse_args()
-    myRuns = vfp.WhichRuns(myArgs, ed.ensembles)
-    
-    ### Rebinning
-    reBin = f"_bin{myRuns.rb}" if myRuns.rebin else ""
-    
-    ### Root Location of your hdf5 file that contains the correlators already resampled and averaged.
-    myLocation = vfl.DIRECTORY_EXISTS(f'{ed.outputLocation}{myRuns.ensemble}/')
-    
-    ### Name of this version of analysis
-    myIsospin = myRuns.isospin
-    myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
-    myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
-    myIrreps = list(myArchivo.keys())
-    myArchivo.close()
-    myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
-    
-    ### Min and Max t0 to do the GEVP
-    mySorting = myRuns.gevp.sorting
-    myTD = myRuns.gevp.td
-    myRsSorting = myRuns.gevp.rs_sorting
-    
-    myT0Min = myRuns.gevp.t0min
-    myT0Max = myRuns.gevp.t0max
-        
-    ### This is the file that cotains the averaged correlators and stuff
-    myArchivo = f'{myLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
-    
-    myMatrixCorrelatorData = h5py.File(myArchivo,'r+')
-    
-    EigenvaluesExtraction(myMatrixCorrelatorData, myRuns.rs_type, myIrreps, myT0Min, myT0Max, sorting = mySorting, the_td = myTD, rs_sorting = myRsSorting)
-    myMatrixCorrelatorData.close()   
-    
-    print('-'*(len(myArchivo)+1))
-    print('Saved as: \n' + myArchivo)
-    print('_'*(len(myArchivo)+1))
+if __name__== "__main__":
+    print("Nothing to do here.")

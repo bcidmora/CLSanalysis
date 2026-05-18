@@ -92,6 +92,7 @@ class Runs:
     the_irreps: NrIrreps
     
     ib_corr: bool
+    corr_fit_ib: str
     
 import argparse
 ### Comments:
@@ -139,6 +140,7 @@ def parse_args():
     parser.add_argument("--fit-type", choices=["1", "2", "g"], default="1")
     parser.add_argument("--fit-correlation", choices=["Correlated", "Uncorrelated"], default="Correlated")
     parser.add_argument("--fit-t0", default=4)
+    parser.add_argument("--fit-ib", choices=["isoQCD", "ib", "both"], default="isoQCD")
     
     ### These is for the Bootstrap
     parser.add_argument("-kbt", "--k-bootstrap", type=int, default=500) # resampling schemes
@@ -219,6 +221,7 @@ def WhichRuns(args, the_ensemble_data):
         
         the_irreps = the_irreps,
         ib_corr = args.ib_corr,
+        corr_fit_ib = args.fit_ib,
         )
     
 ## Comments:
@@ -348,8 +351,14 @@ def IRREP_BIN_SIZE_INFO_PRINTING(the_irreps):
     print(*info_list, sep='\n')
     
     
-    
-    
+
+def PRINT_IB_INFO(the_index, the_irrep, the_op_list):    
+    print('----------------------------------------------------------------------------------------')
+    print(f'IRREP ({the_index+1}/3): {the_irrep}\n   --->>   Operators list: ')
+    for item in the_op_list:
+        print(f'           {item.decode("utf-8")}')
+    print('----------------------------------------------------------------------------------------')
+
     
     
     

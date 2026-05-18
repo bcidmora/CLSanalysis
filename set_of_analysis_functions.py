@@ -221,21 +221,21 @@ def IRREP_OP_LIST(the_Nr_Irreps, the_Nr_Ops):
 # a: shape [nt]
 # This is the old version of the Effective Masses. It can still be used, but the other one is more general
 def EFF_MASS_CLASSIC(a):
-    meff = np.array([np.log(np.double(a[i])/np.double(a[i+1])) for i in range(len(a)-1)])
+    meff = np.asarray([np.log(np.double(a[i])/np.double(a[i+1])) for i in range(len(a)-1)])
     return meff 
 
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
 # a: shape [nt]
 # d: distance of two points, by default this is 1
 def EFF_MASS(a,d):
-    meff = np.array([np.log(np.abs(np.double(a[i])/np.double(a[i+d]))) for i in range(len(a)-d)])
+    meff = np.asarray([np.log(np.abs(np.double(a[i])/np.double(a[i+d]))) for i in range(len(a)-d)])
     return meff
 
 ## This function is created to look at the effective masses of the isospin corrections 
 # a: is the correction to the correlator with shape [nt]
 # b: is the main baryon correlator with shape [nt]
-def EFF_MASS_CORRECTIONS(a,b):
-    meff = np.array([np.double(a[i])/np.double(b[i])  - np.double(a[i+1])/np.double(b[i+1]) for i in range(len(a)-1)])
+def EFF_MASS_CORRECTIONS(a, b):
+    meff = np.asarray([(np.double(a[i])/np.double(b[i]))  - (np.double(a[i+1])/np.double(b[i+1])) for i in range(len(a)-1)])
     return meff
 
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
@@ -384,6 +384,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
     
     print("ROLLING PIVOT")
     
+    ### Choosing the t0's for which to perform the GEVP
     the_t0_start = np.abs(the_t0_min_max[0] - the_nt[0])
     the_t0_end = (the_t0_min_max[1] - the_nt[0]) + 1
 
@@ -392,7 +393,6 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
     
     ### Loop over the t0's chosen
     for the_t0_init in range(the_t0_start, the_t0_end):
-
         ### This is the reference correlation matrix for the GEVP
         the_ct0_mean = the_mean_corr[the_t0_init]
 
@@ -404,11 +404,11 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             print(f"WARNING: Matrix isn't positive definite anymore. Skipping T0 = {the_t0_init + the_nt[0]}")
             continue
         
-        the_evals_mean = [the_ev[0] for the_ev in the_ev_mean]
-        the_evecs_mean = [the_ev[1] for the_ev in the_ev_mean]
+        the_evals_mean = np.asarray([the_ev[0] for the_ev in the_ev_mean])
+        the_evecs_mean = np.asarray([the_ev[1] for the_ev in the_ev_mean])
         
         ### First sort by eigenvalue
-        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES_NEW(the_evals_mean, the_evecs_mean)
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
         
         if the_sorting is not None and the_sorting!='eigenvals':
             the_evals_mean, the_evecs_mean = the_sorting_process(the_evals_mean, the_evecs_mean, the_t0_init)
@@ -422,15 +422,20 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             try:
                 the_ct_rs = the_rs_real[ttt]
                 
+                the_evals_rs_t , the_evecs_rs_t = [], []
                 ### Loop over the resamples
-                the_ev_mean_rs = [SOLVING_GEVP(the_ct0_rs[xyz], the_ct_rs[xyz]) for xyz in range(the_ncnfgs)]
+                for xyz in range(the_ncnfgs):
+                    the_ev_mean_rs, the_evec_mean_rs = SOLVING_GEVP(the_ct0_rs[xyz], the_ct_rs[xyz])
+                    
+                    the_evals_rs_t.append(np.asarray(the_ev_mean_rs))
+                    the_evecs_rs_t.append(np.asarray(the_evec_mean_rs))
                 
-                the_evals_rs.append(np.array([the_ev_rs[0] for the_ev_rs in the_ev_mean_rs]))
-                the_evecs_rs.append(np.array([the_ev_rs[1] for the_ev_rs in the_ev_mean_rs]))
+                the_evals_rs.append(np.asarray(the_evals_rs_t))
+                the_evecs_rs.append(np.asarray(the_evecs_rs_t))
                 
             except np.linalg.LinAlgError:
                 break
-
+        
         ### Here the final eigenvalues and eigenvectors are saved
         if len(the_evals_rs) == 0:
             continue
@@ -441,13 +446,11 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
         
         ### Loop over the resamples (sorting)
         for xyz in range(len(the_mod_evals_rs)):
-            
-            # sort by eigenvalue before any other sorting step is done
-            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES_NEW(the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz], the_t0_init)
-            if the_rs_sorting_process == SORTING_EIGENVECTORS_RS_MEAN:
-                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVECTORS_RS_MEAN(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init, mean_eigvec= the_evecs_mean, rs = True)
-            else:
-                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = the_rs_sorting_process(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init)
+            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+            # if the_rs_sorting_process == SORTING_EIGENVECTORS_RS_MEAN:
+                # the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVECTORS_RS_MEAN(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init, mean_eigvec= the_evecs_mean, rs = True)
+            # else:
+                # the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = the_rs_sorting_process(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init)
 
         the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
         the_evals_fits_rs = RESHAPING_EIGENVALS_MEAN(the_mod_evals_rs)
@@ -624,17 +627,24 @@ def SORTING_PROCESS(the_sorting, ev = True):
     return the_sorting_process
 
 
+# THIS SHOULD WORK
+# def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
+#     the_final_eigens = list(the_eigenvals[:the_t0])
+#     the_final_eigenvecs = list(the_eigenvecs[:the_t0])
+#     for ii in range(the_t0, len(the_eigenvals)):
+#         the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)
+#         the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+#         the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+#     return [the_final_eigens, the_final_eigenvecs]
+
 
 def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
-    the_final_eigens = list(the_eigenvals[:the_t0])
-    the_final_eigenvecs = list(the_eigenvecs[:the_t0])
-    for ii in range(the_t0, len(the_eigenvals)):
-        the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)
-        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
-        the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+    the_final_eigens = np.array(the_eigenvals, copy=True)
+    the_final_eigenvecs = np.array(the_eigenvecs, copy=True)
+    sorted_indices = np.argsort(-the_eigenvals[the_t0:], axis=1)
+    the_final_eigens[the_t0:] = np.take_along_axis(the_eigenvals[the_t0:], sorted_indices, axis=1)
+    the_final_eigenvecs[the_t0:] = np.take_along_axis( the_eigenvecs[the_t0:], sorted_indices[:, :, np.newaxis], axis=1)
     return [the_final_eigens, the_final_eigenvecs]
-
-
 
 
 def SORTING_EIGENVALUES_NEW(the_eigenvals, the_eigenvecs, the_t0 = 0):
@@ -1193,10 +1203,11 @@ def COV_MATRIX(a,b,c):
 # Comments:
 # This is the function for a single exponential fit. Ae^{-E0*(nt-t0))}
 # x: is the t_slices
-# e0: is a list (amplitud, energy)
-# *a: this is a variable size arguments, in thie case corresponds to t0.
-def SINGLE_EXPONENTIAL(x,e0,*a): 
-    return e0[0] * np.exp((-e0[1]) * (x - a))
+# the_pars: is a list (amplitud, energy)
+# # *a: this is a variable size arguments, in thie case corresponds to t0.
+def SINGLE_EXPONENTIAL(x,the_pars,*a): 
+    a0, e0 = the_pars
+    return a0 * np.exp(-e0 * (x - a))
 
 
 ### Comments:
@@ -1211,33 +1222,34 @@ def DOUBLE_EXPONENTIAL_ALTERNATIVE(x, e0, *a):
 # Comments:
 # This is the function for a geometric fit form: Ae^{-E0(nt-t0)}/ (1 - B e^{- nt*M})
 # x: is the t_slices
-# e0: is a list (amplitud, energy E0, Amplitude shift of energy)
+# the_pars: is a list (amplitud, energy E0, Amplitude shift of energy)
 # *a: this is a variable size arguments, in thie case corresponds to t0.
-def GEOMETRIC_FORM(x,e0,*a):
-    return e0[0] * np.exp(-(x-a) * e0[1]) / (1. - e0[2] * np.exp(-x * e0[3]))
+def GEOMETRIC_FORM(x,the_pars,*a):
+    a0, e0, b, dm = the_pars
+    return a0 * np.exp(-(x-a) * e0) / (1. - b * np.exp(-x * dm))
 
 
 ### Comments:
 # This is the function for a double exponential fit. Ae^{-E0*(nt-t0)}(1+ Be^{-nt*D^{2}})
 # x: is the t_slices
-# e0: is a list (amplitud, energy E0, Amplitude shift of energy, DeltaE**2)
+# the_pars: is a list (amplitud, energy E0, Amplitude shift of energy, DeltaE**2)
 # *a: this is a variable size arguments, in thie case corresponds to t0.
-def DOUBLE_EXPONENTIAL(x, e0, *a):
-    return e0[0] * np.exp(-(x - a) * e0[1]) * (1. + e0[2] * np.exp(-x * (e0[3] ** 2)))
+def DOUBLE_EXPONENTIAL(x, the_pars, *a):
+    a0, e0, b, dm = the_pars
+    return a0 * np.exp(-(x - a) * e0) * (1. + b * np.exp(-x * (dm ** 2)))
 
 
-def DOUBLE_EXPONENTIAL_IB(x, p,*a):
-    return p[0] * np.exp(-p[1] * x) * (1.0 + p[2] * np.exp(-p[3] * x))
+### Comments:
+# This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
+def DOUBLE_EXP_CORRECTIONS_IB(x, the_pars, *a):
+    b0, a0, b, dm, e0, e1 = the_pars
+    return (b0 + (a0 * np.exp(-x * dm)) - x * (e0 + b * e1) * np.exp(-x * dm)) / (1 + b * np.exp(-x * dm))
 
-
-def DOUBLE_EXP_CORRECTIONS_IB(x, p, *a):
-    the_base = np.exp(-p[1] * x)
-    return ((p[4] - p[0] * p[5] * x) * the_base * (1.0 + p[2] * np.exp(-p[3] * x)) + p[0] * the_base * (p[6] - p[2] * p[7] * x) * np.exp(-p[3] * x))
-
-
-def SINGLE_EXP_CORRECTIONS_IB(x,e0,*a): 
-    # return (e0[2] - e0[0] * e0[3] * x) * np.exp((-e0[1]) * (x - a))
-    return e0[1] - e0[0]*x
+### Comments:
+# This is the single exponential forme for the ib corrections to the isoQCD correlators
+def SINGLE_EXP_CORRECTIONS_IB(x,the_pars,*a): 
+    a0, e0 = the_pars
+    return a0 - e0*x
 
 ### Comments:
 # This function tries to find a good guess for the fit to have a prior, so it would in principle take less time. It uses a simple polynomial fit of order 1. 
@@ -1277,8 +1289,8 @@ def TOTAL_CHI(a,b,c,nrp):
 class My_Fits:
     def __init__(self, model, x, y, cov, dgof, a):
         self.model = model  # model predicts y for given x
-        self.x = np.array(x, dtype = float)
-        self.y = np.array(y, dtype = float)
+        self.x = np.asarray(x, dtype = float)
+        self.y = np.asarray(y, dtype = float)
         self.cov = np.matrix(cov, dtype = float)
         
         self.arg = a
@@ -1293,7 +1305,6 @@ class My_Fits:
         the_val_chi2 = float(the_chi2 / self.dof)
         
         return the_val_chi2
-        # return np.dot(np.dot(self.y - ym, self.cov), self.y - ym)/np.double((np.double(len(self.x))-self.nrPars))
     
     
     
@@ -1363,7 +1374,6 @@ def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin
             the_ul = [x-the_nt[0] for x in the_list_tmaxs[the_irreps.index(the_irrep)]]
             
             ### Lower limit for the fit depends on the upper limit
-            # the_ll = np.arange(nt_mod[0]+1, int(the_ul[ls]*(.8 - (0.025*ls))))
             the_ll = np.arange(nt_mod[0]+1, int(nt_mod[-1]*.75))
             
         ### Choosing the covariance matrix depending on the type of correlated fit
@@ -1410,9 +1420,12 @@ def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin
             ### Energy values
             e0 = np.float128(the_fit.values['e0'])
             
+            ### Amplitude values
+            a0 = np.float128(the_fit.values['a0'])
+            
             ### The fitted energy results from the central values are used as an initial guess for the resamples
             the_dof_rs = the_dof
-            the_dof_rs[0], the_dof_rs[1] = np.float64(the_fit.values['a0']), e0
+            the_dof_rs[0], the_dof_rs[1] = a0, e0
             
             another_useful_list.append(e0)
             
@@ -1452,14 +1465,14 @@ def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin
 
 ### Comments:
 def CONTINUUM_DISP_REL(p, E0, norm):
-    E = np.sqrt(E0 ** 2 + int(p) * norm)
+    E = np.sqrt(E0 ** 2 + int(p) * norm) # p is already squared so no need to square it again
     E_norm = E / E0  # aE
     return E_norm
 
 ### Comments:
 # calculates the fraction of the measured energy E (lat units) and the values of the continuum dispersion relation for the measured E0
 def RELATIVE_DISP_REL(p, E0, E, norm):
-    E_disp = np.sqrt(E0 ** 2 + int(p) * norm)
+    E_disp = np.sqrt(E0 ** 2 + int(p) * norm) # p is already squared so no need to square it again
     return E / E_disp
     
     
@@ -1477,6 +1490,7 @@ def CONTINUUM_DISP_REL_NO_NORM(p, E0, norm):
     return E
 
 ### Comments:
+# WHAT IS THIS?
 def EXTRACT_HADS_MOM(non_int_list):
     return None
 
@@ -1499,11 +1513,11 @@ def NON_INTERACTING_LEVELS(non_int_list, t_mins_range, singles_files, t_mins_shi
                     'Resampled': dataset.get('1exp/Tmin/Correlated/Resampled')[()][t_mins_range[meson][i] - t_mins_shift]}
                 nr_rs = dataset.get('1exp/Tmin/Correlated/Resampled')[()][t_mins_range[meson][i] - t_mins_shift].size
             except KeyError:
-                raise KeyError(f'Irrep {irrep} does not excist in {meson} file.')
+                raise KeyError(f'Irrep {irrep} does not exist in {meson} file.')
             except TypeError:
                 raise TypeError(f'Fit data in irrep {irrep} is missing in {meson} file.')
             except IndexError:
-                raise IndexError(f'Chosen fit range does not excist in {meson} file.')
+                raise IndexError(f'Chosen fit range does not exist in {meson} file.')
         singles_files[meson].close()
 
 

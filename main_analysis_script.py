@@ -64,13 +64,18 @@ if myRuns.correlator =='s':
     if not myRuns.ib_corr:
         myVersion =  f'{myRuns.ensemble}_singles_test' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
-        myEffMassFunction = efs.SingleCorrelatorEffectiveMass
-        myFitFunction = fts.FitSingleCorrelators
+        myEffMassPrefix = efs
+        myFitPrefix = fts
     else:
+        import ib_functions as ibf
         myVersion =  f'{myRuns.ensemble}_omega_test' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]['ib']
-        myEffMassFunction = efs.SingleCorrelatorEffectiveMassIB
-        myFitFunction = fts.FitSingleCorrelatorsIB
+        myEffMassPrefix = ibf
+        myFitPrefix = ibf
+        if not myArchivoPre['allConfigs']:
+            myTempCnfgs = myArchivoPre['nfgsList']
+            myCnfgs = len(myTempCnfgs)
+            myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.float128)
         
     myArchivo = h5py.File(myArchivoPre['fs'], 'r')
     myIrreps = list(myArchivo.keys())
@@ -88,18 +93,15 @@ if myRuns.correlator =='s':
     
     ### Effective Masses analysis
     if myRuns.effmass: 
-        myEffMassFunction(myCorrelator, myRuns.rs_type, dist_eff_mass = myRuns.dist_eff_mass) 
+        myEffMassPrefix.SingleCorrelatorEffectiveMass(myCorrelator, myRuns.rs_type, dist_eff_mass = myRuns.dist_eff_mass) 
         
     ### Fits analysis
     if myRuns.fits: 
-        myOneTMin = myRuns.fit.one_tmin
-        myTypeFit = myRuns.fit.type_fit
-        myTypeCorrelation = myRuns.fit.type_correlation
         myTMaxList = myArchivoPre['singleTMaxFits']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
-        myFitFunction(myCorrelator, myFitCorrelator, myRuns.rs_type, myTMaxList, myIrreps, one_tmin = myOneTMin, type_fit = myTypeFit, type_correlation = myTypeCorrelation, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
+        myFitPrefix.FitSingleCorrelators(myCorrelator, myFitCorrelator, myRuns.rs_type, myTMaxList, myIrreps, myRuns.fit.type_fit, myRuns.fit.type_correlation, one_tmin = myRuns.fit.one_tmin, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, iso_or_ib = myRuns.corr_fit_ib)
         
         myFitCorrelator.close()
     
@@ -124,7 +126,7 @@ if myRuns.correlator =='s':
 #         myBinSizeIrrepName = myIrreps[myBinSizeIrrep[0]]
 #         myBinLocation = vfl.DIRECTORY_EXISTS(f'{myLocation}Bin_Size_Analysis_{myBinSizeIrrepName}_{myRuns.rs_type}/')
 #         
-#         bs.BinSizeAnalysis(myArchivo, myBinLocation, myRuns.rs_type, myBinSizeIrrep, myIrreps, myTMinFit, myMaxBinSize, myBinSizeFitRange, myChosenBinSize, myVersion, myWeight, one_tmin=myOneTMin, type_fit=myTypeFit, type_correlation=myTypeCorrelation, kbt=myRuns.kbt, number_cfgs=myCnfgs, own_kbt_list=myKbtSamples, isospin_label=ed.ensembles[myRuns.ensemble]['iso_label'], ensemble=myRuns.ensemble, plots_only=runPlotBinOnly)
+#         bs.BinSizeAnalysis(myArchivo, myBinLocation, myRuns.rs_type, myBinSizeIrrep, myIrreps, myTMinFit, myMaxBinSize, myBinSizeFitRange, myChosenBinSize, myVersion, myWeight, one_tmin=myRuns.fit.one_tmin, type_fit=myRuns.fit.type_fit, type_correlation=myRuns.fit.type_correlation, kbt=myRuns.kbt, number_cfgs=myCnfgs, own_kbt_list=myKbtSamples, isospin_label=ed.ensembles[myRuns.ensemble]['iso_label'], ensemble=myRuns.ensemble, plots_only=runPlotBinOnly)
 #    
     myArchivo.close()
     myCorrelator.close()
@@ -287,6 +289,3 @@ else:
 print('-'*(len(locationWorkedCorrelators)+1))
 print('Correlator analysis saved as: \n' + locationWorkedCorrelators )
 print('_'*(len(locationWorkedCorrelators)+1))
-
-
-### -------- CLOSES ALL OTHER FILES --------

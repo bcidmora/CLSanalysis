@@ -4,22 +4,37 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.linalg import eigh
 from scipy.linalg import fractional_matrix_power
+from dataclasses import dataclass
+from typing import Optional, Tuple
 from iminuit import Minuit
 import re
 import math
 
+import warnings
+warnings.filterwarnings('ignore', message=".*timestamp seems very low.*")
+
 import matplotlib
-matplotlib.rcParams['mathtext.fontset'] = 'stix'
-matplotlib.rcParams['font.family'] = 'STIXGeneral'
+matplotlib.rcParams.update({
+    "mathtext.fontset": "cm",          
+    "font.family": "serif",
+    "font.serif": ["CMU Serif"],       
+    "axes.unicode_minus": False,       
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+})
 
+# the_colors  = [ "#5d83d5", "#b90f22", "#ffa500", "#008000", "#c44601", "#f57600", "#5ba300","#e6308a", "#8a2be2", "#00ced1", "#ffd700", "#ff69b4", "#7cfc00", "#dc143c", "#4682b4", "#ff8c00", "#00fa9a", "#9370db", "#1e90ff", "#ff1493", "#9acd32"]
 
-from dataclasses import dataclass
-from typing import Optional, Tuple
+# the_colors  = [ "#000099", "#b90f22", "#ffa500", "#008000", "#c44601", "#f57600", "#5ba300","#e6308a", "#8a2be2", "#00ced1", "#ffd700", "#ff69b4", "#7cfc00", "#dc143c", "#4682b4", "#ff8c00", "#00fa9a", "#9370db", "#1e90ff", "#ff1493", "#9acd32"]
 
+the_colors  = [ "#3535B2", "#b90f22", "#ffa500", "#008000", "#c44601", "#f57600", "#5ba300","#e6308a", "#8a2be2", "#00ced1", "#ffd700", "#ff69b4", "#7cfc00", "#dc143c", "#4682b4", "#ff8c00", "#00fa9a", "#9370db", "#1e90ff", "#ff1493", "#9acd32"]
+
+### Putting a lot of markers in case of a big matrix
+the_markers_list = ['o','^','s','p','v','*','x','d','>','D', '<','8','P','h','1','o','v','s','p','^','*','x']
 
 @dataclass
 class FitPlots:
-    type_fit: str = '1' #'1' #'2' #'g'
+    type_fit: str #= '1' #'1' #'2' #'g'
     t0: int = 4
     type_correlation: str = 'Correlated' # 'Uncorrelated'    
 
@@ -52,9 +67,11 @@ class Runs:
     diag_flag: bool
     gevp_flag: bool
     ops_flag: bool
+    all_corr: bool
     
     ### Extra flags
     fit_param: FitPlots
+    fit_type: str
     zoom_fit: bool
     plot_chi: bool
     total_chi_plot: bool
@@ -93,8 +110,9 @@ def parse_args():
     parser.add_argument("--ib-corr", action="store_true") # including ib corrections
     
     parser.add_argument("--diag-flag", action="store_true")
-    parser.add_argument("--ops-flag", "--ops", action="store_true")
+    parser.add_argument("--ops-flag", action="store_true")
     parser.add_argument("--gevp-flag", action="store_true")
+    parser.add_argument("--all-corr", action="store_true")
     
     ### Extra params
     parser.add_argument("--zoom-fit", action="store_true", default=False)
@@ -139,6 +157,7 @@ def WhichRuns(args, the_ensemble_data):
         fits=args.fits,
         fit_param=fit_run,
         fitmass=args.fitted_mass,
+        fit_type=args.fit_type,
         join=args.join,
         
         zoom_fit=args.zoom_fit,
@@ -150,6 +169,7 @@ def WhichRuns(args, the_ensemble_data):
         diag_flag=args.diag_flag,
         gevp_flag=args.gevp_flag,
         ops_flag=args.ops_flag,
+        all_corr=args.all_corr,
         
         the_irreps = the_irreps,
         ib_corr = args.ib_corr,
@@ -160,9 +180,9 @@ def WhichRuns(args, the_ensemble_data):
     
 def PLOT_SINGLE_HADRON_NAMES(the_hadron_name):
     the_plot_hadron_name = ''
-    if the_hadron_name[0]=='P':
+    if the_hadron_name[0]=='P' or the_hadron_name[0]=='p':
         the_plot_hadron_name=r'$\pi$'
-    elif the_hadron_name[0]=='k':
+    elif the_hadron_name[0]=='k' or the_hadron_name[0]=='K':
         the_plot_hadron_name=r'$K$'
     elif the_hadron_name[0]=='N':
         the_plot_hadron_name=r'$N$'
@@ -198,7 +218,6 @@ def CHOOSING_YMIN_PLOT(the_mean_efm):
         elif the_mean_efm[int(2* (len(the_mean_efm)/3))]>(the_mean_efm[0]*1.5) or the_mean_efm[int(2* (len(the_mean_efm)/3))]<(the_mean_efm[0]*.5):
             the_ymin=(the_mean_efm[0]/2)*.65 
     else: 
-        # the_ymin=0.
         the_ymin= the_mean_efm[int(len(the_mean_efm)/2)]*.68
     return the_ymin
 
@@ -219,28 +238,47 @@ def OPERATORS_SH(operator_name):
     OperatorPlot = ''
     if 'GI{' not in operator_name:
         if new_op[0].lower()=='pion':
-            OperatorPlot = 'P[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'P[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='kaon':
-            OperatorPlot = 'k[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'k[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='nucleon':
-            OperatorPlot = 'N[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'N[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='lambda':
-            OperatorPlot = 'L[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'L[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='sigma':
-            OperatorPlot = 'S[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'S[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='xi':
-            OperatorPlot = 'X[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'X[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='dmeson':
-            OperatorPlot = 'D[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'D[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='omega':
-            OperatorPlot = 'O[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'O[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='mass_shift':
-            OperatorPlot = 'dm[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'dm[{new_op[-1].replace('_','')}]'
         elif new_op[0].lower()=='qed':
-            OperatorPlot = 'qed[%s]'%new_op[-1].replace('_','')
+            OperatorPlot = f'qed[{new_op[-1].replace('_','')}]'
     elif 'GI{' in operator_name:
         OperatorPlot = str(new_op[-2])
     return str(OperatorPlot)
+
+
+### Comments:
+# This function receives an operator name and returns a string in a nice way to put in the plots. 
+def OPERATORS_SH_ISOSPIN(the_hadron):
+    the_hadron_isolabel = ''
+    if the_hadron.upper()=='P':
+        the_hadron_isolabel = '1'
+    elif the_hadron.upper()=='K':
+        the_hadron_isolabel = r'$\frac{1}{2}$'
+    elif the_hadron.upper()=='N':
+        the_hadron_isolabel = r'$\frac{1}{2}$'
+    elif the_hadron.upper()=='L':
+        the_hadron_isolabel = '0'
+    elif the_hadron.upper()=='S':
+        the_hadron_isolabel = '1'
+    elif the_hadron.upper()=='X':
+        the_hadron_isolabel = r'$\frac{1}{2}$'
+    return the_hadron_isolabel
 
 
 def PLOT_HADRON_LABELINGS(the_irrep_name):
@@ -308,74 +346,6 @@ def PLOT_HADRON_LABELINGS(the_irrep_name):
 
 
 
-
-
-### Comments:
-# This function receives an operator name and returns a string in a nice way to put in the plots. 
-# def OPERATORS_MH(the_operator_name):
-#     new_op = list(the_operator_name.split(' '))
-#     if "CG" in the_operator_name: the_shift = 1
-#     else: the_shift=0
-#     OperatorPlot = ''
-#     if 'GI{' not in the_operator_name:
-#         if '_' in new_op[0]:
-#             the_hads = list(new_op[0].split('_'))
-#             for ii in range(1,len(the_hads)):
-#                 the_mom = str(SQUARED_MOM(new_op[2+the_shift+((ii-1)*3)]))
-#                 the_irrep = str(new_op[3+the_shift+((ii-1)*3)])
-#                 the_site = str(new_op[4+the_shift+((ii-1)*3)][:-1]).replace('_','')
-#                 if the_hads[ii].lower()=='pion':
-#                     OperatorPlot += 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='kaon' or the_hads[ii].lower()=='kbar':
-#                     OperatorPlot += 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='nucleon':
-#                     OperatorPlot += 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='lambda':
-#                     OperatorPlot += 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='sigma':
-#                     OperatorPlot += 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='xi':
-#                     OperatorPlot += 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#                 elif the_hads[ii].lower()=='dmeson':
-#                     OperatorPlot += 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             
-#         elif '_' not in new_op[0]:
-#             the_mom = str(SQUARED_MOM(new_op[1]))
-#             if '_' not in new_op[2]:           
-#                     the_irrep = str(new_op[2]) 
-#             else:
-#                 the_irrep = str(new_op[2][:new_op[2].index('_')]) 
-#             the_site = str(new_op[-1]).replace('_','')
-#             if new_op[0].lower()=='pion':
-#                 OperatorPlot = 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='kaon' or new_op[0].lower()=='kbar':
-#                 OperatorPlot = 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='nucleon':
-#                 OperatorPlot = 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='lambda':
-#                 OperatorPlot = 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='sigma':
-#                 OperatorPlot = 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='xi':
-#                 OperatorPlot = 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#             elif new_op[0].lower()=='dmeson':
-#                 OperatorPlot = 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
-#     elif 'GI{' in the_operator_name:
-#         if '_' in new_op[4]:
-#             OperatorPlot = new_op[4]
-#         else:
-#             if 'P=(' in new_op[2]:
-#                 the_mom = str(SQUARED_MOM(new_op[2]))
-#             else: 
-#                 the_mom = str(new_op[2][new_op[2].index('='):])
-#             the_irrep = new_op[3]
-#             if '}' in new_op[4]: new_op[4] = new_op[4][:-1]
-#             OperatorPlot = new_op[4][:new_op[4].index('[')+1] + the_mom + '_' + the_irrep + '_' + new_op[4][new_op[4].index('[')+1:-1] + ']'
-#     return str(OperatorPlot)
-
-
-
-
 def OPERATORS_MH(the_operator_name):
     new_op = list(the_operator_name.split(' '))
     if "CG" in the_operator_name: 
@@ -396,21 +366,21 @@ def OPERATORS_MH(the_operator_name):
                 if the_site.endswith(']'):
                     the_site = the_site[:-1]
                 the_site = the_site.replace('_','')
-                
+                the_labels = f'[{the_mom}_{the_irrep}_{the_site}]'
                 if the_hads[ii].lower()=='pion':
-                    OperatorPlot += 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'P{the_labels}'
                 elif the_hads[ii].lower()=='kaon' or the_hads[ii].lower()=='kbar':
-                    OperatorPlot += 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'k{the_labels}'
                 elif the_hads[ii].lower()=='nucleon':
-                    OperatorPlot += 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'N{the_labels}'
                 elif the_hads[ii].lower()=='lambda':
-                    OperatorPlot += 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'L{the_labels}'
                 elif the_hads[ii].lower()=='sigma':
-                    OperatorPlot += 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'S{the_labels}'
                 elif the_hads[ii].lower()=='xi':
-                    OperatorPlot += 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'X{the_labels}'
                 elif the_hads[ii].lower()=='dmeson':
-                    OperatorPlot += 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                    OperatorPlot += f'D{the_labels}'
         
         elif '_' not in new_op[0]:
             the_mom = str(SQUARED_MOM(new_op[1]))
@@ -418,27 +388,26 @@ def OPERATORS_MH(the_operator_name):
                 the_irrep = str(new_op[2]) 
             else:
                 the_irrep = str(new_op[2][:new_op[2].index('_')]) 
-            
-            # Only remove trailing ']' if present
+
             the_site = str(new_op[-1])
             if the_site.endswith(']'):
                 the_site = the_site[:-1]
             the_site = the_site.replace('_','')
-            
+            the_labels = f'[{the_mom}_{the_irrep}_{the_site}]'
             if new_op[0].lower()=='pion':
-                OperatorPlot = 'P[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'P{the_labels}'
             elif new_op[0].lower()=='kaon' or new_op[0].lower()=='kbar':
-                OperatorPlot = 'k['+ the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'k{the_labels}'
             elif new_op[0].lower()=='nucleon':
-                OperatorPlot = 'N[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'N{the_labels}'
             elif new_op[0].lower()=='lambda':
-                OperatorPlot = 'L[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'L{the_labels}'
             elif new_op[0].lower()=='sigma':
-                OperatorPlot = 'S[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'S{the_labels}'
             elif new_op[0].lower()=='xi':
-                OperatorPlot = 'X[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'X{the_labels}'
             elif new_op[0].lower()=='dmeson':
-                OperatorPlot = 'D[' + the_mom + '_' + the_irrep + '_' + the_site + ']'
+                OperatorPlot = f'D{the_labels}'
     
     elif 'GI{' in the_operator_name:
         if '_' in new_op[4]:
@@ -449,21 +418,17 @@ def OPERATORS_MH(the_operator_name):
             else: 
                 the_mom = str(new_op[2][new_op[2].index('='):])
             the_irrep = new_op[3]
-            
-            # Only remove '}' or ']' if present
+
             if new_op[4].endswith('}'):
                 new_op[4] = new_op[4][:-1]
             if new_op[4].endswith(']'):
                 new_op[4] = new_op[4][:-1]
-            
-            OperatorPlot = new_op[4][:new_op[4].index('[')+1] + the_mom + '_' + the_irrep + '_' + new_op[4][new_op[4].index('[')+1:] + ']'
-    
+            OperatorPlot = f'{new_op[4][:new_op[4].index('[')+1]}{the_mom}_{the_irrep}_{new_op[4][new_op[4].index('[')+1:]}]'
     return str(OperatorPlot)
 
 
 
 def SH_OPERATORS_RELABEL(a_string_ops, an_irrep,the_mom):
-    # print(a_string_ops)
     hadron_raw = a_string_ops.split('[')[0]
     ss_tag = a_string_ops.split('[')[1][:-1]     
     ss_number = ss_tag.replace("SS", "")  
@@ -474,8 +439,11 @@ def SH_OPERATORS_RELABEL(a_string_ops, an_irrep,the_mom):
         return rf'$ {hadron_clean}[{irrep_clean}({the_mom})]_{{\mathrm{{{ss_number}}}}} $'
     else:
         return rf'$ {hadron_clean}[{irrep_clean}({the_mom})] $'
+
     
     
+def NON_INTERACTING_LABELS(a_str_ops):
+    return f'{PLOT_SINGLE_HADRON_NAMES(a_str_ops[0])}{a_str_ops[1:4]}{PLOT_SINGLE_HADRON_NAMES(a_str_ops[4])}{a_str_ops[5:]}'
     
 
 # def MH_OPERATORS_RELABEL(a_string_ops):
@@ -521,18 +489,30 @@ def MH_OPERATORS_RELABEL(a_string_ops):
     return re.sub(r'([A-Za-z])\[(.*?)\]', repl, a_string_ops)
 
 
-### Comments:
-# This class rewrites the names of the irreps in TeX type of text such that they can be put in the plots in a nice way.
+# ### Comments:
+# # This class rewrites the names of the irreps in TeX type of text such that they can be put in the plots in a nice way.
+# class IrrepInfo:
+#      def __init__(self,nombre):
+#         self.name = nombre.split('_')            
+#         self.Name = self.name[1]
+#         self.NamePlot = PLOT_HADRON_LABELINGS(self.Name)
+#         self.Momentum = self.name[0][-1]
+#         # self.TotalMomPlot = self.name[0][0]+ r'$^{2}=%s$'%self.name[0][-1]
+#         # self.TotalMomPlot = r'$\vec{\mathbf{d}}^{2}=%s$'%self.name[0]
+#         self.TotalMomPlot = r'$\vec{\mathbf{d}}^{2}=%s$'%self.Momentum
+        
+        
 class IrrepInfo:
      def __init__(self,nombre):
         self.name = nombre.split('_')            
         self.Name = self.name[1]
         self.NamePlot = PLOT_HADRON_LABELINGS(self.Name)
         self.Momentum = self.name[0][-1]
+        self.Hadron = self.name[-1]
+        self.HadronIsospin = OPERATORS_SH_ISOSPIN(self.Hadron)
         # self.TotalMomPlot = self.name[0][0]+ r'$^{2}=%s$'%self.name[0][-1]
         # self.TotalMomPlot = r'$\vec{\mathbf{d}}^{2}=%s$'%self.name[0]
         self.TotalMomPlot = r'$\vec{\mathbf{d}}^{2}=%s$'%self.Momentum
-        
         
         
 ### Comments:
@@ -592,30 +572,30 @@ def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_
     the_min_y = (the_mean_corr[the_min_position]-the_sigmas_corr[the_min_position])*.9
     the_max_y= (the_mean_corr[the_max_position]+the_sigmas_corr[the_max_position])*1.05 
     
-    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker=the_marker, ls='None', ms=4.5, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=3., label = the_rs_scheme, color='#5d83d5')
+    plt.errorbar(the_nt, the_mean_corr, yerr = the_sigmas_corr, marker=the_marker, ls='None', ms=4.5, markeredgewidth=1.5, lw=1.5, elinewidth=1.5, zorder=3, capsize=3.5, label = the_rs_scheme, color= the_colors[0])
     plt.xlabel(the_x_axis_label,fontsize=24)
     plt.ylabel(the_y_axis_label,fontsize=24)
     plt.title(the_title_info,fontsize=20)
-    plt.xticks(the_nt_ticks,fontsize=18)
-    plt.yticks(fontsize=18)
-    if kwargs.get('yscale')!=None: plt.yscale(str(kwargs.get('yscale')))
-    else:
-        plt.ylim([the_min_y, the_max_y])
+    plt.xticks(the_nt_ticks,fontsize=14)
+    plt.yticks(fontsize=14)
+    if kwargs.get('yscale')=='log': plt.yscale(str(kwargs.get('yscale')))
+    elif kwargs.get('yscale')=='effmass': plt.ylim([0, the_max_y/2])
+    else: plt.ylim([the_min_y, the_max_y])
     plt.legend(fontsize=16, handletextpad=0.01)
     plt.tight_layout()
     
     
 def PLOT_HISTOGRAMS(the_rs, the_label , the_mean_rs, the_label_mean_rs, the_nt_mean, the_label_mean_nt, the_title_info, the_bins,  the_x_axis_label):
-    counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label, color='#5d83d5')
+    counts, bins, patches = plt.hist(the_rs, bins=the_bins, label =  the_label, color=the_colors[0])
     padding = counts.max() * 0.15 
     plt.vlines(the_mean_rs, 0, 200, colors= '#b90f22', label = the_label_mean_rs)
     plt.vlines(the_nt_mean, 0, 200, colors='black', label = the_label_mean_nt)
     plt.title( the_title_info,fontsize=20)
-    plt.ylabel('Frequency',fontsize=24)
-    plt.xlabel(the_x_axis_label, fontsize=24)
+    plt.ylabel('Frequency',fontsize=20)
+    plt.xlabel(the_x_axis_label, fontsize=20)
     plt.legend(fontsize=14, handletextpad=0.01)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
     plt.ylim(0, counts.max() + padding)
     plt.tight_layout()
 
@@ -624,39 +604,37 @@ def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label
     if kwargs.get('zoom'):
         the_ll = int(kwargs.get('the_ll'))
         the_ul = int(kwargs.get('the_ul'))
-        plt.errorbar(the_nt[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], the_plot_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], yerr = the_sigmas_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], marker='o', ls='None', ms=6, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=6, color='#5d83d5')#, label='Bootstrap')
+        plt.errorbar(the_nt[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], the_plot_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], yerr = the_sigmas_data[the_chosen_tmin-the_ll:the_chosen_tmin+the_ul], marker='o', ls='None', ms=6, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, zorder=3, capsize=6, color=the_colors[0])
     else:
-        plt.errorbar(the_nt, the_plot_data, yerr = the_sigmas_data, marker='o', ls='None', ms=4, markeredgewidth=2.5, lw=2.5, elinewidth=2.5, zorder=3, capsize=6,color='#5d83d5')#, label='Bootstrap')
-        plt.xticks(the_nt_ticks,fontsize=18)    
-    plt.errorbar([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], yerr = [the_sigmas_data[the_chosen_tmin]], marker='o', ls='None', ms=4.5, markeredgewidth=2.5, lw=2.5, color = '#b90f22', elinewidth=2.5, zorder=3, markerfacecolor = 'white', capsize=6, label = the_label)
-    plt.yticks(fontsize=18)
+        plt.errorbar(the_nt, the_plot_data, yerr = the_sigmas_data, marker='o', ls='None', ms=5, markeredgewidth=1.5, lw=1.5, elinewidth=1.5, zorder=3, capsize=6, color=the_colors[0]) 
+    plt.errorbar([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], yerr = [the_sigmas_data[the_chosen_tmin]], marker='o', ls='None', ms=5.5, markeredgewidth=1.75, lw=1.75, color = '#b90f22', elinewidth=1.75, zorder=3, markerfacecolor = 'white', capsize=6, label = the_label)
+    plt.yticks(fontsize=14)
+    plt.xticks(fontsize=14)
     plt.legend(fontsize=16, ncols=2, columnspacing=0.1,handletextpad=0.01)
-    plt.xlabel(the_xlabel,fontsize=36)
-    plt.ylabel(the_ylabel,fontsize=36)
-    plt.title(the_title,fontsize=26)
-    # plt.xticks(the_nt_ticks)
+    plt.xlabel(the_xlabel,fontsize=26)
+    plt.ylabel(the_ylabel,fontsize=26)
+    plt.title(the_title,fontsize=20)
     plt.tight_layout()
 
 
 
 
 def PLOT_CHI_FITS(the_nt, the_plot_data, the_chosen_tmin, the_label, the_xlabel, the_ylabel, the_title, the_nt_ticks, **kwargs):
-    plt.plot(the_nt, the_plot_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, color='#5d83d5')
+    plt.plot(the_nt, the_plot_data, marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, zorder=3, color=the_colors[0])
     plt.plot([the_nt[the_chosen_tmin]], [the_plot_data[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, lw=1.75, color = '#b90f22', zorder=3, markerfacecolor = 'white', label = the_label)
     plt.xticks(the_nt_ticks)
     plt.legend(fontsize=14, handletextpad=0.01)
     plt.xlabel(the_xlabel,fontsize=16)
     plt.ylabel(the_ylabel,fontsize=16)
     plt.title(the_title,fontsize=16)
-    # plt.xticks(the_nt_ticks)
     plt.tight_layout()
     
     
 import matplotlib.ticker as mtick
 
 
-def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin,
-                           the_rs_scheme, the_label, the_title, the_nt_ticks, the_color_eff_mass, the_color_fit):
+def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin,the_rs_scheme, the_label, the_title, the_nt_ticks, the_color_eff_mass, the_color_fit):
+    
     the_min_position = np.where(the_mean_corr == min(the_mean_corr[:-3]))
     the_max_position = np.where(the_mean_corr == max(the_mean_corr[:-3]))
 
@@ -672,12 +650,12 @@ def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data,
                      y2=the_fit_data[the_chosen_tmin] + the_fit_sigmas[the_chosen_tmin],
                      color=the_color_fit,
                      alpha=0.2)
-    plt.xlabel(r'$t\,/\, a$', fontsize=36)
-    plt.ylabel(r'$a_{t}\,m_{\mathrm{eff}}(t+\frac{1}{2})$', fontsize=36)
-    plt.title(the_title, fontsize=26)
-    plt.xticks(the_nt_ticks, fontsize=18)
+    plt.xlabel(r'$t\,/\, a$', fontsize=30)
+    plt.ylabel(r'$a_{t}\,m_{\mathrm{eff}}(t+\frac{1}{2})$', fontsize=30)
+    plt.title(the_title, fontsize=24)
+    plt.xticks(the_nt_ticks, fontsize=16)
     plt.ylim([the_min_y, the_max_y])
-    plt.yticks(fontsize=18)
+    plt.yticks(fontsize=16)
     plt.xlim([the_nt[0] - 1, the_nt_ticks[-1] + 1])
     plt.legend(fontsize=18, handletextpad=0.3)
     plt.tight_layout()
@@ -734,7 +712,7 @@ def ROUND_UP_4(x):
 # Functions unseful for Plot titles
 def GET_IRREP_LOGO(text):
     momentum_j = text[3]
-    momentum_j_label = r'$P^2$ = ' + str(momentum_j)
+    momentum_j_label = rf'$P^2$ = {momentum_j}'
     return momentum_j_label
 
 ### Comments:
@@ -752,13 +730,10 @@ def GET_RESAMPLING_BINNING(file):
 ### Comments:
 # Converts A1 to A_1, T1u to T_{1u} etc.
 def IRREP_TO_INDEX(name: str) -> str:
-
     if len(name) == 1:
         return name
-
     base = name[0]
     index = name[1:]
-
     # Use braces when index has more than one character
     if len(index) > 1:
         return f"${base}_{{{index}}}$"

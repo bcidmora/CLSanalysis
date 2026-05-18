@@ -147,19 +147,19 @@ def SingleCorrelatorAnalysis(the_archivo, the_location, the_version, the_type_rs
         g_i.create_dataset('Operators', data = the_op_list) 
         
         ### This is the mean value of the resampled correlators
-        the_mrs_f_rs = np.array(vfa.MEAN(the_rs))
+        the_mrs_f_rs = np.asarray(vfa.MEAN(the_rs))
         
         ### This is the mean value of the original/raw correlators
         if rb == 'C':
-            the_mrs_f = np.array(vfa.MEAN_CUSTOM(the_datos, bins))
+            the_mrs_f = np.asarray(vfa.MEAN_CUSTOM(the_datos, bins))
         else:
-            the_mrs_f = np.array(vfa.MEAN(the_datos))
+            the_mrs_f = np.asarray(vfa.MEAN(the_datos))
         
         ### The statistical error of the resampled data
-        the_sigma_corr = np.array(vfa.STD_DEV_MEAN(the_rs, the_mrs_f_rs, the_type_rs))
+        the_sigma_corr = np.asarray(vfa.STD_DEV_MEAN(the_rs, the_mrs_f_rs, the_type_rs))
         
         ### The covariance matrix
-        the_cov_corr = np.array(vfa.COV_MATRIX(the_rs, the_mrs_f_rs, the_type_rs))
+        the_cov_corr = np.asarray(vfa.COV_MATRIX(the_rs, the_mrs_f_rs, the_type_rs))
         
         group_corr_real.create_dataset('Mean', data = the_mrs_f) 
         group_corr_real.create_dataset('Sigmas', data = the_sigma_corr)
@@ -496,65 +496,5 @@ def MultiCorrelatorAnalysisRatios(the_multi_hadrons_archivo, the_single_hadrons_
 ### ------------------------------- START EXECUTING --------------------------------------------------
 
 
-
 if __name__== "__main__":
-    
-    import ensembles as ed
-    
-    myArgs = vfp.parse_args()
-    myRuns = vfp.WhichRuns(myArgs, ed.ensembles)
-    
-    myKbtSamples = None #np.array(np.loadtxt('bootstrap_samples.txt')) #None
-    
-    ### This is just naming schemes
-    reBin = f"_bin{myRuns.rb}" if myRuns.rebin else ""
-        
-    ### Information from the ensembles dictionary
-    myLocation = vfl.DIRECTORY_EXISTS(f'{ed.outputLocation}{myRuns.ensemble}/')
-
-    myCnfgs = ed.ensembles[myRuns.ensemble]['ncfgs'] # None # 20 # 100
-    myWeight = vfa.REWEIGHTS(ed.ensembles[myRuns.ensemble]['weight_raw'], myCnfgs)
-
-    if not ed.ensembles[myRuns.ensemble]['allConfigs']:
-        myTempCnfgs = ed.ensembles[myRuns.ensemble]['nfgsList']
-        myCnfgs = len(myTempCnfgs)
-        myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.float128)
-
-    vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
-    
-    if myRuns.correlator =='s':        
-        ### Name of the output file
-        if not myRuns.ib_corr:
-            myVersion =  f'{myRuns.ensemble}_singles_test' 
-            myArchivoPre = ed.ensembles[myRuns.ensemble]
-        else:
-            myVersion =  f'{myRuns.ensemble}_omega_test' 
-            myArchivoPre = ed.ensembles[myRuns.ensemble]['ib']
-    
-        myArchivo = h5py.File(myArchivoPre['fs'], 'r')
-        myIrreps = list(myArchivo.keys())  
-        
-        savedLocation = SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myRuns.rs_type, myIrreps, myWeight, rebin_on = myRuns.rebin, rb = myRuns.rb, kbt = myRuns.kbt, number_cfgs = myCnfgs, nr_irreps = myRuns.the_irreps.nr_irreps, own_kbt_list = myKbtSamples, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
-        
-        myArchivo.close()
-    
-    elif myRuns.correlator=='m':
-        ### Name of the output file
-        myIsospin = myRuns.isospin
-        myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
-        myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
-        myIrreps = list(myArchivo.keys())
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
-        
-        savedLocation = MultiCorrelatorAnalysis(myArchivo, myLocation, myVersion, myRuns.rs_type, myIrreps, myWeight, rebin_on = myRuns.rebin, rb = myRuns.rb, kbt = myRuns.kbt, number_cfgs = myCnfgs, nr_irreps = myRuns.the_irreps.nr_irreps, own_kbt_list = myKbtSamples, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
-        
-        myArchivo.close()
-    elif myRuns.correlator=='mr':
-        print("Still working on this...")
-    else:
-        print('NOT AN OPTION.\nQUITTING.')
-        sys.exit()
-
-    print('-'*(len(savedLocation)+1))
-    print('Saved as: \n' + savedLocation)
-    print('_'*(len(savedLocation)+1))
+    print("Nothing to do here.")

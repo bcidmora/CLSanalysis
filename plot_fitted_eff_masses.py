@@ -4,12 +4,12 @@ import h5py
 import time
 import os
 import sys
-# import set_of_functions as vf
 import set_of_plot_functions as vfp
 
 def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correlator_data, the_rs_scheme, the_type_fit, the_nr_exps, the_tmins, the_version, the_location, the_rebin, the_irreps, **kwargs):    
     
-    the_eff_mass_color = '#5d83d5'
+    # the_eff_mass_color = '#5d83d5'
+    the_eff_mass_color = '#3535B2'
     the_fit_color = '#b90f22'
     
     ### These are the irreps in this file
@@ -34,7 +34,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
     for the_irrep in s_irreps:
         
         print("---------------------------------------------------------------------------")
-        print("Irrep: ", the_irrep)
+        print(f"Irrep: {the_irrep}")
         
         ### Central values of the correlators
         the_mean_corr = np.asarray(the_single_correlator_data[f'{the_irrep}/Effective_masses/Mean'])
@@ -83,7 +83,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         the_chi_corr = dis_set[4]    
         
         ### The title of the Plot
-        the_title = OperatorNamePlot #+ ' (%s): '%MomentumIrrep + r' $\to$ %s '%NameIrrepPlot + '(%s-exp)'%the_nr_exps
+        the_title = f'{OperatorNamePlot} ({the_nr_exps}-exp)'
        
         ### This is just to write the errors properly in the plot
         the_mean_fit_string = str('{:.5f}'.format(np.round(the_fit_data[the_plot_fit_data_index], 5)))
@@ -95,7 +95,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         
         print("Plotting Fitted Effective Masses...")
         
-        fit_fig = plt.figure(figsize=(5.5,4.5))             
+        fit_fig = plt.figure() #plt.figure(figsize=(5.5,4.5))             
         the_label = r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_plot_fit_data_index],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
         vfp.PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_plot_fit_data_index, f'{the_rs_scheme} data', the_label, the_title, the_nt_ticks, the_eff_mass_color, the_fit_color)
