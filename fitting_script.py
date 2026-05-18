@@ -304,7 +304,7 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
         the_last_irrep = int(the_nr_irreps)
     else:
         the_first_irrep = int(the_first) - 1 if the_first is not None else 0
-        the_last_irrep = int(the_last) if the_last is not None else len(the_irreps)
+        the_last_irrep = int(the_last) if the_last is not None else len(the_m_irreps)
     
     ### The name of the irreps
     the_m_irreps = the_irreps[the_first_irrep:the_last_irrep]
@@ -375,16 +375,16 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
             ### Creating a folder for correlated or uncorrelated fits
             if the_type_correlated_fit=='Correlated':
                 if 'Correlated' in tmin_data.keys(): del tmin_data['Correlated']
-                the_fit_data = tmin_data.create_group('Correlated')
+                the_fit_data_corr = tmin_data.create_group('Correlated')
             elif the_type_correlated_fit=='Uncorrelated':
                 if 'Uncorrelated' in tmin_data.keys(): del tmin_data['Uncorrelated']
-                the_fit_data = tmin_data.create_group('Uncorrelated')
+                the_fit_data_corr = tmin_data.create_group('Uncorrelated')
             
             ### Creating a folder for the fits of the central values
-            the_mean_data = the_fit_data.create_group('Mean')
+            the_mean_data = the_fit_data_corr.create_group('Mean')
             
             ### Creating a folder for the resampled data fits
-            the_rs_data = the_fit_data.create_group('Resampled')
+            the_rs_data = the_fit_data_corr.create_group('Resampled')
             
             ### Loop over eigenvalues
             for ls in range(len(the_corr_fit)):
@@ -398,13 +398,14 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                         
                         ### Upper limit for the fit
                         the_ul = [x-the_nt[0] for x in the_list_tmaxs[the_irreps.index(the_irrep)]]
+                        
                         ### Lower limit for the fit
                         the_ll = [nt_mod[5]]                    
                     else: 
                         ### Upper limir for the fit
                         the_ul = [x-the_nt[0] for x in the_list_tmaxs[the_irreps.index(the_irrep)]]
+                        
                         ### Lower limit for the fit depends on the upper limit
-                        # the_ll = np.arange(nt_mod[0]+1, int(the_ul[ls]*(.8 - (0.025*ls))))
                         the_ll = np.arange(nt_mod[0]+1, int(nt_mod[-1]*.75))
                     
                     ### Choosing the covariance matrix depending on the type of correlated fit
@@ -421,18 +422,12 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                     
                     ### Loop over all the tmins
                     for yy in the_ll:
-                        print('Tmin = ' + str(yy+the_nt[0]) + '|| TMax = %s'%(the_ul[ls]+the_nt[0]))
+                        print(f'Tmin = {yy+the_nt[0]} || TMax = {the_ul[ls]+the_nt[0]}')
                         another_useful_list = []
                         
                         ### This is finding a good guess to make the fit converge easier.
-                        da_hint = vfa.BEST_GUESS(the_corr_fit_slice[yy:the_ul[ls]], the_nt[yy:the_ul[ls]], the_type_fit) 
-                        if False in np.isnan(da_hint):
-                            the_dof = da_hint
-                        else: 
-                            the_dof = np.zeros((1,len(da_hint)));
-                            the_dof = the_dof[0]
-                            the_dof[0] = np.float64(0.1)
-                            the_dof[1] = np.float64(the_eff_energy_hint[ls,nn,yy])
+                        the_dof[0] = np.float64(0.1)
+                        the_dof[1] = np.float64(the_eff_energy_hint[ls,nn,yy])
                         
                         ### Reduces the covariance matrix to the size of the time range chosen and takes the inverse of it                        
                         the_inverse_cov_m = np.linalg.inv(vfa.SHRINK_MATRIX(the_cov_matrix_fit, yy, the_ul[ls]))
@@ -484,7 +479,7 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                     lambda_group_name = f"lambda_{ls}_nonint_{nn}"
 
                     the_rs_data.create_dataset(lambda_group_name, data = np.asarray(another_list))
-                    the_mean_data.create_dataset(lambda_group_name, data = np.asarray([the_ll + the_nt[0],                                    [the_ul[ls]+the_nt[0]]*len(the_ll), the_results['the_energies'], the_results['the_sigmas'], the_results['the_chi_vals'], the_results['the_sigmas_chi']]))                    
+                    the_mean_data.create_dataset(lambda_group_name, data = np.asarray([the_ll + the_nt[0], [the_ul[ls]+the_nt[0]]*len(the_ll), the_results['the_energies'], the_results['the_sigmas'], the_results['the_chi_vals'], the_results['the_sigmas_chi']]))                    
                     
                 end_time_tmin = time.time()
                 print(f'Time taken: {round((end_time_tmin-begin_time_tmin)/60,2)} min')
