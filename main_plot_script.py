@@ -2,7 +2,6 @@
 import plot_correlators_script as pcorr
 import plot_effective_masses_script as peff
 import plot_fits_script as pfit
-# import set_of_functions as vf
 import plot_fitted_eff_masses as pfem
 
 ### LAYOUT AND EXTRA FUNCTIONS
@@ -14,7 +13,7 @@ import set_of_plot_functions as vfp
 import sys
 import os
 import h5py
-# from PyPDF2 import PdfMerger
+from PyPDF2 import PdfMerger
 
 import ensembles as ed
 
@@ -84,7 +83,7 @@ if myRuns.correlator =='s':
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
-        pfem.PlotSingleHadronsEffectiveMassesFits(myFitCorrelator, mySingleCorrelatorData, myResamplingScheme, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, mySingleTmins, myVersion, myPlotLocation, reBin, myIrreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
+        pfem.PlotSingleHadronsEffectiveMassesFits(myFitCorrelator, mySingleCorrelatorData, myResamplingScheme, myRuns.fit_param.type_correlation, myRuns.fit_type, mySingleTmins, myVersion, myPlotLocation, reBin, myIrreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
     
     ### Puts all the plots in one PDF file. It checks if the file exists first
     if myRuns.join:
@@ -92,64 +91,58 @@ if myRuns.correlator =='s':
         irreps = list(mySingleCorrelatorData.keys())
         all_ef_mass_x = []
         for aa in irreps:
-            ##3 Loop over all the operators in this ensemble
-            ops = list(mySingleCorrelatorData[aa+'/Operators'])
-            x=[]
-                
             ### Corrs
-            # if os.path.isfile(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion):
-                # x.append(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion)
+            the_corr_plot = f'{myPlotLocation}Correlator_{aa[:4]}_{aa[-1]}{reBin}_{myVersion}.pdf'
             
             ### Corrs log-plots
-            if os.path.isfile(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + '_log' +  reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Correlator_' + aa[:4] +'_%s'%aa[-1] + '_log' +  reBin + '_v%s.pdf'%myVersion)
-                
+            the_corr_log_plot = f'{myPlotLocation}Correlator_{aa[:4]}_{aa[-1]}_log{reBin}_{myVersion}.pdf'
+            
             ### Histogram Corrs
-            if os.path.isfile(myPlotLocation + 'Histogram_correlators_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Histogram_correlators_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion)
+            the_hist_plot = f'{myPlotLocation}Histogram_correlators_{aa[:4]}_{aa[-1]}{reBin}_{myVersion}.pdf'
             
             ### Effective Masses Corrs
-            if os.path.isfile(myPlotLocation + 'EffectiveMass_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'EffectiveMass_' + aa[:4] +'_%s'%aa[-1] + reBin + '_v%s.pdf'%myVersion)
+            the_eff_mass_plot = f'{myPlotLocation}EffectiveMass_{aa[:4]}_{aa[-1]}{reBin}_{myVersion}.pdf'
             
             ### Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Tmin_Fits_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Tmin_Fits_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-
+            the_tmin_plot = f'{myPlotLocation}Tmin_Fits_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            
             ### Zoom Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Tmin_Fits_Zoom_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Tmin_Fits_Zoom_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
+            the_tmin_zoom_plot = f'{myPlotLocation}Tmin_Fits_Zoom_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
             
             ### Chi^{2} Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Tmin_Chisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Tmin_Chisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-        
+            the_chi_plot = f'{myPlotLocation}Tmin_Chisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            
             ### Total Chi^{2} Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Tmin_TotalChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Tmin_TotalChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-                
+            the_total_chi_plot = f'{myPlotLocation}Tmin_TotalChisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            
             ### Delta Chi^{2} Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Tmin_DeltaChisqr_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-                
-            ### Fits Corrs
-            if os.path.isfile(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-                all_ef_mass_x.append(myPlotLocation + 'Fitted_Effective_Masses_' + aa[:4] +'_%s'%aa[-1] + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
+            the_delta_chi_plot = f'{myPlotLocation}Tmin_DeltaChisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            
+            ### All fits in one plot
+            the_diff_fits_plot = f'{myPlotLocation}Different_Fits_{aa[:4]}_{aa[-1]}_{reBin}_{myVersion}.pdf'
+            
+            ### Fitted effective masses
+            the_fitted_mass_plot = f'{myPlotLocation}Fitted_Effective_Masses_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp_{reBin}_{myVersion}.pdf'
+            
+            the_plots = [the_corr_plot, the_corr_log_plot, the_hist_plot, the_eff_mass_plot, the_tmin_plot, the_tmin_zoom_plot, the_chi_plot, the_total_chi_plot, the_delta_chi_plot, the_diff_fits_plot, the_fitted_mass_plot]
+        
+            x=[]
+            for item in the_plots:
+                if os.path.isfile(item): x.append(item)
+                if 'Fitted_Effective_Masses' in item: all_ef_mass_x.append(item)
                 
             merger = PdfMerger()
             for pdf in x:
                 merger.append(open(pdf, 'rb'))
             
-            with open(myPlotLocation + myRuns.ensemble + "_%s"%aa +  reBin + "_%s"%myRuns.rs_type + "_v%s.pdf"%myVersion, "wb") as fout:
+            with open(f'{myPlotLocation}{myRuns.ensemble}_{aa}{reBin}_{myRuns.rs_type}_{myVersion}.pdf', "wb") as fout:
                 merger.write(fout)
         
         merger_eff = PdfMerger()
         for pdf_eff in all_ef_mass_x:
             merger_eff.append(open(pdf_eff, 'rb'))
-        with open(myPlotLocation + myRuns.ensemble + "_All_Fitted_Masses" +  reBin + "_%s"%myRuns.rs_type + "_v%s.pdf"%myVersion, "wb") as fout:
+        with open(f'{myPlotLocation}{myRuns.ensemble}_All_Fitted_Masses{reBin}_{myRuns.rs_type}_{myVersion}.pdf', "wb") as fout:
             merger_eff.write(fout)
-                
         print('Now all the plots are in one file for each irrep')
     
     mySingleCorrelatorData.close()
@@ -160,6 +153,7 @@ elif myRuns.correlator=='m':
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
     myArchivo.close()
+    print(myRuns.all_corr)
     
     if myRuns.ops_flag:
         myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced_test' 
@@ -173,16 +167,16 @@ elif myRuns.correlator=='m':
     
      ### Plots the correlators. Look at the booleans
     if myRuns.corrs: 
-        pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps = myRuns.the_irreps.nr_irreps, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs = myRuns.diag_flag)
+        pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps = myRuns.the_irreps.nr_irreps, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs = myRuns.diag_flag, all_corr = myRuns.all_corr)
     
     ### Plots the effective masses of the eigenvalues from the GEVP and/or the operators analysis
     if myRuns.effmass: 
-        peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag)
+        peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag,all_corr = myRuns.all_corr)
 
         
     if myRuns.fits:        
-        myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
-        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators' + myChosenIsospin + myRuns.rs_type + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        myFitsLocation = vfl.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
+        myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
                              
         pfit.PlotMultiHadronsFits(myFitCorrelator, myChosenIsospin, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, myRuns.rs_type, multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin, myIrreps, gevp=myRuns.gevp_flag, zoom_fit=myRuns.zoom_fit, chi_plots=myRuns.plot_chi, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, total_chi=myRuns.total_chi_plot, delta_chi=myRuns.delta_chi_plot, ops_analysis=myRuns.ops_flag, ops_analysis_method=myOperatorsMethod)
         
@@ -190,8 +184,8 @@ elif myRuns.correlator=='m':
     
     ### Plot the fitted effective masses of the eigenvalues
     if myRuns.fitmass:
-        myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
-        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators' + myChosenIsospin + myRuns.rs_type + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        myFitsLocation = vf.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Matrices/')
+        myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
         pfem.PlotMultiHadronsEffectiveMassesFits(myFitCorrelator, myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin, myIrreps) 
         myFitCorrelator.close()
@@ -206,159 +200,105 @@ elif myRuns.correlator=='m':
             x=[]
             for bb in range(len(ops)):
                 
-                ### Diagonal Corrs
-                # if os.path.isfile(myPlotLocation + 'DiagonalCorrelator' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion):
-                    # x.append(myPlotLocation + 'DiagonalCorrelator' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion)
+                ## Diagonal Corrs
+                the_corr_plot = f'{myPlotLocation}DiagonalCorrelator_{myChosenIsospin}_{aa}_{bb}{reBin}_{myVersion}.pdf'
                 
                 ### Diagonal corrs log-plot
-                # if os.path.isfile(myPlotLocation + 'DiagonalCorrelator' + myChosenIsospin + aa + '_%s_log'%str(bb) + reBin + '_v%s.pdf'%myVersion):
-                #     x.append(myPlotLocation + 'DiagonalCorrelator' + myChosenIsospin + aa + '_%s_log'%str(bb) + reBin + '_v%s.pdf'%myVersion)
+                the_corr_log_plot = f'{myPlotLocation}DiagonalCorrelator_{myChosenIsospin}_{aa}_{bb}_log{reBin}_{myVersion}.pdf'
                 
-                # ### Histogram diagonal corrs
-                # if os.path.isfile(myPlotLocation + 'Histogram_DiagCorrelator' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion):
-                #     x.append(myPlotLocation + 'Histogram_DiagCorrelator' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion)
-               
+                ### Histogram Corrs
+                the_hist_plot = f'{myPlotLocation}Histogram_DiagCorrelator_{myChosenIsospin}_{aa}_{bb}{reBin}_{myVersion}.pdf'
+                
                 ### Effective Mass diagonal corrs
-                if os.path.isfile(myPlotLocation + 'EffectiveMass_DiagonalCorrelators' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion):
-                    x.append(myPlotLocation + 'EffectiveMass_DiagonalCorrelators' + myChosenIsospin + aa + '_%s'%str(bb) + reBin + '_v%s.pdf'%myVersion)
+                the_eff_mass_plot = f'{myPlotLocation}EffectiveMass_DiagonalCorrelators_{myChosenIsospin}_{aa}_{bb}{reBin}_{myVersion}.pdf'
                 
-                # ### Eigenvalues 
-                # if os.path.isfile(myPlotLocation + 'Eigenvalues' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-                #     x.append(myPlotLocation + 'Eigenvalues' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
+                ### Eigenvalues 
+                the_eigens_plot = f'{myPlotLocation}Eigenvalues_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
                 
                 ### Eigenvalues log-plots
-#                 if os.path.isfile(myPlotLocation + 'Eigenvalues' + myChosenIsospin + aa +  '_%s_log'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Eigenvalues' + myChosenIsospin + aa +  '_%s_log'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                 
-                # ### Histogram Eigenvlaues
-                # if os.path.isfile(myPlotLocation +'Histogram_Eigenvalues' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin +  '_v%s.pdf'%myVersion):
-                #     x.append(myPlotLocation +'Histogram_Eigenvalues' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin +  '_v%s.pdf'%myVersion)
+                the_eigens_log_plot = f'{myPlotLocation}Eigenvalues_{myChosenIsospin}_{aa}_{bb}_log_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
                 
-                # ### Effective Mass Eigenvlaues
-                # if os.path.isfile(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin+ aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + reBin + '_v%s.pdf'%myVersion):
-                #     x.append(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
+                ### Histogram Eigenvlaues
+                the_eigens_hist_plot = f'{myPlotLocation}Histogram_Eigenvalues_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
                 
-#                 ### Fits Eigenvalues
-#                 if os.path.isfile(myPlotLocation + 'Tmin_Fits' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Tmin_Fits' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-#                 
-#                 ### Chi^{2} Fits Eigenvalues 
-#                 if os.path.isfile(myPlotLocation + 'Tmin_Chisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Tmin_Chisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-#                 
-#                 ### Zoom Chi^{2} Fits Eigenvalues 
-#                 if os.path.isfile(myPlotLocation + 'Tmin_Chisqr_Zoom' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Tmin_Chisqr_Zoom' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                  ### Total Chi^{2} Fits Eigenvalues 
-#                 if os.path.isfile(myPlotLocation + 'Tmin_TotalChisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Tmin_TotalChisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                 ### Delta Chi^{2} Fits
-#                 if os.path.isfile(myPlotLocation + 'Tmin_DeltaChisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Tmin_DeltaChisqr' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + '_%sexp'%myRuns.fit_param.type_fit + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                 ### Fits Effetive Masses of Eigenvalues
-#                 if os.path.isfile(myPlotLocation + 'Fitted_Effective_Masses' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + reBin + '_v%s.pdf'%myVersion):
-#                     x.append(myPlotLocation + 'Fitted_Effective_Masses' + myChosenIsospin + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0)  + reBin + '_v%s.pdf'%myVersion)
-#                 
+                ### Effective Mass Eigenvlaues
+                the_eigens_eff_mass_plot = f'{myPlotLocation}EffectiveMass_Eigenvalues_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
+                
+                ### Fits Eigenvalues
+                the_tmin_plot = f'{myPlotLocation}Tmin_Fits_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+                
+                ### Chi^{2} Fits Eigenvalues 
+                the_chi_plot = f'{myPlotLocation}Tmin_Chisqr_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+                
+                ### Total Chi^{2} Fits Eigenvalues 
+                the_total_chi_plot = f'{myPlotLocation}Tmin_TotalChisqr_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+                
+                ### Delta Chi^{2} Fits Corrs
+                the_delta_chi_plot = f'{myPlotLocation}Tmin_DeltaChisqr_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+                
+                ### All fits in one plot
+                # the_diff_fits_plot = f'{myPlotLocation}Different_Fits_{aa[:4]}_{aa[-1]}_{reBin}_{myVersion}.pdf'
+                
+                ### Fitted Effective Masses of Eigenvalues
+                the_fitted_mass_plot = f'{myPlotLocation}Fitted_Effective_Masses_{myChosenIsospin}_{aa}_{bb}_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
+                
+                the_plots = [the_corr_plot, the_corr_log_plot, the_hist_plot, the_eff_mass_plot, the_eigens_plot, the_eigens_log_plot, the_eigens_hist_plot, the_eigens_eff_mass_plot, the_tmin_plot, the_chi_plot, the_total_chi_plot, the_delta_chi_plot, the_fitted_mass_plot]
+                
+                for item in the_plots:
+                    if os.path.isfile(item): x.append(item)
+                  
             ### All Correlators together log-plot
-            if os.path.isfile(myPlotLocation + 'ALLDiagonalCorrelators' + myChosenIsospin + aa + '_log'+ reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'ALLDiagonalCorrelators' + myChosenIsospin + aa + '_log'+ reBin + '_v%s.pdf'%myVersion)
-
-            ### Effective Masses all diagonal correlators together
-            if os.path.isfile(myPlotLocation + 'EffectiveMass_ALLDiagonalCorrelators' + myChosenIsospin + aa + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'EffectiveMass_ALLDiagonalCorrelators'+ myChosenIsospin + aa + reBin + '_v%s.pdf'%myVersion)
+            the_all_diag_corr_log_plot = f'{myPlotLocation}ALLDiagonalCorrelators_{myChosenIsospin}_{aa}_log{reBin}_{myVersion}.pdf'
             
-            # ### All eigenvalues together log-plots
-            # if os.path.isfile(myPlotLocation + 'ALLEigenvalues' + myChosenIsospin + aa + '_log'+ '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-            #     x.append(myPlotLocation + 'ALLEigenvalues'+ myChosenIsospin + aa + '_log'+ '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
+            ### Effective Masses all diagonal correlators together
+            the_all_diag_corr_effmass_plot = f'{myPlotLocation}EffectiveMass_ALLDiagonalCorrelators_{myChosenIsospin}_{aa}{reBin}_{myVersion}.pdf'
+
+            ### All eigenvalues together log-plots
+            the_all_eigens_log_plot = f'{myPlotLocation}ALLEigenvalues_{myChosenIsospin}_{aa}_log_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
         
             ### Effective Masses all eigenvalues together
-            if os.path.isfile(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-                x.append(myPlotLocation + 'EffectiveMass_ALLEigenvalues'+ myChosenIsospin + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
+            the_all_eigens_eff_mass_plot = f'{myPlotLocation}EffectiveMass_ALLEigenvalues_{myChosenIsospin}_{aa}_t0_{myRuns.fit_param.t0}{reBin}_{myVersion}.pdf'
             
-#             ### If the operators analysis was performed, then it will look for the plots
-#             if 'Operators_Analysis' in list(myMatrixCorrelatorData[aa].keys()):
-#                 
-#                 ### What type of operators analysis is in
-#                 if any('Ops_chosen' in the_keys for the_keys in list(myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys())):
-#                     
-#                     the_list_of_chosen_ops = list(filter(lambda x: 'Ops_chosen' in x, myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys()))
-#                     
-#                     ### Loop over all the operators analysis
-#                     for the_op_item in the_list_of_chosen_ops:
-#                         the_len_data = len(myMatrixCorrelatorData[aa+'/Operators_Analysis/'+the_op_item+'/t0_%s/Eigenvalues/Mean'%myRuns.fit_param.t0])
-#                         ### Loop over the eigenvalues of this analysis
-#                         for bb in range(the_len_data):
-#                             if os.path.isfile(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                                 x.append(myPlotLocation + 'EffectiveMass_Eigenvalues'+ myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                     ### All eigenvalues together in one plot
-#                     if os.path.isfile(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                             x.append(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                 
-#                 if any('Add_Op' in the_keys for the_keys in list(myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys())):
-#                     
-#                     
-#                     the_list_of_chosen_ops = list(filter(lambda x: 'Add_Op' in x, myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys()))
-#                     
-#                     ### Loop over all the operators analysis
-#                     for the_op_item in the_list_of_chosen_ops:
-#                         the_len_data = len(myMatrixCorrelatorData[aa+'/Operators_Analysis/'+the_op_item+'/t0_%s/Eigenvalues/Mean'%myRuns.fit_param.t0])
-#                         
-#                         ### Loop over the eignvalues
-#                         for bb in range(the_len_data):
-#                             if os.path.isfile(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                                 x.append(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                     ### All the eigenvalues together in one plot
-#                     if os.path.isfile(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                             x.append(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                         
-#                 if any('Remove_Op' in the_keys for the_keys in list(myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys())):
-#                     the_list_of_chosen_ops = list(filter(lambda x: 'Remove_Op' in x, myMatrixCorrelatorData[aa+'/Operators_Analysis'].keys()))
-#                     
-#                     ### Loop over all the operators of the analysis
-#                     for the_op_item in the_list_of_chosen_ops:
-#                         the_len_data = len(myMatrixCorrelatorData[aa+'/Operators_Analysis/'+the_op_item+'/t0_%s/Eigenvalues/Mean'%myRuns.fit_param.t0])
-#                         
-#                         ### Loop over the eigenvalues of this selection
-#                         for bb in range(the_len_data):
-#                             if os.path.isfile(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                                 x.append(myPlotLocation + 'EffectiveMass_Eigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_%s'%str(bb) + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
-#                     
-#                     ### All eigenvalues together in one plot
-#                     if os.path.isfile(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion):
-#                         x.append(myPlotLocation + 'EffectiveMass_ALLEigenvalues' + myChosenIsospin + the_op_item +'_' + aa + '_t0_%s'%str(myRuns.fit_param.t0) + reBin + '_v%s.pdf'%myVersion)
+            the_all_plots = [the_all_diag_corr_log_plot, the_all_diag_corr_effmass_plot, the_all_eigens_log_plot, the_all_eigens_eff_mass_plot]
+            
+            for item in the_all_plots: 
+                if os.path.isfile(item): x.append(item)
                         
             merger = PdfMerger()
             for pdf in x:
                 merger.append(open(pdf, 'rb'))
             
-            with open(myPlotLocation + myRuns.ensemble + myChosenIsospin + "_%s"%aa + "_t0%s"%str(myRuns.fit_param.t0) + reBin + "_%s"%myRuns.rs_type + "_v%s.pdf"%myVersion, "wb") as fout:
+            with open(f'{myPlotLocation}{myRuns.ensemble}_{myChosenIsospin}_{aa}_t0{myRuns.fit_param.t0}{reBin}_{myRuns.rs_type}_{myVersion}.pdf', "wb") as fout:
                 merger.write(fout)
-
-
+        
         print('Now all the plots are in one file for each irrep')
         
     myMatrixCorrelatorData.close()
     
     
 elif myRuns.correlator=='mr':
+    myIsospin = myRuns.isospin
     myNonInteractingLevels = ed.ensembles[myRuns.ensemble][myRuns.isospin]['nonInteractingLevels']
-    myRatioCorrelatorData = h5py.File(myDataLocation + 'Matrix_correlators_ratios_' + myRuns.rs_type + reBin +'_v%s.h5'%myVersion,'r')
-    myPlotLocation = vf.DIRECTORY_EXISTS(os.path.expanduser('~')+'/Documents/Chris Files/Plots/%s/Matrices_Ratios/'%myRuns.ensemble +  '%s/'%myResamplingScheme)
+    myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
+    
+    if myRuns.ops_flag:
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced_test' 
+    else:
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test'
+        
+    myRatioCorrelatorData = h5py.File(f'{myDataLocation}Ratio_matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
+    myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices_Ratios/{myResamplingScheme}/')
 
-    if myRuns.correlator: 
-        pcorr.PlotMultiHadronCorrelators(myRatioCorrelatorData, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin)
+    if myRuns.corrs: 
+        pcorr.PlotRatioHadronCorrelators(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
 
     if myRuns.effmass: 
-        peff.PlotMultiHadronsEffectiveMasses(myRatioCorrelatorData, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation,reBin)
-        
-    if myRuns.fit:        
-        myFitsLocation = vf.DIRECTORY_EXISTS(myDataLocation + 'Fits_Ratios/')
-        myFitCorrelator = h5py.File(myFitsLocation + 'Matrix_correlators_ratios_' + myRuns.rs_type + reBin + '_fits_v%s.h5'%myVersion, 'a')
+        peff.PlotRatioHadronsEffectiveMasses(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin)
+    
+    ### NOT WORKED OUT YET
+    if myRuns.fits:        
+        myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Ratios/')
+        myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_ratios_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
         pfit.PlotMultiHadronsFits(myFitCorrelator, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit,  multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin)
         
