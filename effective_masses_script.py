@@ -55,8 +55,7 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
         print(f'Irrep nr.: {j+1} out of {len(the_list_name_irreps)}')
     end_time = time.time()
     print(f'TOTAL TIME TAKEN: {(end_time-begin_time)/60} mins')
-
-
+            
             
 def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwargs):
     
@@ -175,17 +174,17 @@ def RatioMultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, *
                 
                 for nn in range(the_evalues_mean_f.shape[1]):
                     
-                    the_average = np.array(vfa.EFF_MASS(the_evalues_mean_f[ls,nn], the_dist_eff_mass),dtype=np.float64)
+                    the_average = np.asarray(vfa.EFF_MASS(the_evalues_mean_f[ls,nn], the_dist_eff_mass),dtype=np.float64)
                     the_eff_mass_mean_i.append(the_average)
                     
                     ### Loop over the resamples of the eigenvalues
-                    the_eff_mass_rs = [np.asarray(vfa.EFF_MASS(the_evalues_rs_f[ls,nn,zz], the_dist_eff_mass), dtype=np.float64) for zz in range(the_evalues_rs_f.shape[2])]
-                
-                    ### Reshaping the data
-                    the_eff_mass_rs = np.asarray(vfa.NCFGS_TO_NT(the_eff_mass_rs))
-                
+                    the_eff_mass_rs = np.asarray([vfa.EFF_MASS(the_evalues_rs_f[ls,nn,:,zz], the_dist_eff_mass) for zz in range(the_evalues_rs_f.shape[-1])])
+                    
+                    ### Reshaping to compute the mean and errors
+                    the_eff_mass_rs = vfa.NT_TO_NCFGS(the_eff_mass_rs)
+                    
                     ### Here the statistical errors of the resampled data are computed
-                    the_eff_rs_mean = vfa.MEAN(np.array(the_eff_mass_rs))
+                    the_eff_rs_mean = vfa.MEAN(the_eff_mass_rs)
                     the_cov_eff_mass_i.append(vfa.STD_DEV_MEAN(the_eff_mass_rs, the_eff_rs_mean, the_type_rs))
                 
                 the_eff_mass_mean.append(np.asarray(the_eff_mass_mean_i))

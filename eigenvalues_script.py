@@ -26,8 +26,8 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
     ### What type of sorting of the eigenstates
     the_sorting = kwargs.get('sorting')
     the_sorting_map = {
-        None : (vfa.SORTING_EIGENVALUES_NEW, "Sorting states based on Eigenvalues."),
-        'eigenvals' : (vfa. SORTING_EIGENVALUES_NEW, "Sorting states based on Eigenvalues."),
+        None : (vfa.SORTING_EIGENVALUES, "Sorting states based on Eigenvalues."),
+        'eigenvals' : (vfa. SORTING_EIGENVALUES, "Sorting states based on Eigenvalues."),
         'vecs_fix' : (vfa.SORTING_EIGENVECTORS, "Sorting states by Eigenvectors with a fixed reference time slice."),
         'vecs_fix_norm' : (vfa.SORTING_EIGENVECTORS_NORMALIZED, "Sorting states by normalized Eigenvectors with a fixed reference time slice."),
         'vecs_var' : (vfa.SORTING_EIGENVECTORS_CHANGING_TSLICE, "Sorting states by Eigenvectors with a varying reference time slice."),
@@ -39,7 +39,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
     
     the_rs_sorting = kwargs.get('rs_sorting')
     if the_rs_sorting is None:
-        the_rs_sorting_process = vfa.SORTING_EIGENVALUES_NEW
+        the_rs_sorting_process = vfa.SORTING_EIGENVALUES
     else:
         the_rs_sorting_process = the_sorting_process
 
@@ -59,8 +59,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
         the_rs_real = np.asarray(this_data['Correlators/Real/Resampled'])
         
         ### The central values of the original correlators
-        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean'])    
-        the_mean_corr = np.asarray(the_mean_corr_real, dtype = np.float64)
+        the_mean_corr = np.asarray(this_data['Correlators/Real/Mean'], dtype = np.float64)    
         
         print('\n----------------------------------------------')
         print(f'     IRREP ({the_irreps.index(the_irrep)+1}/{len(the_irreps)}): {the_irrep}')

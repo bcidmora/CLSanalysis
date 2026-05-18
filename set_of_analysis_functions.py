@@ -24,7 +24,6 @@ def RANDOM_GENERATOR(k_size, cfgs_nr):
 # It receives a list [Ncfgs]
 # It returns the normalization factor
 def NORM_FACTOR(a_list):
-    # return np.double(np.mean(a_list)) #OLD
     return np.double(np.mean(a_list, dtype=np.float128))
 
 
@@ -232,20 +231,12 @@ def EFF_MASS(a,d):
     return meff
 
 
-## This function is created to look at the effective masses of the isospin corrections 
-# a: is the correction to the correlator with shape [nt]
-# b: is the main baryon correlator with shape [nt]
-def EFF_MASS_CORRECTIONS(a,b):
-    meff = np.asarray([np.double(a[i])/np.double(b[i])  - np.double(a[i+1])/np.double(b[i+1]) for i in range(len(a)-1)])
-    return meff
-
 # This function receives a list "a" of time slices, and it calculates the effective mass, returning a list of effectives masses for each time slice (half integer numbers).
 # a: shape [nt]
 # d: distance of two points, by default this is 1
 def EFF_MASS_COSH(a,d):
     meff=[np.acosh(np.abs((np.double(a[i+d]) + np.double(a[i-d]))/np.double(2.*a[i]))) for i in range(len(a)-d)]
     return np.asarray(meff)
-
 
 
 def DOING_EFFECTIVE_MASSES_EIGENVALUES(gevp_group, the_dist_eff_mass, the_type_rs):
@@ -386,6 +377,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
     
     print("ROLLING PIVOT")
     
+    ### Choosing the t0's for which to perform the GEVP
     the_t0_start = np.abs(the_t0_min_max[0] - the_nt[0])
     the_t0_end = (the_t0_min_max[1] - the_nt[0]) + 1
 
@@ -394,7 +386,6 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
     
     ### Loop over the t0's chosen
     for the_t0_init in range(the_t0_start, the_t0_end):
-
         ### This is the reference correlation matrix for the GEVP
         the_ct0_mean = the_mean_corr[the_t0_init]
 
@@ -406,11 +397,11 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             print(f"WARNING: Matrix isn't positive definite anymore. Skipping T0 = {the_t0_init + the_nt[0]}")
             continue
         
-        the_evals_mean = [the_ev[0] for the_ev in the_ev_mean]
-        the_evecs_mean = [the_ev[1] for the_ev in the_ev_mean]
+        the_evals_mean = np.asarray([the_ev[0] for the_ev in the_ev_mean])
+        the_evecs_mean = np.asarray([the_ev[1] for the_ev in the_ev_mean])
         
         ### First sort by eigenvalue
-        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES_NEW(the_evals_mean, the_evecs_mean)
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
         
         if the_sorting is not None and the_sorting!='eigenvals':
             the_evals_mean, the_evecs_mean = the_sorting_process(the_evals_mean, the_evecs_mean, the_t0_init)
@@ -424,15 +415,20 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
             try:
                 the_ct_rs = the_rs_real[ttt]
                 
+                the_evals_rs_t , the_evecs_rs_t = [], []
                 ### Loop over the resamples
-                the_ev_mean_rs = [SOLVING_GEVP(the_ct0_rs[xyz], the_ct_rs[xyz]) for xyz in range(the_ncnfgs)]
+                for xyz in range(the_ncnfgs):
+                    the_ev_mean_rs, the_evec_mean_rs = SOLVING_GEVP(the_ct0_rs[xyz], the_ct_rs[xyz])
+                    
+                    the_evals_rs_t.append(np.asarray(the_ev_mean_rs))
+                    the_evecs_rs_t.append(np.asarray(the_evec_mean_rs))
                 
-                the_evals_rs.append(np.array([the_ev_rs[0] for the_ev_rs in the_ev_mean_rs]))
-                the_evecs_rs.append(np.array([the_ev_rs[1] for the_ev_rs in the_ev_mean_rs]))
+                the_evals_rs.append(np.asarray(the_evals_rs_t))
+                the_evecs_rs.append(np.asarray(the_evecs_rs_t))
                 
             except np.linalg.LinAlgError:
                 break
-
+        
         ### Here the final eigenvalues and eigenvectors are saved
         if len(the_evals_rs) == 0:
             continue
@@ -443,13 +439,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
         
         ### Loop over the resamples (sorting)
         for xyz in range(len(the_mod_evals_rs)):
-            
-            # sort by eigenvalue before any other sorting step is done
-            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES_NEW(the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz], the_t0_init)
-            if the_rs_sorting_process == SORTING_EIGENVECTORS_RS_MEAN:
-                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVECTORS_RS_MEAN(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init, mean_eigvec= the_evecs_mean, rs = True)
-            else:
-                the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = the_rs_sorting_process(the_mod_evals_rs[xyz],the_mod_evectors_rs[xyz], the_t0_init)
+            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
 
         the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
         the_evals_fits_rs = RESHAPING_EIGENVALS_MEAN(the_mod_evals_rs)
@@ -474,6 +464,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
         group_eigns.create_dataset('Resampled', data = the_evals_fits_rs)
         group_eigns.create_dataset('Covariance_matrix', data = np.asarray(the_sigma_2))
         print(f'T0 = {the_t0_init + the_nt[0]}...DONE')
+
 
 
 ### Comments:
@@ -625,17 +616,24 @@ def SORTING_PROCESS(the_sorting, ev = True):
     return the_sorting_process
 
 
+# THIS SHOULD WORK
+# def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
+#     the_final_eigens = list(the_eigenvals[:the_t0])
+#     the_final_eigenvecs = list(the_eigenvecs[:the_t0])
+#     for ii in range(the_t0, len(the_eigenvals)):
+#         the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)
+#         the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
+#         the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+#     return [the_final_eigens, the_final_eigenvecs]
+
 
 def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
-    the_final_eigens = list(the_eigenvals[:the_t0])
-    the_final_eigenvecs = list(the_eigenvecs[:the_t0])
-    for ii in range(the_t0, len(the_eigenvals)):
-        the_sorted_indices = sorted(range(len(the_eigenvals[ii])), key=lambda i: the_eigenvals[ii][i], reverse=True)
-        the_final_eigens.append(np.array([the_eigenvals[ii][i] for i in the_sorted_indices]))
-        the_final_eigenvecs.append(np.array([the_eigenvecs[ii][i] for i in the_sorted_indices]))
+    the_final_eigens = np.array(the_eigenvals, copy=True)
+    the_final_eigenvecs = np.array(the_eigenvecs, copy=True)
+    sorted_indices = np.argsort(-the_eigenvals[the_t0:], axis=1)
+    the_final_eigens[the_t0:] = np.take_along_axis(the_eigenvals[the_t0:], sorted_indices, axis=1)
+    the_final_eigenvecs[the_t0:] = np.take_along_axis( the_eigenvecs[the_t0:], sorted_indices[:, :, np.newaxis], axis=1)
     return [the_final_eigens, the_final_eigenvecs]
-
-
 
 
 def SORTING_EIGENVALUES_NEW(the_eigenvals, the_eigenvecs, the_t0 = 0):
@@ -1069,7 +1067,6 @@ def REWEIGHTS(the_rw_list, the_nfs):
     return RW_NORMALIZATION(the_weight, the_nfs)
 
 
-
 ### ------------- RESAMPLING ------------------------------------------------------
 
 # Comments:
@@ -1169,7 +1166,6 @@ def STD_DEV(a,b,c):
         sigma.append(np.double((np.double(a[ii]) - np.double(b))**2))
     sigma = np.sum(sigma)
     return np.sqrt(sigma*pre_factor)
-
 
 
 
@@ -1312,6 +1308,7 @@ class My_Fits_Update:
         return val
     
     
+    
 def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin_data, the_type_correlated_fit, the_type_fit, the_only_one_tmin, the_t0, the_list_tmaxs, da_minimization, the_fit_params):
     
     ### Loop over all the t0 chosen
@@ -1437,6 +1434,7 @@ def DOING_THE_FITTING(the_corr, the_nt, the_type_rs, the_irreps, the_irrep, tmin
         
         the_rs_data.create_dataset(f'lambda_{ls}', data = np.asarray(another_list))
         the_mean_data.create_dataset(f'lambda_{ls}', data = np.asarray([the_ll + the_nt[0], [the_ul[ls]+the_nt[0]]*len(the_ll), the_results['the_energies'], the_results['the_sigmas'], the_results['the_chi_vals'], the_results['the_sigmas_chi']]))    
+        
         
 
 
