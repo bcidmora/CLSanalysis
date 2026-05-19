@@ -38,6 +38,7 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
     
     ### Sigma values for the resamples
     the_sigma_eff_mass = vfa.STD_DEV_MEAN(the_em_rs, the_mrs_f_real_rs, the_type_rs)
+    the_cov_matrix_effmass = vfa.COV_MATRIX(the_em_rs, the_mrs_f_real_rs, the_type_rs)
     
     ### CORRECTIONS
     this_data_mass = the_single_correlator_data[the_list_name_irreps[1]]
@@ -68,6 +69,10 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
     the_sigma_eff_mass_ms = vfa.STD_DEV_MEAN(the_em_rs_mass, the_mrs_f_real_rs_mass, the_type_rs)
     the_sigma_eff_mass_qed = vfa.STD_DEV_MEAN(the_em_rs_qed, the_mrs_f_real_rs_qed, the_type_rs)
     
+    ### Covariant matrices
+    the_cov_matrix_eff_mass_ms = vfa.COV_MATRIX(the_em_rs_mass, the_mrs_f_real_rs_mass, the_type_rs)
+    the_cov_matrix_eff_mass_qed = vfa.COV_MATRIX(the_em_rs_qed, the_mrs_f_real_rs_qed, the_type_rs)
+    
     ### Ratio of central values
     the_ratio_mean_mass = the_mean_corr_real_mass / the_mean_corr_real
     the_ratio_mean_qed = the_mean_corr_real_qed / the_mean_corr_real
@@ -91,6 +96,8 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
     
     the_effs_masses = [the_em_rs_f, the_em_rs_f_mass, the_em_rs_f_qed]
     the_sigmas = [the_sigma_eff_mass, the_sigma_eff_mass_ms, the_sigma_eff_mass_qed]
+    the_cov_matrix = [the_cov_matrix_effmass, the_cov_matrix_eff_mass_ms, the_cov_matrix_eff_mass_qed]
+    the_resampled_effmass = [the_em_rs, the_em_rs_mass, the_em_rs_qed]
     
     for j in range(len(the_list_name_irreps)):
         this_data = the_single_correlator_data[the_list_name_irreps[j]]
@@ -103,6 +110,8 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
         
         group_em.create_dataset('Mean', data = the_effs_masses[j])
         group_em.create_dataset('Sigmas', data = the_sigmas[j])
+        group_em.create_dataset('Covariance_matrix', data = the_cov_matrix[j])
+        group_em.create_dataset('Resampled', data = the_resampled_effmass[j])
         
         print(f'Irrep nr.: {j+1} out of {len(the_list_name_irreps)}')
     end_time = time.time()

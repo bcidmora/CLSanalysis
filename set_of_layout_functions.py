@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 
+
 ### Here are some classes defined in order to make the selection of analysis tasks easier
 @dataclass
 class GEVPRuns:

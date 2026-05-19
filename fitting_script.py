@@ -324,6 +324,9 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
         ### These are the operators used for the full matrix
         the_op_list = list(the_data[f'{the_irrep}/Operators'])
         
+        ### These are the non-interacting levels
+        the_non_int = list(the_data[f'{the_irrep}/Single_hadron_corrs'])
+        
         print('----------------------------------------------------------------------------------------')
         print(f'IRREP ({the_irreps.index(the_irrep)+1}/{len(the_irreps)}): {the_irrep}\n   --->>   Operators list: ')
         
@@ -340,6 +343,9 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
        ### It creates a path to store the operators
         if 'Operators' not in dis_irrep.keys():
             dis_irrep.create_dataset('Operators', data = the_op_list)
+        
+        if 'Single_hadron_corrs' not in dis_irrep.keys():
+            dis_irrep.create_dataset('Single_hadron_corrs', data = the_non_int)
         
         ### Searching if the path for the data exists
         if f'{the_type_fit}exp' not in dis_irrep.keys(): 
@@ -410,9 +416,9 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                     
                     ### Choosing the covariance matrix depending on the type of correlated fit
                     if the_type_correlated_fit=='Correlated':
-                        the_cov_matrix_fit = the_cov_matrix[ls,nn]
+                        the_cov_matrix_fit = the_cov_matrix[ls,nn,:,:]
                     elif the_type_correlated_fit=='Uncorrelated':
-                        the_cov_matrix_fit = np.diag(np.diag(the_cov_matrix[ls,nn]))          
+                        the_cov_matrix_fit = np.diag(np.diag(the_cov_matrix[ls,nn,:,:]))          
                     
                     the_results = {'the_energies': [], 'the_sigmas': [], 'the_chi_vals': [], 'the_sigmas_chi': [], 'the_resampled': []}
                     another_list = []

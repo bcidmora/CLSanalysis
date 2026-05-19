@@ -62,7 +62,7 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 ##  Single Hadron correlators
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles_test' 
+        myVersion =  f'{myRuns.ensemble}_singles_fwd' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
         myEffMassPrefix = efs
         myFitPrefix = fts
@@ -73,6 +73,8 @@ if myRuns.correlator =='s':
         myEffMassPrefix = ibf
         myFitPrefix = ibf
         if not myArchivoPre['allConfigs']:
+            myCnfgs = ed.ensembles[myRuns.ensemble]['ncfgs']
+            myWeight = vfa.REWEIGHTS(ed.ensembles[myRuns.ensemble]['weight_raw'], myCnfgs)
             myTempCnfgs = myArchivoPre['nfgsList']
             myCnfgs = len(myTempCnfgs)
             myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.float128)
@@ -275,7 +277,7 @@ elif myRuns.correlator=='mr':
         
         myFitRatioCorrelator = h5py.File(f'{myFitsLocation}Ratio_matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
-        fts.FitRatioMultiCorrelators(myRatioCorrelator, myFitRatioCorrelator, myRuns.rs_type, myTMaxList, myMultiIrreps, myRuns.fit.type_fit, myRuns.fit.type_correlation, one_tmin = myRuns.fit.one_tmin, one_t0 = myRuns.fit.one_t0, chosen_t0 = myRuns.fit.t0)
+        fts.FitRatioMultiCorrelators(myRatioCorrelator, myFitRatioCorrelator, myRuns.rs_type, myTMaxList, myMultiIrreps, myRuns.fit.type_fit, myRuns.fit.type_correlation, one_tmin = myRuns.fit.one_tmin, one_t0 = myRuns.fit.one_t0, chosen_t0 = myRuns.fit.t0, first_irrep = myRuns.the_irreps.first_irrep , last_irrep = myRuns.the_irreps.last_irrep)
         
         myFitRatioCorrelator.close()
     

@@ -46,7 +46,7 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles_test' 
+        myVersion =  f'{myRuns.ensemble}_singles_fwd' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
     else:
         myVersion =  f'{myRuns.ensemble}_omega_test' 
@@ -61,7 +61,7 @@ if myRuns.correlator =='s':
 
     ### Correlators data
     mySingleCorrelatorData = h5py.File(f'{myDataLocation}/Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
-    
+    print(f'{myDataLocation}/Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5')
     ### Directory where the plots will be saved
     myPlotLocation += f'SingleHadrons/{myResamplingScheme}/'
     
@@ -124,7 +124,9 @@ if myRuns.correlator =='s':
             ### Fitted effective masses
             the_fitted_mass_plot = f'{myPlotLocation}Fitted_Effective_Masses_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp_{reBin}_{myVersion}.pdf'
             
-            the_plots = [the_corr_plot, the_corr_log_plot, the_hist_plot, the_eff_mass_plot, the_tmin_plot, the_tmin_zoom_plot, the_chi_plot, the_total_chi_plot, the_delta_chi_plot, the_diff_fits_plot, the_fitted_mass_plot]
+            # the_plots = [the_corr_plot, the_corr_log_plot, the_hist_plot, the_eff_mass_plot, the_tmin_plot, the_tmin_zoom_plot, the_chi_plot, the_total_chi_plot, the_delta_chi_plot, the_diff_fits_plot, the_fitted_mass_plot]
+            
+            the_plots = [the_tmin_plot, the_chi_plot, the_fitted_mass_plot]
         
             x=[]
             for item in the_plots:
@@ -149,7 +151,7 @@ if myRuns.correlator =='s':
     
 elif myRuns.correlator=='m':
     myIsospin = myRuns.isospin
-    myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
+    myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']    
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
     myArchivo.close()
@@ -174,7 +176,8 @@ elif myRuns.correlator=='m':
         peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag,all_corr = myRuns.all_corr)
 
         
-    if myRuns.fits:        
+    if myRuns.fits:     
+        multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResults']
         myFitsLocation = vfl.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
         myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
                              
@@ -184,6 +187,7 @@ elif myRuns.correlator=='m':
     
     ### Plot the fitted effective masses of the eigenvalues
     if myRuns.fitmass:
+        multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResults']
         myFitsLocation = vf.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Matrices/')
         myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -296,11 +300,12 @@ elif myRuns.correlator=='mr':
         peff.PlotRatioHadronsEffectiveMasses(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin)
     
     ### NOT WORKED OUT YET
-    if myRuns.fits:        
+    if myRuns.fits:  
+        multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResultsRatios']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Ratios/')
-        myFitCorrelator = h5py.File(f'{myFitsLocation}Matrix_correlators_ratios_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
+        myFitCorrelator = h5py.File(f'{myFitsLocation}Ratio_matrix_correlators_{myChosenIsospin}_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
-        pfit.PlotMultiHadronsFits(myFitCorrelator, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit,  multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin)
+        pfit.PlotRatioMultiHadronsFits(myFitCorrelator, myChosenIsospin, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, myRuns.rs_type, multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin, chi_plots = myRuns.plot_chi )
         
         myFitCorrelator.close()
 

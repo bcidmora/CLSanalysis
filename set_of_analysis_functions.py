@@ -1209,7 +1209,6 @@ def SINGLE_EXPONENTIAL(x,the_pars,*a):
     a0, e0 = the_pars
     return a0 * np.exp(-e0 * (x - a))
 
-
 ### Comments:
 # This is the function for an alternative double exponential fit. Ae^{-E0*(nt-t0)}(1+ B e^{-nt (E1-E0)})
 # x: is the t_slices
@@ -1238,6 +1237,22 @@ def DOUBLE_EXPONENTIAL(x, the_pars, *a):
     a0, e0, b, dm = the_pars
     return a0 * np.exp(-(x - a) * e0) * (1. + b * np.exp(-x * (dm ** 2)))
 
+### Comments:
+# This is the function for a double exponential fit. Ae^{-E0*(nt-t0)}(1+ Be^{-nt*D^{2}})
+# x: is the t_slices
+# the_pars: is a list (amplitud, energy E0, Amplitude shift of energy, DeltaE**2)
+# *a: this is a variable size arguments, in thie case corresponds to t0.
+def DOUBLE_EXPONENTIAL_EFFMASS(x, the_pars, *a):
+    e0, g, dm = the_pars
+    return e0 + (g * np.exp(-dm * x))
+
+
+### Comments:
+# This is the single exponential forme for the ib corrections to the isoQCD correlators
+def SINGLE_EXP_CORRECTIONS_IB(x,the_pars,*a): 
+    a0, e0 = the_pars
+    return a0 - e0*x
+
 
 ### Comments:
 # This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
@@ -1245,11 +1260,13 @@ def DOUBLE_EXP_CORRECTIONS_IB(x, the_pars, *a):
     b0, a0, b, dm, e0, e1 = the_pars
     return (b0 + (a0 * np.exp(-x * dm)) - x * (e0 + b * e1) * np.exp(-x * dm)) / (1 + b * np.exp(-x * dm))
 
+
 ### Comments:
-# This is the single exponential forme for the ib corrections to the isoQCD correlators
-def SINGLE_EXP_CORRECTIONS_IB(x,the_pars,*a): 
-    a0, e0 = the_pars
-    return a0 - e0*x
+# This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
+def DOUBLE_EXP_CORRECTIONS_IB_EFFMASS(x, the_pars, *a):
+    e0, a0, b0, dm = the_pars
+    return e0 + ((a0-b0) * np.exp(-dm * x) )
+
 
 ### Comments:
 # This function tries to find a good guess for the fit to have a prior, so it would in principle take less time. It uses a simple polynomial fit of order 1. 
