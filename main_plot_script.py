@@ -36,7 +36,6 @@ elif myRuns.rs_type=='bt':
 
 ### Information from the ensembles dictionary
 myDataLocation = vfl.DIRECTORY_EXISTS(f'{ed.outputLocation}{myRuns.ensemble}/')
-myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/')
 
 ### -------- PRINTING INFO OF ENSEMBLE ---------
 
@@ -59,9 +58,9 @@ if myRuns.correlator =='s':
 
     ### Correlators data
     mySingleCorrelatorData = h5py.File(f'{myDataLocation}/Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
-    print(f'{myDataLocation}/Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5')
+    
     ### Directory where the plots will be saved
-    myPlotLocation += f'SingleHadrons/{myResamplingScheme}/'
+    myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/SingleHadrons/{myResamplingScheme}/'
     
     if myRuns.corrs:    
         pcorr.PlotSingleHadronCorrelators(mySingleCorrelatorData, myRuns.rs_type, myVersion, myPlotLocation, reBin, nr_irreps = myRuns.the_irreps.nr_irreps, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
@@ -165,7 +164,7 @@ elif myRuns.correlator=='m':
     myMatrixCorrelatorData = h5py.File(f'{myDataLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
     
     ### Directory where the plots will be saved
-    myPlotLocation += f'Matrices/{myResamplingScheme}/'
+    myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices/{myResamplingScheme}/')
     
      ### Plots the correlators. Look at the booleans
     if myRuns.corrs: 
@@ -291,6 +290,7 @@ elif myRuns.correlator=='mr':
         myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test'
         
     myRatioCorrelatorData = h5py.File(f'{myDataLocation}Ratio_matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
+    
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices_Ratios/{myResamplingScheme}/')
 
     if myRuns.corrs: 
