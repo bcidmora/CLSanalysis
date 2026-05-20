@@ -24,12 +24,16 @@ ens_a654 = {
     'weight_raw' : [f"{location}/data/A654/A654r000.ms1.dat_ascii"],
     'fs' : f'{location}/data/A654/cls21_A654_r000_singles.hdf5',
     'singleTMaxFits' :  [23, 22, 22],
-    'singleTMinResults' : [10, 10, 10],
-    'ib': {'fs': f'{location}/data/A654/cls21_A654_r000_isosinglet_Sm3.hdf5',
+    'singleTMinResults-1exp' : [10, 10, 10],
+    'singleTMinResults-2exp' : [10, 10, 10],
+    'ib': {'fs': f'{location}/data/A654/cls21_A654_r000_isosinglet_Sm3_alex.hdf5', #ALEX
+           #'fs': f'{location}/data/A654/cls21_A654_r000_isosinglet_Sm3.hdf5', #BARB
             'allConfigs': False,
-            'nfgsList': np.arange(0,5068,8),
+            'nfgsList': np.arange(0,5068,8), # ALEX
+            #'nfgsList': np.arange(0,394,8), # BARB
             'singleTMaxFits' : [20, 16, 16],
-            'singleTMinResults' :  [13, 7, 15],},
+            'singleTMinResults-1exp' :  [13, 7, 15],
+            'singleTMinResults-2exp' :  [13, 7, 15],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -94,7 +98,12 @@ ens_d200 = {
     'weight_raw' : [f'{location}/data/D200/D200r000_rw.dat'],
     'fs' : f'{location}/data/D200/cls21_D200_r000_single_fwd.hdf5',
     'singleTMaxFits' : [25,25,25,25,25,25,25,25,25,25, 25,25,25,25,25,25,25,25,25,25, 25,25,25,25,25,25,25,25,25],
-    'singleTMinResults' : [10,10,10,10,10,12, #P^{2} = 0
+    'singleTMinResults-1exp' : [10,10,10,10,10,12, #P^{2} = 0
+                            8,10,10,10,10,10, # P^{2} = 1
+                            8,10,8,8,10,8, # P^{2} = 2
+                            8,10,10,8,10,8, # P^{2} = 3
+                            8,8,8,8,10], # P^{2} = 4,
+    'singleTMinResults-2exp' : [10,10,10,10,10,12, #P^{2} = 0
                             8,10,10,10,10,10, # P^{2} = 1
                             8,10,8,8,10,8, # P^{2} = 2
                             8,10,10,8,10,8, # P^{2} = 3
@@ -103,7 +112,8 @@ ens_d200 = {
             'allConfigs': False,
             'nfgsList': np.sort(np.concatenate([np.arange(0,504,1),np.arange(505,597,1),np.arange(598,756,1),np.arange(757,1024,1), np.arange(1025,1118,1), np.arange(1119,1600,1), np.arange(1602,2000,1)])),
             'singleTMaxFits' : [28, 22, 22],
-            'singleTMinResults' : [18, 15, 13],},
+            'singleTMinResults-1exp' : [18, 15, 13],
+            'singleTMinResults-2exp' : [18, 15, 13],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -243,12 +253,14 @@ ens_d450 = {
     'weight_raw' : [f'{location}/data/D450/D450r010.ms1.txt'], 
     'fs' : f'{location}/data/D450/cls21_D450_r010_single_fwd.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [], 
+    'singleTMinResults-1exp' : [], 
+    'singleTMinResults-2exp' : [], 
     'ib': {'fs': f'{location}/data/D450/cls21_D450_r010_isosinglet_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,500,1),
             'singleTMaxFits' : [31, 23, 25], # [27, 25, 25]
-            'singleTMinResults' : [17, 14, 14],},
+            'singleTMinResults-1exp' : [17, 14, 14],
+            'singleTMinResults-2exp' : [17, 14, 14],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -313,12 +325,14 @@ ens_e250 = {
     'weight_raw' : [f'{location}/data/E250/correct_reweights_e250.txt'],
     'fs' : f'{location}/data/E250/cls21_e250_r001_S1_singles.h5',
     'singleTMaxFits': [37,37,37,37,37,37,28,31,28],
-    'singleTMinResults': [17,25,25,24,18,18,18,17,19],
+    'singleTMinResults-1exp': [],
+    'singleTMinResults-2exp': [],
     'ib' : {'fs' : f'{location}/data/E250/cls21_E250_r001_isosinglet_Sm3.h5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1009,1),
             'singleTMaxFits' : [],
-            'singleTMinResults' : [],},
+            'singleTMinResults-1exp' : [],
+            'singleTMinResults-2exp' : [],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -383,12 +397,14 @@ ens_n101 = {
     'weight_raw' : [f'{location}/data/N101/N101r003.ms1.txt', f'{location}/data/N101/N101r004.ms1.txt', f'{location}/data/N101/N101r005.ms1.txt', f'{location}/data/N101/N101r006.ms1.txt'],
     'fs' : f'{location}/data/N101/cls21_N101_r003_singles.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [],
+    'singleTMinResults-1exp' : [],
+    'singleTMinResults-2exp' : [],
     'ib' : {'fs' : f'{location}/data/N101/cls21_N101_r003_isosinglet_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1316,1),
             'singleTMaxFits' : [28, 23, 23],
-            'singleTMinResults' : [19, 13, 13],},
+            'singleTMinResults-1exp' : [19, 13, 13],
+            'singleTMinResults-2exp' : [19, 13, 13],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -453,12 +469,14 @@ ens_n200 = {
     'weight_raw' : [f'{location}/data/N200/N200r000.ms1.dat_ascii', f'{location}/data/N200/N200r001.ms1.dat_ascii'],
     'fs' : f'{location}/data/N200/cls21_N200_r000_singles.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [],
+    'singleTMinResults-1exp' : [],
+    'singleTMinResults-2exp' : [],
     'ib' : {'fs' : f'{location}/data/N200/cls21_N200_r000_isosinglet_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1712,1),
             'singleTMaxFits' : [32, 27, 27],
-            'singleTMinResults' : [19, 16, 16],},
+            'singleTMinResults-1exp' : [19, 16, 16],
+            'singleTMinResults-2exp' : [19, 16, 16],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -523,12 +541,14 @@ ens_n201 = {
     'weight_raw' : [f'{location}/data/N201/N201r001.ms1.dat_ascii'],
     'fs' : f'{location}/data/N201/cls21_N201_r000_isotriplet_S0_singles_fwd.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [],
+    'singleTMinResults-1exp' : [],
+    'singleTMinResults-2exp' : [],
     'ib' : {'fs' : f'{location}/data/N201/cls21_N201_r000_singles_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1522,1),
             'singleTMaxFits' : [30, 30, 30],
-            'singleTMinResults' : [15,15,15],},
+            'singleTMinResults-1exp' : [15,15,15],
+            'singleTMinResults-2exp' : [15,15,15],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -593,12 +613,14 @@ ens_n203 = {
     'weight_raw' : [f'{location}/data/N203/N203r000.ms1.txt', f'{location}/data/N203/N203r001.ms1.txt'],
     'fs' : f'{location}/data/N203/cls21_N203_r000_singles.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [],
+    'singleTMinResults-1exp' : [],
+    'singleTMinResults-2exp' : [],
     'ib' : {'fs' : f'{location}/data/N203/cls21_N203_r000_isosinglet_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1543,1),
             'singleTMaxFits' : [31, 25, 25],
-            'singleTMinResults' : [15, 14, 13],},
+            'singleTMinResults-1exp' : [15, 14, 13],
+            'singleTMinResults-2exp' : [15, 14, 13],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -663,12 +685,14 @@ ens_n451 = {
     'weight_raw' : [f'{location}/data/N451/N451r000.ms1.dat_ascii'],
     'fs' : f'{location}/data/N451/cls21_N451_r000_isotriplet_S0_singles_fwd.hdf5',
     'singleTMaxFits' : [],
-    'singleTMinResults' : [],
+    'singleTMinResults-1exp' : [],
+    'singleTMinResults-2exp' : [],
     'ib' : {'fs' : f'{location}/data/N451/cls21_N451_r000_isosinglet_Sm3.hdf5',
             'allConfigs': True,
             'nfgsList': np.arange(0,1011,1),
             'singleTMaxFits' : [31, 27, 28],
-            'singleTMinResults' : [18, 14, 14],},
+            'singleTMinResults-1exp' : [18, 14, 14],
+            'singleTMinResults-2exp' : [18, 14, 14],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -749,7 +773,12 @@ ens_x451 = {
                         23, 22, 22, 22, 22, #PSQ2
                         21, 22, 22, 22, 21, #PSQ3
                         20, 20, 23], #PSQ4
-    'singleTMinResults' : [15,15,14,14,14, # P^{2} = 0
+    'singleTMinResults-1exp' : [15,15,14,14,14, # P^{2} = 0
+                       13,13,13,13,13, # P^{2} = 1
+                       12,12,13,13,14, # P^{2} = 2
+                       12,13,12,14,12, # P^{2} = 3
+                       13,12,13], # P^{2} = 4,
+    'singleTMinResults-2exp' : [15,15,14,14,14, # P^{2} = 0
                        13,13,13,13,13, # P^{2} = 1
                        12,12,13,13,14, # P^{2} = 2
                        12,13,12,14,12, # P^{2} = 3
@@ -758,7 +787,8 @@ ens_x451 = {
             'allConfigs': False,
             'nfgsList': np.sort(np.concatenate([np.arange(7,393,16),np.arange(175,895,16),np.arange(911,1903,16),np.arange(1919,1952,16)])),
             'singleTMaxFits' : [30,30,30],
-            'singleTMinResults' : [15,15,15],},
+            'singleTMinResults-1exp' : [15,15,15],
+            'singleTMinResults-2exp' : [15,15,15],},
     's' : { 'iso_name' : iso_map['s'][0],
             'iso_tag' : iso_map['s'][1],
             'iso_label' : iso_map['s'][2],
@@ -793,7 +823,7 @@ ens_x451 = {
     'd' : { 'iso_name' : iso_map['d'][0],
             'iso_tag' : iso_map['d'][1],
             'iso_label' : iso_map['d'][2],
-            'fm' : f'{location}/data/X451/cls21_X451_r001_{iso_map['d'][1]}_Sm2_t00_fwd.hdf5',
+            'fm' : f'{location}/data/X451/cls21_X451_r001_{iso_map['d'][1]}_Sm2_fwd.hdf5',
             'multiTMaxFits' : [[]],
             'multiTMinResults' : [[15,15,14,14], #PSQ0 G1g
                           [13,12,12,14,15,14,13,13,14], # PSQ0 G1u

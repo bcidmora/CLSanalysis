@@ -49,10 +49,8 @@ if myRuns.correlator =='s':
         myVersion =  f'{myRuns.ensemble}_singles_fwd' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
     else:
-        myVersion =  f'{myRuns.ensemble}_omega_test' 
+        myVersion =  f'{myRuns.ensemble}_omega' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]['ib']        
-        
-    mySingleTmins = myArchivoPre['singleTMinResults']
     
     ### Original list of irreps
     myArchivo = h5py.File(myArchivoPre['fs'], 'r')
@@ -71,7 +69,8 @@ if myRuns.correlator =='s':
     if myRuns.effmass: 
         peff.PlotSingleHadronsEffectiveMasses(mySingleCorrelatorData, myResamplingScheme, myVersion, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
     
-    if myRuns.fits: 
+    if myRuns.fits:
+        mySingleTmins = myArchivoPre[f'singleTMinResults-{myRuns.fit_param.type_fit}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}/Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -80,6 +79,7 @@ if myRuns.correlator =='s':
         myFitCorrelator.close()
     
     if myRuns.fitmass:        
+        mySingleTmins = myArchivoPre[f'singleTMinResults-{myRuns.fit_param.type_fit}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -158,7 +158,7 @@ elif myRuns.correlator=='m':
     print(myRuns.all_corr)
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced_test' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
     else:
         myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
     
@@ -286,7 +286,7 @@ elif myRuns.correlator=='mr':
     myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced_test' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
     else:
         myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test'
         

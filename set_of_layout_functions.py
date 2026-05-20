@@ -52,7 +52,13 @@ class NrIrreps:
     last_irrep: int
     steps: Optional[int]
     nr_irreps : int
-    
+
+@dataclass
+class NrConfigs:
+    first_config : int
+    last_config: int
+    steps: Optional[int]
+    nr_configs : int
 
 @dataclass
 class Runs:
@@ -91,6 +97,7 @@ class Runs:
     
     ### Getting the irreps if not all are wanted
     the_irreps: NrIrreps
+    the_configs: NrConfigs
     
     ib_corr: bool
     corr_fit_ib: str
@@ -151,6 +158,11 @@ def parse_args():
     parser.add_argument("-li","--last-irrep", type=int)
     parser.add_argument("-ir","--nr-irreps", type=int)
     
+    ### How many configs to do
+    parser.add_argument("-fc", "--start-config", type=int)
+    parser.add_argument("-lc","--last-config", type=int)
+    parser.add_argument("-nc","--nr-configs", type=int)
+    
     return parser.parse_args()
 
 ### Commments:
@@ -189,7 +201,8 @@ def WhichRuns(args, the_ensemble_data):
     
     ### Which irreps to run
     the_irreps = NrIrreps(first_irrep = args.start_irrep if args.start_irrep else None, last_irrep = args.last_irrep if args.last_irrep else None, nr_irreps =  args.nr_irreps if args.nr_irreps else None, steps = 1)
-
+    
+    the_configs = NrConfigs(first_config = args.start_config if args.start_config else 0, last_config = args.last_config if args.last_config else -1, nr_configs = args.nr_configs if args.nr_configs else None, steps = 1)
     return Runs(
         ensemble=args.ensemble.upper(),
         correlator=args.correlator.lower(),
@@ -221,6 +234,7 @@ def WhichRuns(args, the_ensemble_data):
         ops_flag=args.ops_flag,
         
         the_irreps = the_irreps,
+        the_configs = the_configs,
         ib_corr = args.ib_corr,
         corr_fit_ib = args.fit_ib,
         )
