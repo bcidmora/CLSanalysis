@@ -68,12 +68,13 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         the_chosen_tmin = the_nt.index(the_tmins[the_irreps.index(the_irrep)])
         
         ### This is just to write the errors properly in the plot
-        the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
+        the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.5f}"
+
         the_error_string = vfp.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
         the_sigmas_fit_string = the_error_string[0]
             
         if the_error_string[1]==False:
-            the_mean_fit_string = str(f'{np.round(the_fit_data[the_chosen_tmin], the_error_string[2]):.{the_error_string[2]}f}')
+            the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.{the_error_string[2]}f}"
         
         ### The SH operator that appears in the plot
         the_op = list(the_single_fit_data[f'{the_irrep}/Operators'])[0]
@@ -245,12 +246,14 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                 ### Getting the position of the chosen tmin for the fit
                 the_chosen_tmin = the_nt.index(the_tmins[the_irreps.index(the_irrep)][bb])
                 
-                the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
+                # the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
+                the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.5f}"
                 the_error_string = vfp.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
                 the_sigmas_fit_string = the_error_string[0]
                     
                 if the_error_string[1]==False:
-                    the_mean_fit_string = str(f'{np.round(the_fit_data[the_chosen_tmin], the_error_string[2]):.{the_error_string[2]}f}')
+                    # the_mean_fit_string = str(f'{np.round(the_fit_data[the_chosen_tmin], the_error_string[2]):.{the_error_string[2]}f}')
+                    the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.{the_error_string[2]}f}"
                 
                 the_label = r'$[t_{\mathrm{min}}, t_{\mathrm{max}}] = [%sa, $'%str(int(the_nt[the_chosen_tmin])) + r'$%sa] $'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
@@ -434,7 +437,6 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
                         
                         the_label = vfp.NON_INTERACTING_LABELS(the_non_int[nn].decode('utf-8'))
 
-                        
                         plt.errorbar(the_nt, the_chi_corr, yerr=the_chi_sigmas, marker=vfp.the_markers_list[nn], ls='None', ms=6.5, markeredgewidth=1.5, lw=1.5, elinewidth=1.5, zorder=3, capsize=6, color=vfp.the_colors[nn], label=the_label)
                     plt.yticks(fontsize=14)
                     plt.xticks(fontsize=14)
