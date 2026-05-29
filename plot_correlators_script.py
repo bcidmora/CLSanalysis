@@ -83,7 +83,7 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
         the_means_dif = np.abs(the_nt_mean - the_mean_rs)
         the_stat_error = the_sigmas_corr[tt]
 
-        vfp.PLOT_HISTOGRAMS(the_rs, r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) +'\n'+ r'$\sigma = %s$'%'{:.10e}'.format(the_stat_error), the_mean_rs, r'$ \bar{C}_{%s}(t) = $'%the_type_rs + r' $%s$'%'{:.10e}'.format(the_mean_rs), the_nt_mean, r'$ \bar{C}(t) = %s$'%'{:.10e}'.format(the_nt_mean), OperatorNamePlot + rf' $\to$ $t = {tt+the_nt[0]} a$', the_nr_bins,  r'Correlator')
+        vfp.PLOT_HISTOGRAMS(the_rs, r'$\Delta = %s$'%'{:.10e}'.format(the_means_dif) + r'\n $\sigma = %s$'%'{:.10e}'.format(the_stat_error), the_mean_rs, r'$ \bar{C}_{%s}(t) = $'%the_type_rs + r' $%s$'%'{:.10e}'.format(the_mean_rs), the_nt_mean, r'$ \bar{C}(t) = %s$'%'{:.10e}'.format(the_nt_mean), OperatorNamePlot + rf' $\to$ $t = {tt+the_nt[0]} a$', the_nr_bins,  r'Correlator')
         plt.show()
         the_gauss_fig.savefig(f'{the_location}Histogram_correlators_{irrep[:4]}_{irrep[-1]}{the_rebin}_{the_version}.pdf', bbox_inches='tight')
         
@@ -157,14 +157,14 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
                     
                 ### Plotting the diagonal correlators
                 corr_fig = plt.figure()
-                vfp.PLOT_CORRELATORS(the_nt, the_data_corr[bb,bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, r'$t$', r'$\mathbb{Re}\;C(t)$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + f'= {OperatorNamePlot}')
+                vfp.PLOT_CORRELATORS(the_nt, the_data_corr[bb,bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, r'$t$', r'$\mathbb{Re}\;C(t)$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + f' = {OperatorNamePlot}')
                 plt.show()
                 corr_fig.savefig(f'{the_location}DiagonalCorrelator_{the_quantum_number}_{irrep}_{bb}{the_rebin}_{the_version}.pdf')
                 
                 ## Plotting the log of the diagonal correlators.
                 print('Correlator Log-plots in progress...')
                 corr_fig = plt.figure()
-                vfp.PLOT_CORRELATORS(the_nt, the_data_corr[bb,bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, r'$t\,/\,a$', r'$\log\mathbb{Re}\;C(t)$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + f'= {OperatorNamePlot}', yscale='log')
+                vfp.PLOT_CORRELATORS(the_nt, the_data_corr[bb,bb], the_data_sigmas_corr[bb], the_rs_scheme, the_nt_ticks, r'$t\,/\,a$', r'$\log\mathbb{Re}\;C(t)$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + r' $\to \;C_{%s}$'%(str(bb)+str(bb)) + f' = {OperatorNamePlot}', yscale='log')
                 plt.show()
                 corr_fig.savefig(f'{the_location}DiagonalCorrelator_{the_quantum_number}_{irrep}_{bb}_log{the_rebin}_{the_version}.pdf')
                 
@@ -210,6 +210,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
                 # else: the_n_cols = int(len(the_op_list)/2)
                 plt.xticks(the_nt_ticks,fontsize=18)
                 plt.yticks(fontsize=18)
+                plt.grid(True, alpha=0.2)
                 plt.show()
                 corr_fig.savefig(f'{the_location}ALLDiagonalCorrelators_{the_quantum_number}_{irrep}_log{the_rebin}_{the_version}.pdf')
             
@@ -278,6 +279,7 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
                 # else: the_n_cols = int(len(the_data)/2)
                 # plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)
                 plt.xticks(the_nt_ticks)
+                plt.grid(True, alpha=0.2)
                 plt.show()
                 corr_fig.savefig(f'{the_location}ALLEigenvalues_{the_quantum_number}_{irrep}_log_t0_{the_t0}{the_rebin}_{the_version}.pdf')
 
@@ -359,6 +361,7 @@ def PlotRatioHadronCorrelators(the_ratio_correlator_data, the_quantum_number, th
             if the_data_shape[1]>4: the_n_cols = int(the_data_shape[1]/3)
             else: the_n_cols = int(the_data_shape[1]/2)
             plt.legend(fontsize=14, ncol=the_n_cols, handletextpad=0.01)
+            plt.grid(True, alpha=0.2)
             plt.tight_layout()
             plt.show()
             the_corr_fig.savefig(f'{the_location}/Eigenvalues_ratios_{the_quantum_number}_{irrep}_{bb}_{the_rebin}_{the_version}.pdf')

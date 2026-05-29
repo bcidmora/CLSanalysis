@@ -30,7 +30,7 @@ class FitRuns:
     type_fit: str = '1' #'1' #'2' #'g'
     t0: int = 4
     type_correlation: str = 'Correlated' # 'Uncorrelated'
-    one_tmin: bool = True # False
+    one_tmin: bool = False # False
     one_t0: bool = True # False
 
 
@@ -148,6 +148,7 @@ def parse_args():
     parser.add_argument("--fit-type", choices=["1", "2", "g"], default="1")
     parser.add_argument("--fit-correlation", choices=["Correlated", "Uncorrelated"], default="Correlated")
     parser.add_argument("--fit-t0", default=4)
+    parser.add_argument("--fit-one-tmin", choices=[True, False], default=False)
     parser.add_argument("--fit-ib", choices=["isoQCD", "ib", "both"], default="isoQCD")
     
     ### These is for the Bootstrap
@@ -186,7 +187,7 @@ def VALIDATE_RUNS(r: Runs):
 # This routine selects which runs to do, for example the corrs, the effective masses, etc.
 def WhichRuns(args, the_ensemble_data):
     ### Fit parameters
-    fit_run = FitRuns(type_fit = args.fit_type if args.fits else "1", type_correlation = args.fit_correlation, t0=args.fit_t0)
+    fit_run = FitRuns(type_fit = args.fit_type if args.fits else "1", type_correlation = args.fit_correlation, t0=args.fit_t0, one_tmin = args.fit_one_tmin)
     
     ### GEVP Parameters
     gevp_run = GEVPRuns(t0min=args.t0min if (args.eigenvals or args.ops) else None,t0max=args.t0max if (args.eigenvals or args.ops) else None,)

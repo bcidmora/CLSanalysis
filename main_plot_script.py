@@ -45,7 +45,7 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles_fwd' 
+        myVersion =  f'{myRuns.ensemble}_singles' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
     else:
         myVersion =  f'{myRuns.ensemble}_omega' 
@@ -77,8 +77,8 @@ if myRuns.correlator =='s':
         
         myFitCorrelator.close()
     
-    if myRuns.fitmass:        
-        mySingleTmins = myArchivoPre[f'singleTMinResults-{myRuns.fit_param.type_fit}exp']
+    if myRuns.fitmass:    
+        mySingleTmins = myArchivoPre[f'singleTMinResults-{myRuns.fit_type}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -103,13 +103,17 @@ if myRuns.correlator =='s':
             the_eff_mass_plot = f'{myPlotLocation}EffectiveMass_{aa[:4]}_{aa[-1]}{reBin}_{myVersion}.pdf'
             
             ### Fits Corrs
-            the_tmin_plot = f'{myPlotLocation}Tmin_Fits_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            # the_tmin_plot = f'{myPlotLocation}Tmin_Fits_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            the_tmin_plot_1 = f'{myPlotLocation}Tmin_Fits_{aa[:4]}_{aa[-1]}_1exp{reBin}_{myVersion}.pdf'
+            the_tmin_plot_2 = f'{myPlotLocation}Tmin_Fits_{aa[:4]}_{aa[-1]}_2exp{reBin}_{myVersion}.pdf'
             
             ### Zoom Fits Corrs
             the_tmin_zoom_plot = f'{myPlotLocation}Tmin_Fits_Zoom_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
             
             ### Chi^{2} Fits Corrs
-            the_chi_plot = f'{myPlotLocation}Tmin_Chisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            # the_chi_plot = f'{myPlotLocation}Tmin_Chisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
+            the_chi_plot_1 = f'{myPlotLocation}Tmin_Chisqr_{aa[:4]}_{aa[-1]}_1exp{reBin}_{myVersion}.pdf'
+            the_chi_plot_2 = f'{myPlotLocation}Tmin_Chisqr_{aa[:4]}_{aa[-1]}_2exp{reBin}_{myVersion}.pdf'
             
             ### Total Chi^{2} Fits Corrs
             the_total_chi_plot = f'{myPlotLocation}Tmin_TotalChisqr_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp{reBin}_{myVersion}.pdf'
@@ -121,11 +125,12 @@ if myRuns.correlator =='s':
             the_diff_fits_plot = f'{myPlotLocation}Different_Fits_{aa[:4]}_{aa[-1]}_{reBin}_{myVersion}.pdf'
             
             ### Fitted effective masses
-            the_fitted_mass_plot = f'{myPlotLocation}Fitted_Effective_Masses_{aa[:4]}_{aa[-1]}_{myRuns.fit_param.type_fit}exp_{reBin}_{myVersion}.pdf'
+            the_fitted_mass_plot = f'{myPlotLocation}Fitted_Effective_Masses_{aa[:4]}_{aa[-1]}_{myRuns.fit_type}exp_{reBin}_{myVersion}.pdf'
             
             # the_plots = [the_corr_plot, the_corr_log_plot, the_hist_plot, the_eff_mass_plot, the_tmin_plot, the_tmin_zoom_plot, the_chi_plot, the_total_chi_plot, the_delta_chi_plot, the_diff_fits_plot, the_fitted_mass_plot]
             
-            the_plots = [the_tmin_plot, the_chi_plot, the_fitted_mass_plot]
+            # the_plots = [the_tmin_plot, the_chi_plot, the_fitted_mass_plot]
+            the_plots = [the_tmin_plot_1, the_chi_plot_1, the_tmin_plot_2, the_chi_plot_2, the_fitted_mass_plot]
         
             x=[]
             for item in the_plots:

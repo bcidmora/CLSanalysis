@@ -62,7 +62,7 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 ##  Single Hadron correlators
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles_fwd' 
+        myVersion =  f'{myRuns.ensemble}_singles_test' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
         myEffMassPrefix = efs
         myFitPrefix = fts
@@ -110,7 +110,7 @@ if myRuns.correlator =='s':
     ### Dispersion relation analysis
     if myRuns.disp:
         myDispMode = myRuns.disp_run.mode
-        myTMinSPlot = myArchivoPre[f'singleTMinResults-{myRuns.fit.type_fit}exp']
+        myTMinSPlot = myArchivoPre[f'singleTMinResults-{myRuns.fit_type}exp']
         myDispLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Dispersion_Relation/')
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myLocation}Fits_SingleHadrons/')
         myDispFile  = h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
@@ -139,7 +139,7 @@ elif myRuns.correlator=='m':
     myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
-    myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_fwd' 
+    myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
     
     ### Correlators analysis
     if myRuns.corrs: 

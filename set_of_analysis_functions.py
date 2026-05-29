@@ -1254,18 +1254,24 @@ def SINGLE_EXP_CORRECTIONS_IB(x,the_pars,*a):
     return a0 - e0*x
 
 
+# ### Comments:
+# # This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
+# def DOUBLE_EXP_CORRECTIONS_IB(x, the_pars, *a):
+#     b0, a0, b, dm, e0, e1 = the_pars
+#     return (b0 + (a0 * np.exp(-x * dm)) - x * (e0 + b * e1) * np.exp(-x * dm)) / (1 + b * np.exp(-x * dm))
+
 ### Comments:
 # This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
 def DOUBLE_EXP_CORRECTIONS_IB(x, the_pars, *a):
-    b0, a0, b, dm, e0, e1 = the_pars
-    return (b0 + (a0 * np.exp(-x * dm)) - x * (e0 + b * e1) * np.exp(-x * dm)) / (1 + b * np.exp(-x * dm))
+    a0, e0, b, dm, a1, e1 = the_pars
+    return (a0 - (x * e0) + (np.exp(-x * (dm**2 )) * (a1 - (x * b * e1) )) )/( 1 + (b * np.exp(-x * (dm**2))) )
 
 
 ### Comments:
 # This is a function for the double exponential fits of the ib corrections to the isoQCD correlators
 def DOUBLE_EXP_CORRECTIONS_IB_EFFMASS(x, the_pars, *a):
-    e0, a0, b0, dm = the_pars
-    return e0 + ((a0-b0) * np.exp(-dm * x) )
+    a0, e0, b, dm, a1 = the_pars
+    return a0 * e0 + ((b - (a1 * x)) * (np.exp(-x * dm)))
 
 
 ### Comments:

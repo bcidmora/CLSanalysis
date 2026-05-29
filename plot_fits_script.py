@@ -69,7 +69,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         
         ### This is just to write the errors properly in the plot
         the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.5f}"
-        
+
         the_error_string = vfp.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
         the_sigmas_fit_string = the_error_string[0]
             
@@ -90,7 +90,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         print('Fits vs tmin plot in progress...')
         # fit_fig = plt.figure(figsize=(5.5,4.5))
         fit_fig = plt.figure()        
-        the_label = r'${[t_{\mathrm{min}}}, t_{\mathrm{max}} ]= [%sa,$'%str(int(the_nt[the_chosen_tmin])) +r'$%sa]$'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+        the_label = r'${[t_{\mathrm{min}}}, t_{\mathrm{max}} ]= [%sa,$'%str(int(the_nt[the_chosen_tmin])) +rf'${int(the_nt_max)}a]$\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
         vfp.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}/\,a}$', r'$a \; E_{\mathrm{lab}}$', f'{OperatorNamePlot} ({the_nr_exps}-exp)', the_nt_ticks)
         plt.show()
@@ -170,6 +170,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
             plt.xticks(the_nt_ticks,fontsize=18)
             plt.yticks(fontsize=18)
             plt.legend(fontsize=16, handletextpad=0.01)
+            plt.grid(True, alpha=0.2)
             plt.tight_layout()
             plt.show()
             fig_all.savefig(f'{the_location}Different_Fits_{the_irrep[:4]}_{the_irrep[-1]}_{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -246,32 +247,34 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                 ### Getting the position of the chosen tmin for the fit
                 the_chosen_tmin = the_nt.index(the_tmins[the_irreps.index(the_irrep)][bb])
                 
+                # the_mean_fit_string = str(np.round(the_fit_data[the_chosen_tmin], 5))
                 the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.5f}"
                 the_error_string = vfp.WRITTING_ERRORS_PLOTS(the_fit_sigmas[the_chosen_tmin],5)
                 the_sigmas_fit_string = the_error_string[0]
                     
                 if the_error_string[1]==False:
+                    # the_mean_fit_string = str(f'{np.round(the_fit_data[the_chosen_tmin], the_error_string[2]):.{the_error_string[2]}f}')
                     the_mean_fit_string = f"{the_fit_data[the_chosen_tmin]:.{the_error_string[2]}f}"
                 
                 the_label = r'$[t_{\mathrm{min}}, t_{\mathrm{max}}] = [%sa, $'%str(int(the_nt[the_chosen_tmin])) + r'$%sa] $'%str(int(the_nt_max)) + '\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
                 
                 print('Fit vs Tmin plot in progress...')
                 fit_fig = plt.figure()                
-                vfp.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}\,/\,a$', r'$a \; E_{\mathrm{lab}}$',  f'{NameIrrepPlot} ({MomentumIrrep}): ' + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                vfp.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}\,/\,a$', r'$a \; E_{\mathrm{lab}}$',  fr'{NameIrrepPlot} ({MomentumIrrep}): $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)', the_nt_ticks)
                 plt.show()
                 fit_fig.savefig(f'{the_location}Tmin_Fits_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')
                 
                 if the_zoom_flag:
                     print('Zoom Fit vs Tmin plot in progress...')
                     fit_fig = plt.figure()
-                    vf.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  f'{NameIrrepPlot} ({MomentumIrrep}): ' + r' $\to \;\lambda_{%s}$'%str(bb)  + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
+                    vf.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}$', r'$a_{t} \;\Delta E$',  fr'{NameIrrepPlot} ({MomentumIrrep}):  $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)', the_nt_ticks, zoom=True, the_ll=2, the_ul =5)
                     plt.show()
                     fit_fig.savefig(f'{the_location}Tmin_Fits_Zoom_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')
                 
                 if the_chi_plots_flag:
                     print('Chi2 vs tmin plot in progress...')
                     chi_fit_fig = plt.figure()                
-                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}\,/\,a$', r'$\chi^{2}/\mathrm{d.o.f} $',  f'{NameIrrepPlot} ({MomentumIrrep}): ' + r' $\to \;\lambda_{%s}$'%bb + r' ($t_{0} = %s$)'%str(the_t0), the_nt_ticks)
+                    vf.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'$t_{\mathrm{min}}\,/\,a$', r'$\chi^{2}/\mathrm{d.o.f} $',  fr'{NameIrrepPlot} ({MomentumIrrep}): $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)', the_nt_ticks)
                     plt.show()
                     chi_fit_fig.savefig(f'{the_location}Tmin_Chisqr_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')    
                 
@@ -283,8 +286,9 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                     plt.plot([the_nt[the_chosen_tmin]], [total_chi[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label= the_label)
                     plt.xlabel(r'$t_{\mathrm{min}}$')
                     plt.ylabel(r'$\chi^{2}$')
-                    plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
+                    plt.title( fr'{NameIrrepPlot} ({MomentumIrrep}): $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)')
                     plt.xticks(the_nt_ticks)
+                    plt.grid(True, alpha=0.2)
                     plt.legend()
                     plt.tight_layout()
                     plt.show()
@@ -300,9 +304,10 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                     plt.plot([the_nt[the_chosen_tmin]], [delta_chis[the_chosen_tmin]], marker='o', ls='None', ms=4, markeredgewidth=1.75, markerfacecolor='white', lw=1.75, zorder=3, label=the_label)
                     plt.xlabel(r'$t_{\mathrm{min}}$')
                     plt.ylabel(r'$\Delta \chi^{2} $')
-                    plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb) + r' ($t_{0} = %s$)'%str(the_t0))
+                    plt.title( fr'{NameIrrepPlot} ({MomentumIrrep}): $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)')
                     plt.legend()
                     plt.xticks(the_nt_ticks)
+                    plt.grid(True, alpha=0.2)
                     plt.tight_layout()
                     plt.show()
                     delta_chi_fig.savefig(f'{the_location}Tmin_DeltaChisqr_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -327,7 +332,8 @@ def PlotMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, the_typ
                     plt.legend()
                     plt.xlabel(r'$t_{0}$')
                     plt.ylabel(r'$a_{t} \;\Delta E$')
-                    plt.title( NameIrrepPlot+ ' (%s): '%MomentumIrrep + r' $\to \;\lambda_{%s}$'%str(bb))
+                    plt.title( fr'{NameIrrepPlot} ({MomentumIrrep}): $\to \;\lambda_{bb}$')
+                    plt.grid(True, alpha=0.2)
                     plt.tight_layout()
                     #plt.show()
                     t0s_fig.savefig(f'{the_location}T0s_{the_quantum_number}_{the_irrep}_{bb}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -360,7 +366,6 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
 
     ### Loop over the irreps of this file
     for the_irrep in mr_irreps:
-        # print("in here now")
         print("---------------------------------------------------------------------------")
         print(f"Irrep: {the_irrep}")
         
@@ -400,7 +405,6 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
                     the_nt = [int(x) for x in dis_set[0]]
                     
                     ### These are the ticks that appear in the plot
-                    # the_nt_ticks = np.arange(the_nt[0], the_nt[-1], 2)
                     
                     the_label = vfp.NON_INTERACTING_LABELS(the_non_int[nn].decode('utf-8'))
                     
@@ -411,6 +415,7 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
                 plt.xlabel(r'$t_{\mathrm{min}}\,/\,a$', fontsize=26)
                 plt.ylabel(r'$a\, \Delta E_{\mathrm{lab}}$', fontsize=26)
                 plt.title(fr'{NameIrrepPlot} ({MomentumIrrep}) $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)', fontsize=20)
+                plt.grid(True, alpha=0.2)
                 plt.tight_layout()
                 plt.show()
                 fit_fig.savefig(f'{the_location}Tmin_Fits_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -435,7 +440,6 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
                         
                         the_label = vfp.NON_INTERACTING_LABELS(the_non_int[nn].decode('utf-8'))
 
-                        
                         plt.errorbar(the_nt, the_chi_corr, yerr=the_chi_sigmas, marker=vfp.the_markers_list[nn], ls='None', ms=6.5, markeredgewidth=1.5, lw=1.5, elinewidth=1.5, zorder=3, capsize=6, color=vfp.the_colors[nn], label=the_label)
                     plt.yticks(fontsize=14)
                     plt.xticks(fontsize=14)
@@ -443,6 +447,7 @@ def PlotRatioMultiHadronsFits(the_multi_hadrons_fit_data, the_quantum_number, th
                     plt.xlabel(r'$t_{\mathrm{min}}\,/\,a$', fontsize=26)
                     plt.ylabel(r'$\chi^{2}/\mathrm{d.o.f}$', fontsize=26)
                     plt.title(fr'{NameIrrepPlot} ({MomentumIrrep}) $\to \;\lambda_{bb}$ ($t_{{0}} = {the_t0}a$)', fontsize=20)
+                    plt.grid(True, alpha=0.2)
                     plt.tight_layout()
                     plt.show()
                     fit_fig.savefig(f'{the_location}Tmin_Chisqr_{the_quantum_number}_{the_irrep}_{bb}_t0_{the_t0}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')

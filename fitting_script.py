@@ -398,6 +398,7 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                 ### Now also loop over each non-interacting combination
                 for nn in range(the_corr_fit.shape[1]):
                     
+                    print(f"........................\nNon-interacting level: {the_non_int[nn].decode("utf-8")}")
                     ### This is the modified time range to go from item 0 until the end without caring about labeling
                     nt_mod = np.arange(0,len(the_nt))
                     if the_only_one_tmin: 
@@ -423,13 +424,16 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                     the_results = {'the_energies': [], 'the_sigmas': [], 'the_chi_vals': [], 'the_sigmas_chi': [], 'the_resampled': []}
                     another_list = []
                     
-                    the_corr_fit_slice = the_corr_fit[ls,nn]
+                    the_corr_fit_slice_ls = the_corr_fit[ls,nn]
                     the_corr_fit_rs_slice = the_corr_fit_rs[ls,nn]                    
                     
                     ### Loop over all the tmins
                     for yy in the_ll:
                         print(f'Tmin = {yy+the_nt[0]} || TMax = {the_ul[ls]+the_nt[0]}')
                         another_useful_list = []
+                        
+                        the_nt_slice = the_nt[yy:the_ul[ls]]
+                        the_corr_fit_slice = the_corr_fit_slice_ls[yy:the_ul[ls]]
                         
                         ### This is finding a good guess to make the fit converge easier.
                         the_dof[0] = np.float64(0.1)
@@ -439,7 +443,7 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                         the_inverse_cov_m = np.linalg.inv(vfa.SHRINK_MATRIX(the_cov_matrix_fit, yy, the_ul[ls]))
                         
                         ### This chooses the fit function to use 
-                        the_fit_choice = vfa.My_Fits(da_minimization, the_nt[yy:the_ul[ls]], the_corr_fit_slice[yy:the_ul[ls]], the_inverse_cov_m, the_dof, np.float64(the_t0))
+                        the_fit_choice = vfa.My_Fits(da_minimization, the_nt_slice, the_corr_fit_slice, the_inverse_cov_m, the_dof, np.float64(the_t0))
                         
                         ### Fitting started
                         the_fit = Minuit(the_fit_choice, the_dof, name = the_fit_params)
@@ -451,18 +455,21 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                         ### Energy values
                         e0 = np.float128(the_fit.values['e0'])
                         
+                        ### Amplitude values
+                        a0 = np.float128(the_fit.values['a0'])
+                        
                         ### The fitted energy results from the central values are used as an initial guess for the resamples
                         the_dof_rs = the_dof
-                        the_dof_rs[0], the_dof_rs[1] = np.float64(the_fit.values['a0']), e0
+                        the_dof_rs[0], the_dof_rs[1] = a0, e0
                         
                         another_useful_list.append(e0)
                         the_results['the_energies'].append(e0)
-                        the_results['the_chi_vals'].append(np.float64(the_fit.fval))
+                        the_results['the_chi_vals'].append(the_fit.fval)
                         
                         chi_vals_rs_list = []
                         ### Loop over the resamples
-                        for zz in range(the_corr_fit_rs.shape[2]):
-                            my_fit_choice_rs = vfa.My_Fits(da_minimization, the_nt[yy:the_ul[ls]], the_corr_fit_rs_slice[zz, yy:the_ul[ls]], the_inverse_cov_m, the_dof_rs, np.float64(the_t0))
+                        for zz in range(the_corr_fit_rs.shape[3]):
+                            my_fit_choice_rs = vfa.My_Fits(da_minimization, the_nt_slice, the_corr_fit_rs_slice[yy:the_ul[ls], zz], the_inverse_cov_m, the_dof_rs, np.float64(the_t0))
                             the_fit_rs = Minuit(my_fit_choice_rs, the_dof_rs, name=the_fit_params)
                             
                             the_fit_rs.errordef, the_fit_rs.tol = 1e-8, 1e-7
@@ -480,16 +487,17 @@ def FitRatioMultiCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs
                         the_results['the_sigmas'].append(sigma_fit_rs)
                         the_results['the_sigmas_chi'].append(sigma_chi_rs)
                         another_list.append(np.array(another_useful_list))
-                    print(f'E = {ls} READY')    
 
                     lambda_group_name = f"lambda_{ls}_nonint_{nn}"
 
                     the_rs_data.create_dataset(lambda_group_name, data = np.asarray(another_list))
                     the_mean_data.create_dataset(lambda_group_name, data = np.asarray([the_ll + the_nt[0], [the_ul[ls]+the_nt[0]]*len(the_ll), the_results['the_energies'], the_results['the_sigmas'], the_results['the_chi_vals'], the_results['the_sigmas_chi']]))                    
+                
+                print(f'E = {ls} READY')
                     
                 end_time_tmin = time.time()
                 print(f'Time taken: {round((end_time_tmin-begin_time_tmin)/60,2)} min')
-                print(f'Minimization {the_type_fit} exp: E vs Tmin DONE!')
+                print(f'Minimization {the_type_fit} exp: E vs Tmin DONE!\n\n')
             
 
 if __name__== "__main__":

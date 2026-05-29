@@ -60,10 +60,10 @@ def PlotEffectiveMassComparison(the_single_correlator_data_1, the_single_correla
         plt.show()
         the_efm_fig.savefig(f'{the_location}Comparison_EffectiveMass_{the_irrep}.pdf', bbox_inches='tight')
 
-def PlotFitsComparison(the_ensemble_fits, the_selection, the_observable_name):
+def PlotFitsComparison(the_ensemble_fits, the_selection, the_observable_name, the_location):
     the_nr_ensembles = len(the_selection)
-    the_nr_cols = the_nr_ensembles
-    the_nr_rows = 1 if the_nr_ensembles<=3 else 2 #math.ceil(the_nr_ensembles / the_nr_cols)
+    the_nr_cols = 4
+    the_nr_rows = math.ceil(the_nr_ensembles / the_nr_cols)
     fig, axes = plt.subplots(the_nr_rows, the_nr_cols, figsize=(3 * the_nr_cols, 3 * the_nr_rows))
     
     axes = np.atleast_1d(axes).flatten()
@@ -93,7 +93,9 @@ def PlotFitsComparison(the_ensemble_fits, the_selection, the_observable_name):
         ax.grid(True, alpha=0.3)
     for i in range(the_nr_ensembles, len(axes)):
         fig.delaxes(axes[i])
-    plt.tight_layout()
+    fig.suptitle(fr'Comparison $\Omega$ mass (2-exp fit, Bootstrap)', fontsize=20)
+    fig.tight_layout()
+    fig.savefig(f'{the_location}EnsemblesComparisonFits_OmegaMass.pdf', bbox_inches='tight')
     plt.show()
     
 
@@ -103,24 +105,43 @@ if __name__=="__main__":
     myFitsComp = True
     
     # myEnsemble = ['A654']
-    myEnsemble = ['D200', 'D450', 'N200', 'N101']
+    myEnsemble = ['A654','D200','D450','N200','N203','N101','N451']
+    # myEnsemble = ['A654','D200','D450','N200','N101','N451']
     
+    ### BOOTSTRAP
     ensembleFits = { 'A654': {'Alex': {'Value': 0.7398, 'Error': 0.0084,},
-                              'Barb': {'Value': 0.0, 'Error': 0.0,},},
+                              'Barb': {'Value': 0.7445, 'Error': 0.0065,},},
                      'N101': {'Alex': {'Value': 0.6633, 'Error': 0.0067,},
-                              'Barb': {'Value': 0.6620, 'Error': 0.0046,},},
+                              'Barb': {'Value': 0.663, 'Error': 0.015,},},
                      'D450': {'Alex': {'Value': 0.6152, 'Error': 0.0031,},
-                              'Barb': {'Value': 0.6190, 'Error': 0.0018,},},
+                              'Barb': {'Value': 0.6152, 'Error': 0.0016,},},
                      'N451': {'Alex': {'Value': 0.5983, 'Error': 0.0016,},
-                              'Barb': {'Value': 0.0, 'Error': 0.0,},},
+                              'Barb': {'Value': 0.5997, 'Error': 0.0025,},},
                      'N452': {'Alex': {'Value': 0.5736, 'Error': 0.0020,},
                               'Barb': {'Value': 0.0, 'Error': 0.0,},},
                      'D200': {'Alex': {'Value': 0.5245, 'Error': 0.0016,},
-                              'Barb': {'Value': 0.53113, 'Error': 0.00094,},},
+                              'Barb': {'Value': 0.5243, 'Error': 0.0014,},},
                      'N203': {'Alex': {'Value': 0.4880, 'Error': 0.0038,},
-                              'Barb': {'Value': 0.0, 'Error': 0.0,},},
+                              'Barb': {'Value': 0.4895, 'Error': 0.0051,},},
                      'N200': {'Alex': {'Value': 0.5136, 'Error': 0.0023,},
-                              'Barb': {'Value': 0.5162, 'Error': 0.0021,},},}
+                              'Barb': {'Value': 0.5138, 'Error': 0.0015,},},}
+    ### JACKKNIFE
+    # ensembleFits = { 'A654': {'Alex': {'Value': 0.7398, 'Error': 0.0084,},
+    #                           'Barb': {'Value': 0.7426, 'Error': 0.0076,},},
+    #                  'N101': {'Alex': {'Value': 0.6633, 'Error': 0.0067,},
+    #                           'Barb': {'Value': 0.6636, 'Error': 0.0074,},},
+    #                  'D450': {'Alex': {'Value': 0.6152, 'Error': 0.0031,},
+    #                           'Barb': {'Value': 0.6173, 'Error': 0.0018,},},
+    #                  'N451': {'Alex': {'Value': 0.5983, 'Error': 0.0016,},
+    #                           'Barb': {'Value': 0.6018, 'Error': 0.0028,},},
+    #                  'N452': {'Alex': {'Value': 0.5736, 'Error': 0.0020,},
+    #                           'Barb': {'Value': 0.0, 'Error': 0.0,},},
+    #                  'D200': {'Alex': {'Value': 0.5245, 'Error': 0.0016,},
+    #                           'Barb': {'Value': 0.5248, 'Error': 0.0028,},},
+    #                  'N203': {'Alex': {'Value': 0.4880, 'Error': 0.0038,},
+    #                           'Barb': {'Value': 0.4906, 'Error': 0.0062,},},
+    #                  'N200': {'Alex': {'Value': 0.5136, 'Error': 0.0023,},
+    #                           'Barb': {'Value': 0.5155, 'Error': 0.0046,},},}
                     
     
     for ensemble in myEnsemble:
@@ -147,6 +168,6 @@ if __name__=="__main__":
         if myFitsComp:
             theOmegaName = r'$ am_{\Omega} $'
             print("Not done yet.")
-            PlotFitsComparison(ensembleFits, myEnsemble, theOmegaName)
+            PlotFitsComparison(ensembleFits, myEnsemble, theOmegaName, f'{ed.location}/Plots/')
         
         

@@ -126,8 +126,12 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
                             "ib": {"n_params": 2, "model": vfa.SINGLE_EXP_CORRECTIONS_IB, "params": ('a0', 'e0')},
                             "label": "Single Exponential Fit",},
                       '2': {"iso": {"n_params": 4, "model": vfa.DOUBLE_EXPONENTIAL, "params": ('a0', 'e0', 'b', 'dm'),},
-                            "ib": {"n_params": 6, "model": vfa.DOUBLE_EXP_CORRECTIONS_IB, "params": ('b0', 'a0', 'b', 'dm', 'e0', 'e1')},
-                            "label": "Double Exponential Fit"},}    
+                            "ib": {"n_params": 6, "model": vfa.DOUBLE_EXP_CORRECTIONS_IB, "params": ('a0', 'e0', 'b', 'dm', 'a1', 'e1')},
+                            "label": "Double Exponential Fit"},
+                      '2-eff': {"iso": {"n_params": 4, "model": vfa.DOUBLE_EXPONENTIAL, "params": ('a0', 'e0', 'b', 'dm'),},
+                            "ib": {"n_params": 5, "model": vfa.DOUBLE_EXP_CORRECTIONS_IB_EFFMASS, "params": ('a0', 'e0', 'b', 'dm', 'a1')},
+                            "label": "Double Exponential Fit Effective Mass"},
+                      }    
                       
     ### Which correlator to fit: isoQCD or ib corrections
     the_corr_choice = kwargs.get('iso_or_ib')
@@ -278,7 +282,7 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
             
             ### List of operators of this irrep
             the_op_list = list(the_data[f'{the_irrep}/Operators'])
-            vfl.PRINT_IB_INFO(0, the_irrep, the_op_list)
+            vfl.PRINT_IB_INFO(jj, the_irrep, the_op_list)
             
             dis_irrep = the_fit_data.require_group(the_irrep)
             
@@ -323,8 +327,14 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
                 the_corr_fit_slice = the_corr_fit[the_yy:the_ul]
                 
                 the_inverse_cov_m = np.linalg.inv(vfa.SHRINK_MATRIX(the_cov_matrix_fit, the_yy, the_ul))
-                the_dof = np.zeros(the_n_params_ib)
-                the_dof[0], the_dof[1] = 0.1, the_eff_energy_hint[the_yy]
+                
+                da_hint = vfa.BEST_GUESS(the_corr_fit_slice, the_nt_slice, the_fit_key)
+                if np.any(np.isnan(da_hint)):
+                    the_dof = np.zeros(the_n_params_ib)
+                    the_dof[0] = 0.1
+                    the_dof[1] = the_eff_energy_hint[the_yy]
+                else:
+                    the_dof = da_hint.copy()
 
                 the_fit_choice = vfa.My_Fits(da_minimization_ib, the_nt_slice, the_corr_fit_slice, the_inverse_cov_m, the_dof, np.float64(0.))                
                 the_fit = Minuit(the_fit_choice, the_dof, name = the_fit_params_ib)
@@ -342,7 +352,7 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
                 the_dof_rs = the_dof.copy()
                 the_dof_rs[0], the_dof_rs[1] = a0, e0
                 
-                the_n_rs = len(the_iso_corr_rs)
+                the_n_rs = len(the_corr_fit_rs)
                 the_chi_vals_rs = np.empty(the_n_rs)
                 the_resampled_vals = np.empty(the_n_rs + 1)
                 the_resampled_vals[0] = e0
@@ -357,9 +367,9 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
                     the_fit_rs.scan()
                     the_fit_rs.migrad(iterate=10, ncall=5000)
                     
-                    the_chi_vals_rs[zz] = the_fit_rs.fval
                     e0_rs = np.double(the_fit_rs.values['e0'])
-
+                    
+                    the_chi_vals_rs[zz] = the_fit_rs.fval
                     the_resampled_vals[zz + 1] = e0_rs
 
                 rs_vals = the_resampled_vals[1:]
@@ -368,8 +378,7 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
                 the_results['the_sigmas_chi'].append(vfa.STD_DEV(the_chi_vals_rs, np.mean(the_chi_vals_rs), the_type_rs))
                 the_results['the_resampled'].append(the_resampled_vals)
             
-            the_fit_data_group.create_dataset('Resampled', data = np.asarray(the_results['the_resampled']))
-            
+            the_fit_data_group.create_dataset('Resampled', data=np.asarray(the_results['the_resampled']))
             the_fit_data_group.create_dataset('Mean', data = np.array([the_ll + the_nt[0], [the_ul + the_nt[0]]*(len(the_ll)), the_results['the_energies'], the_results['the_sigmas'], the_results['the_chi_vals'], the_results['the_sigmas_chi']]))
             
         print(f'Minimization {the_type_fit.get("label", "")}: DONE!')
