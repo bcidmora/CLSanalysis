@@ -2,7 +2,6 @@
 import plot_correlators_script as pcorr
 import plot_effective_masses_script as peff
 import plot_fits_script as pfit
-# import set_of_functions as vf
 import plot_fitted_eff_masses as pfem
 
 ### LAYOUT AND EXTRA FUNCTIONS
@@ -46,7 +45,6 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 
 if myRuns.correlator =='s':
     myVersion =  f'{myRuns.ensemble}_singles_test' 
-    mySingleTmins = ed.ensembles[myRuns.ensemble]['singleTMinResults']
     
     ### Original list of irreps
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble]['fs'], 'r')
@@ -66,6 +64,7 @@ if myRuns.correlator =='s':
         peff.PlotSingleHadronsEffectiveMasses(mySingleCorrelatorData, myResamplingScheme, myVersion, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
     
     if myRuns.fits: 
+        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_type}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}/Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -73,7 +72,8 @@ if myRuns.correlator =='s':
         
         myFitCorrelator.close()
     
-    if myRuns.fitmass:        
+    if myRuns.fitmass:
+        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_type}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
