@@ -463,18 +463,16 @@ def MultiCorrelatorAnalysisRatios(the_multi_hadrons_archivo, the_single_hadrons_
                     
                     ### Ratio (resampled)
                     the_ratio_rs = dis_rs_eign / the_denom_rs[non_int]
-
+                    
                     ### Covariance matrix
                     cov_i = vfa.COV_MATRIX(the_ratio_rs, the_ratio_mean, the_type_rs)
-
                     ratios_mean_i.append(the_ratio_mean)
                     ratios_rs_i.append(the_ratio_rs)
                     covs_i.append(cov_i)
-
+                    
                 the_ratio_eigenvalues_mean.append(np.asarray(ratios_mean_i))   # shape (n_non_int, nt)
                 the_ratio_eigenvalues_rs.append(np.asarray(ratios_rs_i))
                 the_ratio_cov_matrix.append(np.asarray(covs_i))
-            
             the_t0_group_mean.create_dataset('Mean', data = np.asarray(the_ratio_eigenvalues_mean))
             the_t0_group_mean.create_dataset('Resampled', data = np.asarray(the_ratio_eigenvalues_rs))
             the_t0_group_mean.create_dataset('Covariance_matrix', data = np.asarray(the_ratio_cov_matrix))
