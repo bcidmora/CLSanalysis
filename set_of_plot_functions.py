@@ -575,6 +575,7 @@ def PLOT_CORRELATORS(the_nt, the_mean_corr, the_sigmas_corr, the_rs_scheme, the_
     elif kwargs.get('yscale')=='effmass': plt.ylim([0, the_max_y/2])
     else: plt.ylim([the_min_y, the_max_y])
     plt.legend(fontsize=16, handletextpad=0.01)
+    plt.grid(True, alpha=0.2)
     plt.tight_layout()
     
     
@@ -607,6 +608,7 @@ def PLOT_FITS(the_nt, the_plot_data, the_sigmas_data, the_chosen_tmin, the_label
     plt.xlabel(the_xlabel,fontsize=26)
     plt.ylabel(the_ylabel,fontsize=26)
     plt.title(the_title,fontsize=20)
+    plt.grid(True, alpha=0.2)
     plt.tight_layout()
 
 
@@ -620,6 +622,7 @@ def PLOT_CHI_FITS(the_nt, the_plot_data, the_chosen_tmin, the_label, the_xlabel,
     plt.xlabel(the_xlabel,fontsize=16)
     plt.ylabel(the_ylabel,fontsize=16)
     plt.title(the_title,fontsize=16)
+    plt.grid(True, alpha=0.2)
     plt.tight_layout()
     
     
@@ -651,6 +654,7 @@ def PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data,
     plt.yticks(fontsize=16)
     plt.xlim([the_nt[0] - 1, the_nt_ticks[-1] + 1])
     plt.legend(fontsize=18, handletextpad=0.3)
+    plt.grid(True, alpha=0.2)
     plt.tight_layout()
     
     

@@ -29,7 +29,7 @@ class FitRuns:
     type_fit: str = '1' #'1' #'2' #'g'
     t0: int = 4
     type_correlation: str = 'Correlated' # 'Uncorrelated'
-    one_tmin: bool = True # False
+    one_tmin: bool = False # False
     one_t0: bool = True # False
 
 
@@ -51,6 +51,14 @@ class NrIrreps:
     last_irrep: int
     steps: Optional[int]
     nr_irreps : int
+    
+
+@dataclass
+class NrConfigs:
+    first_config : int
+    last_config: int
+    steps: Optional[int]
+    nr_configs : int
     
 
 @dataclass
@@ -90,6 +98,7 @@ class Runs:
     
     ### Getting the irreps if not all are wanted
     the_irreps: NrIrreps
+    the_configs: NrConfigs
     
 
 import argparse
@@ -137,6 +146,7 @@ def parse_args():
     parser.add_argument("--fit-type", choices=["1", "2", "g"], default="1")
     parser.add_argument("--fit-correlation", choices=["Correlated", "Uncorrelated"], default="Correlated")
     parser.add_argument("--fit-t0", default=4)
+    parser.add_argument("--fit-one-tmin", choices=[True, False], default=False)
     
     ### These is for the Bootstrap
     parser.add_argument("-kbt", "--k-bootstrap", type=int, default=500) # resampling schemes
@@ -145,6 +155,11 @@ def parse_args():
     parser.add_argument("-fi", "--start-irrep", type=int)
     parser.add_argument("-li","--last-irrep", type=int)
     parser.add_argument("-ir","--nr-irreps", type=int)
+    
+    ### How many configs to do
+    parser.add_argument("-fc", "--start-config", type=int)
+    parser.add_argument("-lc","--last-config", type=int)
+    parser.add_argument("-nc","--nr-configs", type=int)
     
     return parser.parse_args()
 
@@ -172,7 +187,7 @@ def VALIDATE_RUNS(r: Runs):
 def WhichRuns(args, the_ensemble_data):
     
     ### Fit parameters
-    fit_run = FitRuns(type_fit = args.fit_type if args.fits else "1", type_correlation = args.fit_correlation, t0=args.fit_t0)
+    fit_run = FitRuns(type_fit = args.fit_type if args.fits else "1", type_correlation = args.fit_correlation, t0=args.fit_t0, one_tmin = args.fit_one_tmin)
     
     ### GEVP Parameters
     gevp_run = GEVPRuns(t0min=args.t0min if (args.eigenvals or args.ops) else None,t0max=args.t0max if (args.eigenvals or args.ops) else None,)
@@ -187,6 +202,7 @@ def WhichRuns(args, the_ensemble_data):
     
     ### Which irreps to run
     the_irreps = NrIrreps(first_irrep = args.start_irrep if args.start_irrep else None, last_irrep = args.last_irrep if args.last_irrep else None, nr_irreps =  args.nr_irreps if args.nr_irreps else None, steps = 1)
+    the_configs = NrConfigs(first_config = args.start_config if args.start_config else 0, last_config = args.last_config if args.last_config else -1, nr_configs = args.nr_configs if args.nr_configs else None, steps = 1)
 
     return Runs(
         ensemble=args.ensemble.upper(),
@@ -219,6 +235,7 @@ def WhichRuns(args, the_ensemble_data):
         ops_flag=args.ops_flag,
         
         the_irreps = the_irreps,
+        the_configs = the_configs,
         )
     
 ## Comments:

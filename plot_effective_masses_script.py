@@ -159,6 +159,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_quantum_numb
                 plt.yticks(fontsize=18)
                 plt.legend(fontsize=16, ncol=2, handletextpad=0.1, columnspacing=0.1)
                 plt.ylim([0.3,1.5])
+                plt.grid(True, alpha=0.2)
                 plt.tight_layout()
                 plt.show()
                 efm_corr_all_fig.savefig(f'{the_location}EffectiveMass_ALLDiagonalCorrelators_{the_quantum_number}_{the_irrep}{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -215,6 +216,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_quantum_numb
                 else: the_n_cols = int(len(the_data)/2)
 
                 plt.legend(fontsize=14, ncol=the_n_cols, handletextpad=0.05, columnspacing=0.3)
+                plt.grid(True, alpha=0.2)
                 plt.tight_layout()
                 plt.show()
                 efm_corr_all_fig.savefig(f'{the_location}EffectiveMass_ALLEigenvalues_{the_quantum_number}_{the_irrep}_t0_{the_t0}{the_rebin}_{the_version}.pdf', bbox_inches='tight')
@@ -293,6 +295,7 @@ def PlotRatioHadronsEffectiveMasses(the_ratio_correlator_data, the_quantum_numbe
             else: the_n_cols = int(the_data_shape[1]/2)
             plt.legend(fontsize=14, ncol=the_n_cols, handletextpad=0.01)
             plt.tight_layout()
+            plt.grid(True, alpha=0.2)
             plt.show()
             efm_fig.savefig(f'{the_location}EffectiveMass_Eigenvalues_ratios_{the_quantum_number}_{irrep}_{bb}_t0_{the_t0}{the_rebin}_{the_version}.pdf', bbox_inches='tight')
 
