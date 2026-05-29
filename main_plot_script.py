@@ -192,7 +192,7 @@ elif myRuns.correlator=='m':
         irreps = list(myMatrixCorrelatorData.keys())
         for aa in irreps:
             ##3 Loop over all the operators in this ensemble
-            ops = list(myMatrixCorrelatorData[aa+'/Operators'])
+            ops = list(myMatrixCorrelatorData[f'{aa}/Operators'])
             x=[]
             for bb in range(len(ops)):
                 
