@@ -89,8 +89,8 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         
         print('Fits vs tmin plot in progress...')
         # fit_fig = plt.figure(figsize=(5.5,4.5))
-        fit_fig = plt.figure()        
-        the_label = r'${[t_{\mathrm{min}}}, t_{\mathrm{max}} ]= [%sa,$'%str(int(the_nt[the_chosen_tmin])) +rf'${int(the_nt_max)}a]$\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
+        fit_fig = plt.figure(figsize=(5.5,4.)) #plt.figure()        
+        the_label = r'${[t_{\mathrm{min}}}, t_{\mathrm{max}} ]= [%sa,$'%str(int(the_nt[the_chosen_tmin])) +rf'${int(the_nt_max)}a]$'+'\n' + r'$\chi^{2}/\mathrm{d.o.f} = %s$'%np.round(the_chi_corr[the_chosen_tmin],3) + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
         vfp.PLOT_FITS(the_nt, the_fit_data, the_fit_sigmas, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}/\,a}$', r'$a \; E_{\mathrm{lab}}$', f'{OperatorNamePlot} ({the_nr_exps}-exp)', the_nt_ticks)
         plt.show()
@@ -105,7 +105,7 @@ def PlotSingleHadronsFits(the_single_fit_data, the_type_fit, the_nr_exps, the_tm
         
         if the_chi_plots_flag:
             print('Chi2 vs tmin plot in progress...')
-            chi_fig = plt.figure()  #plt.figure(figsize=(5.5,4.5))
+            chi_fig = plt.figure(figsize=(5.5,4.)) #plt.figure()  #plt.figure(figsize=(5.5,4.5))
             vfp.PLOT_FITS(the_nt, the_chi_corr, the_chi_sigmas, the_chosen_tmin, the_label, r'${t_{\mathrm{min}}}\,/\,a$', r'$\chi^{2}/\mathrm{d.o.f} $', f'{OperatorNamePlot} ({the_nr_exps}-exp)', the_nt_ticks)
             plt.show()
             chi_fig.savefig(f'{the_location}Tmin_Chisqr_{the_irrep[:4]}_{the_irrep[-1]}_{the_nr_exps}exp{the_rebin}_{the_version}.pdf', bbox_inches='tight')

@@ -45,7 +45,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         the_nt_corr = np.asarray(the_single_correlator_data[f'{the_irrep}/Time_slices'])
         the_nt = np.arange(the_nt_corr[0]+0.5, the_nt_corr[-1]+0.5, 1)
         
-        the_nt_ticks = np.arange(the_nt_corr[0], the_nt_corr[-1], 3)#int(len(the_nt_corr)/5))
+        the_nt_ticks = np.arange(the_nt_corr[0], the_nt_corr[-1], 3)
 
         ### The SH operator that appears in the plot
         the_op = list(the_single_correlator_data[f'{the_irrep}/Operators'])[0]
@@ -94,7 +94,7 @@ def PlotSingleHadronsEffectiveMassesFits(the_single_fit_data, the_single_correla
         
         print("Plotting Fitted Effective Masses...")
         
-        fit_fig = plt.figure() #plt.figure(figsize=(5.5,4.5))             
+        fit_fig = plt.figure(figsize=(5.5,4.)) #plt.figure(figsize=(5.5,4.5))             
         the_label = r'$\chi^{2}/\mathrm{d.o.f} = %s$'%f"{the_chi_corr[the_chosen_tmin]:.3f}" + '\n' + r'$E_{\mathrm{fit}} = %s$'%(the_mean_fit_string + the_sigmas_fit_string)
         
         vfp.PLOT_FITTED_EFF_MASSES(the_nt, the_mean_corr, the_sigmas_corr, the_fit_data, the_fit_sigmas, the_chosen_tmin, f'{the_rs_scheme} data', the_label, the_title, the_nt_ticks, the_eff_mass_color, the_fit_color)

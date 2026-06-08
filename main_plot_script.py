@@ -179,7 +179,7 @@ elif myRuns.correlator=='m':
     if myRuns.effmass: 
         peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag,all_corr = myRuns.all_corr)
 
-        
+    ### Plots the fits, the chi^2 versus tmin
     if myRuns.fits:     
         multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResults']
         myFitsLocation = vfl.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
@@ -298,13 +298,16 @@ elif myRuns.correlator=='mr':
     
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices_Ratios/{myResamplingScheme}/')
 
+    ### Plots the ratio of correlators: eigenvalues over the non-interacting levels.
     if myRuns.corrs: 
         pcorr.PlotRatioHadronCorrelators(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
 
+    ### Plots the effective masses of the ratio of correlators. 
     if myRuns.effmass: 
         peff.PlotRatioHadronsEffectiveMasses(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin)
     
-    ### NOT WORKED OUT YET
+    ### NOT FULLY WORKED OUT YET. 
+    ### Plots the chosen fits. 
     if myRuns.fits:  
         multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResultsRatios']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Ratios/')
@@ -313,7 +316,8 @@ elif myRuns.correlator=='mr':
         pfit.PlotRatioMultiHadronsFits(myFitCorrelator, myChosenIsospin, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, myRuns.rs_type, multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin, chi_plots = myRuns.plot_chi )
         
         myFitCorrelator.close()
-
+    
+    ### NOT DONE YET.
     if myRuns.join:
         print('Now all the plots are in one file')
         
