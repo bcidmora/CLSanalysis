@@ -71,7 +71,7 @@ if myRuns.correlator =='s':
     else:
         locationWorkedCorrelators = f'{myLocation}Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
     
-    try:
+     try:
         myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')
     except FileNotFoundError:
         sys.exit(f'Cannot find the correlator file for further analysis. Check path: \n {locationWorkedCorrelators}')
@@ -147,7 +147,7 @@ elif myRuns.correlator=='m':
 
         evs.EigenvaluesExtraction(myCorrelator, myRuns.rs_type, myIrreps, myT0Min, myT0Max, sorting = mySorting, the_td = myTD, rs_sorting = myRsSorting)
     
-     ### Reduced operator set
+    ### Reduced operator set
     if myRuns.ops:            
         mySorting = myRuns.gevp.sorting
         myTD = myRuns.gevp.td
