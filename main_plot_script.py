@@ -2,6 +2,7 @@
 import plot_correlators_script as pcorr
 import plot_effective_masses_script as peff
 import plot_fits_script as pfit
+# import set_of_functions as vf
 import plot_fitted_eff_masses as pfem
 
 ### LAYOUT AND EXTRA FUNCTIONS
@@ -64,7 +65,7 @@ if myRuns.correlator =='s':
         peff.PlotSingleHadronsEffectiveMasses(mySingleCorrelatorData, myResamplingScheme, myVersion, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
     
     if myRuns.fits: 
-        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_type}exp']
+        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_param.type_fit}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}/Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -72,8 +73,8 @@ if myRuns.correlator =='s':
         
         myFitCorrelator.close()
     
-    if myRuns.fitmass:
-        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_type}exp']
+    if myRuns.fitmass:     
+        mySingleTmins = ed.ensembles[myRuns.ensemble][f'singleTMinResults-{myRuns.fit_param.type_fit}exp']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_SingleHadrons/')
         myFitCorrelator =  h5py.File(f'{myFitsLocation}Single_correlators_{myRuns.rs_type}{reBin}_fits_{myVersion}.h5', 'a')
         
@@ -147,7 +148,6 @@ elif myRuns.correlator=='m':
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
     myArchivo.close()
-    print(myRuns.all_corr)
     
     if myRuns.ops_flag:
         myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
@@ -159,7 +159,7 @@ elif myRuns.correlator=='m':
     ### Directory where the plots will be saved
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices/{myResamplingScheme}/')
     
-     ### Plots the correlators. Look at the booleans
+    ### Plots the correlators. Look at the booleans
     if myRuns.corrs: 
         pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps = myRuns.the_irreps.nr_irreps, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs = myRuns.diag_flag, all_corr = myRuns.all_corr)
     
@@ -168,6 +168,7 @@ elif myRuns.correlator=='m':
         peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag,all_corr = myRuns.all_corr)
 
         
+    ### Plots the fits, the chi^2 versus tmin
     if myRuns.fits:     
         multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResults']
         myFitsLocation = vfl.DIRECTORY_EXISTS(myDataLocation + 'Fits_Matrices/')
@@ -285,14 +286,17 @@ elif myRuns.correlator=='mr':
     myRatioCorrelatorData = h5py.File(f'{myDataLocation}Ratio_matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
     
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices_Ratios/{myResamplingScheme}/')
-
+    
+    ### Plots the ratio of correlators: eigenvalues over the non-interacting levels.
     if myRuns.corrs: 
         pcorr.PlotRatioHadronCorrelators(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
 
+    ### Plots the effective masses of the ratio of correlators. 
     if myRuns.effmass: 
         peff.PlotRatioHadronsEffectiveMasses(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin)
     
-    ### NOT WORKED OUT YET
+    ### NOT FULLY WORKED OUT YET. 
+    ### Plots the chosen fits. 
     if myRuns.fits:  
         multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResultsRatios']
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myDataLocation}Fits_Ratios/')
@@ -301,7 +305,8 @@ elif myRuns.correlator=='mr':
         pfit.PlotRatioMultiHadronsFits(myFitCorrelator, myChosenIsospin, myRuns.fit_param.type_correlation, myRuns.fit_param.type_fit, myRuns.rs_type, multiTMinsFitPlots, myRuns.fit_param.t0, myVersion, myPlotLocation, reBin, chi_plots = myRuns.plot_chi )
         
         myFitCorrelator.close()
-
+    
+    ### NOT DONE YET.
     if myRuns.join:
         print('Now all the plots are in one file')
         
