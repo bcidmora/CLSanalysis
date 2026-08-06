@@ -26,17 +26,17 @@ def SingleCorrelatorEffectiveMass(the_single_correlator_data, the_type_rs,**kwar
         ### Extracting data from file
         this_data = the_single_correlator_data[the_list_name_irreps[j]]
         
-        ### Mean values of the real part of the correlator to get the effective masses
-        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean'])
+        ### Mean values of the real part of the correlator to get the effective masses (getting the real part)
+        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean']).real
         
-        ### The real part of the resampled data
-        the_rs_real = np.transpose(np.asarray(this_data['Correlators/Real/Resampled']), (1,0))
+        ### The real part of the resampled data (getting the real part)
+        the_rs_real = np.transpose(np.asarray(this_data['Correlators/Real/Resampled']), (1,0)).real
         
         ### Effective Mass computation
         the_em_rs_f =  vfa.EFF_MASS(the_mean_corr_real, the_dist_eff_mass)
             
         ### Loop over the resampled data            
-        the_em_rs = np.transpose(np.array([vfa.EFF_MASS(the_rs_real.real[l],the_dist_eff_mass) for l in range(len(the_rs_real))]), (1,0))
+        the_em_rs = np.transpose(np.array([vfa.EFF_MASS(the_rs_real[l],the_dist_eff_mass) for l in range(len(the_rs_real))]), (1,0))
         
         ### Mean values of the resamples
         the_mrs_f_real_rs = np.mean(the_em_rs, axis=1)
@@ -79,11 +79,11 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
         ### This is the size of the correlator matrices
         the_size_matrix = len(the_op_list)
         
-        ### Mean values of the real part of the correlator to get the effective masses
-        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean'])
+        ### Mean values of the real part of the correlator to get the effective masses (getting the real part)
+        the_mean_corr_real = np.asarray(this_data['Correlators/Real/Mean']).real
 
-        ### The real part of the resampled data
-        the_rs_real = np.asarray(this_data['Correlators/Real/Resampled'])
+        ### The real part of the resampled data (getting the real part)
+        the_rs_real = np.asarray(this_data['Correlators/Real/Resampled']).real
         
         ### Reshaping data
         the_reshaped_mean_corr = vfa.RESHAPING_CORRELATORS(the_mean_corr_real)
@@ -105,7 +105,7 @@ def MultiCorrelatorEffectiveMass(the_matrix_correlator_data, the_type_rs, **kwar
             the_rs_mean_eff = vfa.MEAN(the_rs_eff)
             the_sigma_efm.append(vfa.STD_DEV_MEAN(the_rs_eff, the_rs_mean_eff, the_type_rs))
                 
-            ### If the branch Effective Masses exists in the file, then it gets deleted and created a new one with the new values.
+        ### If the branch Effective Masses exists in the file, then it gets deleted and created a new one with the new values.
         the_group_real = this_data['Correlators/Real']
         
         if 'Effective_masses' in the_group_real.keys(): 

@@ -51,7 +51,7 @@ myWeight = vfa.REWEIGHTS(ed.ensembles[myRuns.ensemble]['weight_raw'], myCnfgs)
 if not ed.ensembles[myRuns.ensemble]['allConfigs']:
     myTempCnfgs = ed.ensembles[myRuns.ensemble]['nfgsList']
     myCnfgs = len(myTempCnfgs)
-    myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.float128)
+    myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.double)
 
 myLatSize = ed.ensembles[myRuns.ensemble]['LatSize']
 
@@ -62,13 +62,13 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 ##  Single Hadron correlators
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles_test' 
+        myVersion =  f'{myRuns.ensemble}_singles_{myRuns.version}' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
         myEffMassPrefix = efs
         myFitPrefix = fts
     else:
         import ib_functions as ibf
-        myVersion =  f'{myRuns.ensemble}_omega' 
+        myVersion =  f'{myRuns.ensemble}_omega_{myRuns.version}' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]['ib']
         myEffMassPrefix = ibf
         myFitPrefix = ibf
@@ -77,13 +77,13 @@ if myRuns.correlator =='s':
             myWeight = vfa.REWEIGHTS(ed.ensembles[myRuns.ensemble]['weight_raw'], myCnfgs)
             myTempCnfgs = myArchivoPre['nfgsList']
             myCnfgs = len(myTempCnfgs)
-            myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.float128)
+            myWeight = np.asarray(vfa.RW_NORMALIZATION([myWeight[ii] for ii in myTempCnfgs], myCnfgs), dtype=np.double)
         
     myArchivo = h5py.File(myArchivoPre['fs'], 'r')
     myIrreps = list(myArchivo.keys())
         
     ### Correlators analysis
-    if myRuns.corrs: 
+    if myRuns.corrs:
         locationWorkedCorrelators = cs.SingleCorrelatorAnalysis(myArchivo, myLocation, myVersion, myRuns.rs_type, myIrreps, myWeight, rebin_on = myRuns.rebin, rb = myRuns.rb, kbt = myRuns.kbt, nr_irreps = myRuns.the_irreps.nr_irreps, own_kbt_list = myKbtSamples, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, number_cfgs = myRuns.the_configs.nr_configs)
     else:
         locationWorkedCorrelators = f'{myLocation}Single_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
@@ -139,7 +139,7 @@ elif myRuns.correlator=='m':
     myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
-    myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
+    myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}' 
     
     ### Correlators analysis
     if myRuns.corrs: 
@@ -173,7 +173,7 @@ elif myRuns.correlator=='m':
         myT0Min = myRuns.gevp.t0min
         myT0Max = myRuns.gevp.t0max
         
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
         locationWorkedCorrelators = f'{myLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
         myChosenOpsList = ed.ensembles[myRuns.ensemble][myIsospin]['operatorsChoice']
         rcs.OperatorsAnalysis(myCorrelator, myRuns.rs_type, myIrreps, myT0Min, myT0Max, locationWorkedCorrelators, myChosenOpsList, sorting = mySorting, the_td = myTD, rs_sorting = myRsSorting)
@@ -181,7 +181,7 @@ elif myRuns.correlator=='m':
     ### Effective Masses analysis
     if myRuns.effmass:
         if myRuns.ops_flag or myRuns.ops:
-            myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+            myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
             locationWorkedCorrelators = f'{myLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
             myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')     
             efs.MultiCorrelatorEffectiveMass(myCorrelator, myRuns.rs_type, dist_eff_mass = myRuns.dist_eff_mass)
@@ -193,7 +193,7 @@ elif myRuns.correlator=='m':
         myFitsLocation = vfl.DIRECTORY_EXISTS(f'{myLocation}Fits_Matrices/')
         
         if myRuns.ops_flag or myRuns.ops:
-            myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+            myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
             locationWorkedCorrelators = f'{myLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5'
             myCorrelator = h5py.File(locationWorkedCorrelators, 'r+')     
             myTMaxList = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMaxFitsOpChoices']
@@ -228,9 +228,9 @@ elif myRuns.correlator=='mr':
     
     ### Multi-hadron corrs
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
     else:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}' 
         
     ### Ratio of Correlators
     if myRuns.corrs:
@@ -242,7 +242,7 @@ elif myRuns.correlator=='mr':
         myMHCorrelator = h5py.File(f'{myLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5', 'r+')
         
         ### Single-hadron corrs
-        mySHVersion =  f'{myRuns.ensemble}_singles_test' 
+        mySHVersion =  f'{myRuns.ensemble}_singles_{myRuns.version}' 
         myArchivo = h5py.File(ed.ensembles[myRuns.ensemble]['fs'], 'r')
         mySingleIrreps = list(myArchivo.keys())
         myArchivo.close()

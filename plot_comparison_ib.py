@@ -62,7 +62,7 @@ def PlotEffectiveMassComparison(the_single_correlator_data_1, the_single_correla
 
 def PlotFitsComparison(the_ensemble_fits, the_selection, the_observable_name, the_location):
     the_nr_ensembles = len(the_selection)
-    the_nr_cols = 4
+    the_nr_cols = 2
     the_nr_rows = math.ceil(the_nr_ensembles / the_nr_cols)
     fig, axes = plt.subplots(the_nr_rows, the_nr_cols, figsize=(3 * the_nr_cols, 3 * the_nr_rows))
     
@@ -105,8 +105,9 @@ if __name__=="__main__":
     myFitsComp = True
     
     # myEnsemble = ['A654']
-    myEnsemble = ['A654','D200','D450','N200','N203','N101','N451']
+    # myEnsemble = ['A654','D200','D450','N200','N203','N101','N451']
     # myEnsemble = ['A654','D200','D450','N200','N101','N451']
+    myEnsemble = ['D200','D450','N200','N203']
     
     ### BOOTSTRAP
     ensembleFits = { 'A654': {'Alex': {'Value': 0.7398, 'Error': 0.0084,},

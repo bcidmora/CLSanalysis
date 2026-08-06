@@ -66,6 +66,7 @@ class Runs:
     correlator: str
     rs_type: str
     isospin: Optional[str]
+    version: Optional[str]
 
     rebin: bool
     rb: int
@@ -114,7 +115,8 @@ def parse_args():
     parser.add_argument("-rs", "--rs-type", required=True, choices=["jk", "bt"]) # resampling schemes    
 
     ### These are optional
-    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q"]) # isosinglet, isodoublet, isotriplet, isoquartet
+    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q", "dk", "dd", "dd*"]) # isosinglet, isodoublet, isotriplet, isoquartet, isodoublet k-meson, isodoublet d-meson, isodoublet d-star-meson
+    parser.add_argument("-v", "--version", type=str, default='test') # extension of the file's name
     
     ### Binning info
     parser.add_argument("--rebin", action="store_true")
@@ -209,6 +211,7 @@ def WhichRuns(args, the_ensemble_data):
         correlator=args.correlator.lower(),
         rs_type=args.rs_type,
         isospin=args.isospin.lower() if args.isospin else None,
+        version=args.version,
 
         rebin=args.rebin,
         rb=args.rb,
@@ -257,17 +260,17 @@ def INFO_PRINTING(the_corr_type, the_ensemble):
     if the_corr_type=='s':
         print('.............................................................................')
         print('                         SINGLE HADRON CORRELATORS')
-        print('                               ENSEMBLE '+ the_ensemble)
+        print(f'                               ENSEMBLE {the_ensemble}')
         print('.............................................................................')
     elif the_corr_type=='m':
         print('.............................................................................')
         print('                         MULTIHADRON CORRELATORS')
-        print('                               ENSEMBLE '+ the_ensemble)
+        print(f'                               ENSEMBLE {the_ensemble}')
         print('.............................................................................')
     elif the_corr_type=='mr':
         print('.............................................................................')
         print('                       MULTIHADRON RATIO CORRELATORS')
-        print('                               ENSEMBLE '+ the_ensemble)
+        print(f'                               ENSEMBLE {the_ensemble}')
         print('.............................................................................')
         
     
@@ -279,7 +282,7 @@ def HADRON_MENU(the_irreps):
     the_hadrons = sorted({vfp.IrrepInfo(the_irrep).Hadron for the_irrep in the_rest_irreps})
     
     if len(the_hadrons)==1:
-        print("Available hadrons: ", the_hadrons)
+        print(f"Available hadrons: {the_hadrons}")
         return the_hadrons
     else:
         print("Available hadrons:")
@@ -299,14 +302,13 @@ def HADRON_MENU(the_irreps):
 ### Comments:
 def SINGLE_INFO_PRINTING(the_irreps, bin_analysis, corr_analysis):
     info_list = []
-
     if bin_analysis:
         print('Choose one irrep for the bin-size analysis with PSQ = 0.')
     if corr_analysis:
         print('Choose the irreps you want to include in the correlator analysis.')
     else: print('Choose the irreps you want to include in the effective mass- or fit analysis.')
     for i in range(len(the_irreps)):
-        info_list.append(the_irreps[i] + ' = ' + str(i))
+        info_list.append(f'{the_irreps[i]} = {i}')
     print(*info_list, sep='\n')
 
 
@@ -358,12 +360,10 @@ def REPLACE_DATASET(the_group, the_name, the_data):
 ### Comments:
 # Prints the index and the name of the irrep in the file and reminds one to choose a rest frame irrep
 def IRREP_BIN_SIZE_INFO_PRINTING(the_irreps):
-
     info_list = []
-
     print('Choose one irrep for the bin-size analysis with PSQ = 0:')
     for i in range(len(the_irreps)):
-        info_list.append(the_irreps[i] + ' = ' + str(i))
+        info_list.append(f'{the_irreps[i]} = {i}')
     print(*info_list, sep='\n')
     
     

@@ -45,10 +45,10 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 
 if myRuns.correlator =='s':
     if not myRuns.ib_corr:
-        myVersion =  f'{myRuns.ensemble}_singles' 
+        myVersion =  f'{myRuns.ensemble}_singles_{myRuns.version}' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]
     else:
-        myVersion =  f'{myRuns.ensemble}_omega' 
+        myVersion =  f'{myRuns.ensemble}_omega_{myRuns.version}' 
         myArchivoPre = ed.ensembles[myRuns.ensemble]['ib']        
     
     ### Original list of irreps
@@ -159,14 +159,14 @@ elif myRuns.correlator=='m':
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble][myIsospin]['fm'], 'r')
     myIrreps = list(myArchivo.keys())
     myArchivo.close()
-    print(myRuns.all_corr)
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
     else:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}' 
     
     myMatrixCorrelatorData = h5py.File(f'{myDataLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
+    print(f"Plotting datafile: \n {myDataLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5")
     
     ### Directory where the plots will be saved
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices/{myResamplingScheme}/')
@@ -290,9 +290,9 @@ elif myRuns.correlator=='mr':
     myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
     else:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test'
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}'
         
     myRatioCorrelatorData = h5py.File(f'{myDataLocation}Ratio_matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
     

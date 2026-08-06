@@ -131,7 +131,7 @@ def PlotMultiHadronsEffectiveMasses(the_matrix_correlator_data, the_quantum_numb
                 the_ymin = vfp.CHOOSING_YMIN_PLOT(the_mean_efm)
                 
                 efm_corr_fig = plt.figure(figsize=(6,4))
-                vfp.PLOT_CORRELATORS(the_nt_corr_efm[1:], the_mean_efm[1:], the_sigmas_efm[1:], the_rs_scheme, the_nt_ticks, r'$t\,/\,a$', r'$a \;m_{\mathrm{eff}}(t+\frac{1}{2})$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + rf'$\to$ {OperatorNamePlot}', ymin=the_ymin)
+                vfp.PLOT_CORRELATORS(the_nt_corr_efm[1:], the_mean_efm[1:], the_sigmas_efm[1:], the_rs_scheme, the_nt_ticks, r'$t\,/\,a$', r'$a \;m_{\mathrm{eff}}(t+\frac{1}{2})$', 'o', f'{NameIrrepPlot} ({MomentumIrrep}) ' + rf'$\to$ $C_{{{bb}{bb}}} = $ {OperatorNamePlot}', ymin=the_ymin)
                 plt.show()
                 efm_corr_fig.savefig(f'{the_location}EffectiveMass_DiagonalCorrelators_{the_quantum_number}_{the_irrep}_{bb}{the_rebin}_{the_version}.pdf', bbox_inches='tight')
             

@@ -52,6 +52,7 @@ class Runs:
     correlator: str
     rs_type: str
     isospin: Optional[str]
+    version: Optional[str]
 
     rebin: bool
     rb: int
@@ -95,7 +96,8 @@ def parse_args():
     parser.add_argument("-rs", "--rs-type", required=True, choices=["jk", "bt"]) # resampling schemes    
 
     ### These are optional
-    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q"]) # isosinglet, isodoublet, isotriplet, isoquartet
+    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q", "dk", "dd", "dd*"]) # isosinglet, isodoublet, isotriplet, isoquartet
+    parser.add_argument("-v", "--version", type=str, default='test') # extension of the file's name
     
     ### Binning info
     parser.add_argument("--rebin", action="store_true")
@@ -148,6 +150,7 @@ def WhichRuns(args, the_ensemble_data):
         correlator=args.correlator.lower(),
         rs_type=args.rs_type,
         isospin=args.isospin.lower() if args.isospin else None,
+        version=args.version,
 
         rebin=args.rebin,
         rb=args.rb,
@@ -205,7 +208,10 @@ def PLOT_SINGLE_HADRON_NAMES(the_hadron_name):
 
 def SQUARED_MOM(the_mom_str):
     the_mod_str = list(the_mom_str.split(','))
-    the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
+    if '(' in the_mod_str[0]:
+        the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
+    elif '[PSQ' in the_mod_str[0]: #Tanja's Mod
+        the_sqrd_mom = int(the_mod_str[0][the_mod_str[0].index('=')+1:])
     return the_sqrd_mom
 
 
