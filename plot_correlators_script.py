@@ -39,10 +39,10 @@ def PlotSingleHadronCorrelators(the_single_correlator_data, the_type_rs, the_ver
     
     for irrep in s_irreps:
         ### This is the central values of the correlator
-        the_mean_corr = np.asarray(the_single_correlator_data[f'{irrep}/Correlators/Real/Mean'])
+        the_mean_corr = np.asarray(the_single_correlator_data[f'{irrep}/Correlators/Real/Mean']).real
         
         ### These are the statistical errors of the correlators
-        the_sigmas_corr = np.asarray(the_single_correlator_data[f'{irrep}/Correlators/Real/Sigmas'])
+        the_sigmas_corr = np.asarray(the_single_correlator_data[f'{irrep}/Correlators/Real/Sigmas']).real
         
         ### This is the time extent
         the_nt = np.asarray(the_single_correlator_data[f'{irrep}/Time_slices'])
@@ -123,10 +123,10 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
         the_op_list = list(the_matrix_correlator_data[f'{irrep}/Operators'])
         
         ### The correaltor dataset
-        the_data_corr = vfa.RESHAPING_CORRELATORS(np.asarray(the_matrix_correlator_data[f'{irrep}/Correlators/Real/Mean']))
+        the_data_corr = vfa.RESHAPING_CORRELATORS(np.asarray(the_matrix_correlator_data[f'{irrep}/Correlators/Real/Mean'])).real
         
         ### The sigmas of this correlator dataset
-        the_data_sigmas_corr = np.asarray(the_matrix_correlator_data[f'{irrep}/Correlators/Real/Sigmas'])
+        the_data_sigmas_corr = np.asarray(the_matrix_correlator_data[f'{irrep}/Correlators/Real/Sigmas']).real
         
         ### This is the time interval
         the_nt = np.asarray(the_matrix_correlator_data[f'{irrep}/Time_slices'])
@@ -195,19 +195,16 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
                     
                     ### Name of this operator
                     the_op = the_op_list[bb]
-                    theOperatorNamePlot = vf.OPERATORS_MH(the_op.decode('utf-8'))
-                    OperatorNamePlot = vf.MH_OPERATORS_RELABEL(theOperatorNamePlot)           
+                    theOperatorNamePlot = vfp.OPERATORS_MH(the_op.decode('utf-8'))
+                    OperatorNamePlot = vfp.MH_OPERATORS_RELABEL(theOperatorNamePlot)           
                     
                     plt.errorbar(the_nt, the_data_corr[bb][bb], the_data_sigmas_corr[bb],  marker=vfp.the_markers_list[bb], ls='None', ms=6, markeredgewidth=1.75, lw=1.75, elinewidth=1.75, capsize=5, label = OperatorNamePlot, color=vfp.the_colors[bb])
                 plt.xlabel(r'$t\,/\,a$',fontsize=36)
                 plt.ylabel(r'$\log\mathbb{Re}\;C(t)$', fontsize=36)
                 plt.title( f'{NameIrrepPlot} ({MomentumIrrep}) ' ,fontsize=26)
-                # the_n_cols = int(len(the_op_list)/2)
                 plt.legend(fontsize=16, ncol= 2, columnspacing=0.1, handletextpad=0.01)
                 plt.yscale('log')
                 plt.tight_layout()
-                # if len(the_op_list)>7: the_n_cols = int(len(the_op_list)/3)
-                # else: the_n_cols = int(len(the_op_list)/2)
                 plt.xticks(the_nt_ticks,fontsize=18)
                 plt.yticks(fontsize=18)
                 plt.grid(True, alpha=0.2)
@@ -222,10 +219,10 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
             
             for bb in range(len(the_data)):
                 ### The mean value of the eigenvalue_{i}
-                the_mean_corr = the_data[bb]
+                the_mean_corr = the_data[bb].real
                 
                 ### The corresponding sigmas of this eigenvalue
-                the_sigmas_corr = np.sqrt(np.diag(the_data_sigmas[bb]))
+                the_sigmas_corr = np.sqrt(np.diag(the_data_sigmas[bb])).real
                 
                 print("..................................................")
                 print(f'Eigenvalue = {bb} plot in process...')
@@ -275,9 +272,6 @@ def PlotMultiHadronCorrelators(the_matrix_correlator_data, the_quantum_number, t
                 plt.yscale('log')
                 plt.legend(fontsize=16, ncol= 2, handletextpad=0.01)
                 plt.tight_layout()
-                # if len(the_data)>6: the_n_cols = int(len(the_data)/3)
-                # else: the_n_cols = int(len(the_data)/2)
-                # plt.legend(fontsize=12, ncol=the_n_cols, handletextpad=0.3)
                 plt.xticks(the_nt_ticks)
                 plt.grid(True, alpha=0.2)
                 plt.show()

@@ -23,6 +23,7 @@ matplotlib.rcParams.update({
     "ps.fonttype": 42,
 })
 
+
 the_colors  = [ "#3535B2", "#b90f22", "#ffa500", "#008000", "#c44601", "#f57600", "#5ba300","#e6308a", "#8a2be2", "#00ced1", "#ffd700", "#ff69b4", "#7cfc00", "#dc143c", "#4682b4", "#ff8c00", "#00fa9a", "#9370db", "#1e90ff", "#ff1493", "#9acd32"]
 
 ### Putting a lot of markers in case of a big matrix
@@ -48,6 +49,7 @@ class Runs:
     correlator: str
     rs_type: str
     isospin: Optional[str]
+    version: Optional[str]
 
     rebin: bool
     rb: int
@@ -77,7 +79,6 @@ class Runs:
     ### Getting the irreps if not all are wanted
     the_irreps: NrIrreps
     
-    
 import argparse
 ### Comments:
 # this function allows you to put all inputs in the terminal as variables. Easier for the amount of variables we have
@@ -90,7 +91,8 @@ def parse_args():
     parser.add_argument("-rs", "--rs-type", required=True, choices=["jk", "bt"]) # resampling schemes    
 
     ### These are optional
-    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q"]) # isosinglet, isodoublet, isotriplet, isoquartet
+    parser.add_argument("-i", "--isospin", default=None, choices=["s", "d", "t", "q", "dk", "dd", "dd*"]) # isosinglet, isodoublet, isotriplet, isoquartet
+    parser.add_argument("-v", "--version", type=str, default='test') # extension of the file's name
     
     ### Binning info
     parser.add_argument("--rebin", action="store_true")
@@ -142,6 +144,7 @@ def WhichRuns(args, the_ensemble_data):
         correlator=args.correlator.lower(),
         rs_type=args.rs_type,
         isospin=args.isospin.lower() if args.isospin else None,
+        version=args.version,
 
         rebin=args.rebin,
         rb=args.rb,
@@ -198,7 +201,10 @@ def PLOT_SINGLE_HADRON_NAMES(the_hadron_name):
 
 def SQUARED_MOM(the_mom_str):
     the_mod_str = list(the_mom_str.split(','))
-    the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
+    if '(' in the_mod_str[0]:
+        the_sqrd_mom = (int(the_mod_str[0][the_mod_str[0].index('(')+1:])**2) + (int(the_mod_str[1])**2) + (int(the_mod_str[2][:the_mod_str[2].index(')')])**2)
+    elif '[PSQ' in the_mod_str[0]: #Tanja's Mod
+        the_sqrd_mom = int(the_mod_str[0][the_mod_str[0].index('=')+1:])
     return the_sqrd_mom
 
 

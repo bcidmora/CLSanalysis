@@ -2,7 +2,6 @@
 import plot_correlators_script as pcorr
 import plot_effective_masses_script as peff
 import plot_fits_script as pfit
-# import set_of_functions as vf
 import plot_fitted_eff_masses as pfem
 
 ### LAYOUT AND EXTRA FUNCTIONS
@@ -45,7 +44,7 @@ vfl.INFO_PRINTING(myRuns.correlator, myRuns.ensemble)
 ### ------------ START ----------------
 
 if myRuns.correlator =='s':
-    myVersion =  f'{myRuns.ensemble}_singles_test' 
+    myVersion =  f'{myRuns.ensemble}_singles_{myRuns.version}' 
     
     ### Original list of irreps
     myArchivo = h5py.File(ed.ensembles[myRuns.ensemble]['fs'], 'r')
@@ -150,16 +149,17 @@ elif myRuns.correlator=='m':
     myArchivo.close()
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
     else:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}' 
     
     myMatrixCorrelatorData = h5py.File(f'{myDataLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
+    print(f"Plotting datafile: \n {myDataLocation}Matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5")
     
     ### Directory where the plots will be saved
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices/{myResamplingScheme}/')
     
-    ### Plots the correlators. Look at the booleans
+     ### Plots the correlators. Look at the booleans
     if myRuns.corrs: 
         pcorr.PlotMultiHadronCorrelators(myMatrixCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps = myRuns.the_irreps.nr_irreps, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs = myRuns.diag_flag, all_corr = myRuns.all_corr)
     
@@ -167,7 +167,6 @@ elif myRuns.correlator=='m':
     if myRuns.effmass: 
         peff.PlotMultiHadronsEffectiveMasses(myMatrixCorrelatorData, myChosenIsospin, myResamplingScheme, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, nr_irreps=myRuns.the_irreps.nr_irreps, first_irrep=myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep, diag_corrs= myRuns.diag_flag,all_corr = myRuns.all_corr)
 
-        
     ### Plots the fits, the chi^2 versus tmin
     if myRuns.fits:     
         multiTMinsFitPlots = ed.ensembles[myRuns.ensemble][myIsospin]['multiTMinResults']
@@ -279,14 +278,14 @@ elif myRuns.correlator=='mr':
     myChosenIsospin = ed.ensembles[myRuns.ensemble][myIsospin]['iso_tag']
     
     if myRuns.ops_flag:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_reduced' 
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}_reduced' 
     else:
-        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_test'
+        myVersion =  f'{myRuns.ensemble}_{myChosenIsospin}_{myRuns.version}'
         
     myRatioCorrelatorData = h5py.File(f'{myDataLocation}Ratio_matrix_correlators_{myRuns.rs_type}{reBin}_{myVersion}.h5','r')
     
     myPlotLocation = vfl.DIRECTORY_EXISTS(f'{ed.location}/Plots/{myRuns.ensemble}/Matrices_Ratios/{myResamplingScheme}/')
-    
+
     ### Plots the ratio of correlators: eigenvalues over the non-interacting levels.
     if myRuns.corrs: 
         pcorr.PlotRatioHadronCorrelators(myRatioCorrelatorData, myChosenIsospin, myRuns.rs_type, myVersion, myRuns.fit_param.t0, myPlotLocation, reBin, first_irrep = myRuns.the_irreps.first_irrep, last_irrep = myRuns.the_irreps.last_irrep)
