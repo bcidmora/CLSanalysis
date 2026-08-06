@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.linalg import eigh
+from scipy.linalg import eig
 from scipy.linalg import fractional_matrix_power
 from iminuit import Minuit
 from scipy.optimize import linear_sum_assignment
@@ -279,7 +280,8 @@ def SOLVING_GEVP(the_ct0_mean, the_mean_corr):
     ### This matrix is to compute the modified GEVP
     the_ct0_root = fractional_matrix_power(the_ct0_mean, -1/2)
     the_mean_corr_mod = the_ct0_root @ the_mean_corr @ (the_ct0_root.conj().T)
-    return eigh(the_mean_corr_mod, eigvals_only=False) 
+    # return eigh(the_mean_corr_mod, eigvals_only=False) # HERMITIAN VERSION
+    return eig(the_mean_corr_mod) # ANY MATRIX
 
 
 def DOING_THE_GEVP_SINGLE_PIVOT(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_rs, the_sorting, the_sorting_process, group_i, **kwargs):
@@ -387,7 +389,8 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
     ### Loop over the t0's chosen
     for the_t0_init in range(the_t0_start, the_t0_end):
         ### This is the reference correlation matrix for the GEVP
-        the_ct0_mean = the_mean_corr[the_t0_init]
+        the_ct0_mean = the_mean_corr[the_t0_init]        
+        print(f"Checking Hermiticity: {np.allclose(the_ct0_mean, the_ct0_mean.conj().T, atol=1e-12)}")
 
         ### ---------- MEAN VALUES ----------
         ### Loop over the time slices (diagonalization at each time slice)
@@ -401,7 +404,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
         the_evecs_mean = np.asarray([the_ev[1] for the_ev in the_ev_mean])
         
         ### First sort by eigenvalue
-        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean, the_evecs_mean)
+        the_evals_mean, the_evecs_mean = SORTING_EIGENVALUES(the_t0_init, the_evals_mean.real, the_evecs_mean)
         
         if the_sorting is not None and the_sorting!='eigenvals':
             the_evals_mean, the_evecs_mean = the_sorting_process(the_evals_mean, the_evecs_mean, the_t0_init)
@@ -439,7 +442,7 @@ def DOING_THE_GEVP(the_t0_min_max, the_nt, the_mean_corr, the_rs_real, the_type_
         
         ### Loop over the resamples (sorting)
         for xyz in range(len(the_mod_evals_rs)):
-            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz])
+            the_mod_evals_rs[xyz], the_mod_evectors_rs[xyz] = SORTING_EIGENVALUES(the_t0_init, the_mod_evals_rs[xyz].real, the_mod_evectors_rs[xyz])
 
         the_eigevals_final_mean = NT_TO_NCFGS(the_evals_mean)
         the_evals_fits_rs = RESHAPING_EIGENVALS_MEAN(the_mod_evals_rs)
@@ -630,7 +633,11 @@ def SORTING_PROCESS(the_sorting, ev = True):
 def SORTING_EIGENVALUES(the_t0, the_eigenvals, the_eigenvecs):
     the_final_eigens = np.array(the_eigenvals, copy=True)
     the_final_eigenvecs = np.array(the_eigenvecs, copy=True)
-    sorted_indices = np.argsort(-the_eigenvals[the_t0:], axis=1)
+    ### Sorting according to the real part
+    sorted_indices = np.argsort(the_eigenvals[:the_t0].real, axis=1)
+    the_final_eigens[:the_t0] = np.take_along_axis(the_eigenvals[:the_t0], sorted_indices, axis=1)
+    the_final_eigenvecs[:the_t0] = np.take_along_axis( the_eigenvecs[:the_t0], sorted_indices[:, :, np.newaxis], axis=1)
+    sorted_indices = np.argsort(-the_eigenvals[the_t0:].real, axis=1)
     the_final_eigens[the_t0:] = np.take_along_axis(the_eigenvals[the_t0:], sorted_indices, axis=1)
     the_final_eigenvecs[the_t0:] = np.take_along_axis( the_eigenvecs[the_t0:], sorted_indices[:, :, np.newaxis], axis=1)
     return [the_final_eigens, the_final_eigenvecs]
@@ -957,11 +964,11 @@ def SORTING_EIGENVECTORS_NORMALIZED_CHANGING_TSLICE(the_eigenvals, the_eigenvecs
 # bin_size: size of the rebinning
 # it returns a smaller list len(a_list)/ bin_size
 def BINNING(a_list, bin_size):
-    the_a = np.asarray(a_list, dtype=np.float128)
+    the_a = np.asarray(a_list)
     the_n = (the_a.size // bin_size) * bin_size
     the_a_trimmed = the_a[:the_n]
-    the_rebinned = the_a_trimmed.reshape(-1, bin_size).mean(axis=1, dtype=np.float128)
-    return the_rebinned.astype(np.float64)
+    the_rebinned = the_a_trimmed.reshape(-1, bin_size).mean(axis=1)
+    return the_rebinned
 
 
 ### Comments:
@@ -1076,13 +1083,13 @@ def REWEIGHTS(the_rw_list, the_nfs):
 # It normalizes the reweights chosen, and calculates de average over the samples, mutplied by this factor
 # It returns the list with the new samples, it has the shape [K bt samples]
 def BOOTSTRAP(a_list, c_conf, dis_rw):
-    the_a, the_rw, k_th = np.asarray(a_list, dtype=np.float64), np.asarray(dis_rw, dtype=np.float64), np.asarray(c_conf, dtype=int)
+    the_a, the_rw, k_th = np.asarray(a_list), np.asarray(dis_rw), np.asarray(c_conf, dtype=int)
     the_bt_samples = the_a[k_th]
     the_rw_samples = the_rw[k_th]
     the_weighted = the_bt_samples * the_rw_samples
-    k_mean_corr = np.mean(the_weighted, axis=1, dtype=np.float128)
-    k_norm_factor = np.mean(the_rw_samples, axis=1, dtype=np.float128)
-    return (k_mean_corr / k_norm_factor).astype(np.float64)
+    k_mean_corr = np.mean(the_weighted, axis=1)
+    k_norm_factor = np.mean(the_rw_samples, axis=1)
+    return (k_mean_corr / k_norm_factor)
 
 
 # Comments:
@@ -1115,7 +1122,7 @@ def JACKKNIFE_CUSTOM(a, dis_rw, bin_rw):
 # a:  list of [time slices (nt), nr configs (Nf)]
 # it returns an array of nt slice with a mean value for each, shape [nt slices]
 def MEAN(a):
-    the_mean_val = np.asarray(np.mean(a, axis=1, dtype=np.float128))
+    the_mean_val = np.asarray(np.mean(a, axis=1, dtype=a.dtype))
     return the_mean_val
 
 

@@ -59,7 +59,7 @@ def EigenvaluesExtraction(the_matrix_correlator_data, the_type_rs, the_irreps, t
         the_rs_real = np.asarray(this_data['Correlators/Real/Resampled'])
         
         ### The central values of the original correlators
-        the_mean_corr = np.asarray(this_data['Correlators/Real/Mean'], dtype = np.float64)    
+        the_mean_corr = np.asarray(this_data['Correlators/Real/Mean'])
         
         print('\n----------------------------------------------')
         print(f'     IRREP ({the_irreps.index(the_irrep)+1}/{len(the_irreps)}): {the_irrep}')

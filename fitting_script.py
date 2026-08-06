@@ -52,7 +52,6 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
     My_Fits = vfa.My_Fits
     STD_DEV = vfa.STD_DEV
     MinuitCls = Minuit
-    
     irrep_index_map = {r: i for i, r in enumerate(the_irreps)}
     
     ### Loop over the irreps
@@ -83,10 +82,11 @@ def FitSingleCorrelators(the_data, the_fit_data, the_type_rs, the_list_tmaxs, th
         the_tmin_data = the_one_exp_fit.require_group('Tmin')
         
         the_corr = the_data[f'{the_irrep}/Correlators']
-        the_corr_fit = np.asarray(the_corr['Real/Mean'], dtype=np.float64)
-        the_corr_fit_rs = vfa.NT_TO_NCFGS(np.asarray(the_corr['Real/Resampled'], dtype=np.float64))
+        the_corr_fit = np.asarray(the_corr['Real/Mean'])
+
+        the_corr_fit_rs = vfa.NT_TO_NCFGS(np.asarray(the_corr['Real/Resampled']))
         
-        the_cov_matrix = np.asarray(the_corr['Real/Covariance_matrix'], dtype=np.float64)
+        the_cov_matrix = np.asarray(the_corr['Real/Covariance_matrix'])
         the_eff_energy_hint = np.asarray(the_data[f'{the_irrep}/Effective_masses/Mean'])
         the_nt = np.asarray(the_data[f'{the_irrep}/Time_slices'])
         
